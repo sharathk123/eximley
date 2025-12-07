@@ -59,7 +59,7 @@ export default function EntitiesPage() {
     const [editingEntity, setEditingEntity] = useState<any>(null);
     const [deletingEntity, setDeletingEntity] = useState<any>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+    const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
     const itemsPerPage = 12;
     const { toast } = useToast();
 
@@ -584,7 +584,7 @@ export default function EntitiesPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="border rounded-lg">
+                                <div className="border rounded-md bg-card">
                                     <Table>
                                         <TableHeader>
                                             <TableRow>

@@ -45,6 +45,10 @@ export async function GET(request: Request) {
                 export_orders (
                     id,
                     order_number
+                ),
+                quotes (
+                    id,
+                    quote_number
                 )
             `)
             .eq("company_id", companyUser.company_id)

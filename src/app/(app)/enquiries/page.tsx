@@ -64,7 +64,7 @@ export default function EnquiriesPage() {
     const [deletingEnquiry, setDeletingEnquiry] = useState<any>(null);
     const [convertingEnquiry, setConvertingEnquiry] = useState<any>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+    const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
     const itemsPerPage = 12;
     const { toast } = useToast();
 
@@ -183,7 +183,7 @@ export default function EnquiriesPage() {
             await fetchEnquiries();
             toast({
                 title: "Success",
-                description: `Enquiry converted to PI successfully! PI Number: ${data.pi?.invoice_number || 'Created'}`
+                description: `Enquiry converted successfully! Quote Number: ${data.quote?.quote_number || 'Created'}`
             });
         } catch (error) {
             console.error(error);
@@ -639,6 +639,11 @@ export default function EnquiriesPage() {
                                                     {enquiry.next_follow_up_date && (
                                                         <div>Follow-up: {new Date(enquiry.next_follow_up_date).toLocaleDateString()}</div>
                                                     )}
+                                                    {enquiry.quotes && enquiry.quotes.length > 0 && (
+                                                        <div className="pt-1">
+                                                            Quote: <span className="font-medium text-primary">{enquiry.quotes[0].quote_number}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 {enquiry.status !== 'converted' && enquiry.status !== 'won' && enquiry.status !== 'lost' && (
@@ -659,7 +664,7 @@ export default function EnquiriesPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="border rounded-lg">
+                                <div className="border rounded-md bg-card">
                                     <Table>
                                         <TableHeader>
                                             <TableRow>

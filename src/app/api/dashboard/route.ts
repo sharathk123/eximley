@@ -36,7 +36,7 @@ export async function GET() {
             .from("shipments")
             .select("*", { count: "exact", head: true })
             .eq("company_id", companyId)
-            .eq("status", "active"); // assuming 'active' handling or specific status
+            .in("status", ["packed", "shipped", "in_transit"]);
 
         // 3. Recent Shipments
         const { data: recentShipments } = await supabase
@@ -46,13 +46,40 @@ export async function GET() {
             .order("created_at", { ascending: false })
             .limit(5);
 
+        // 4. Quotes Stats
+        const { count: activeQuotes } = await supabase
+            .from("quotes")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .in("status", ["draft", "sent", "revised"]);
+
+        // 5. Orders Stats
+        const { count: pendingOrders } = await supabase
+            .from("export_orders")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .in("status", ["confirmed", "in_production", "pending"]);
+
+        // 6. Recent Orders
+        const { data: recentOrders } = await supabase
+            .from("export_orders")
+            .select(`
+                *,
+                entities (name)
+            `)
+            .eq("company_id", companyId)
+            .order("created_at", { ascending: false })
+            .limit(5);
+
         return NextResponse.json({
             stats: {
-                total: totalShipments || 0,
-                active: activeShipments || 0,
-                pending: 0 // placeholder
+                total_shipments: totalShipments || 0,
+                active_shipments: activeShipments || 0,
+                active_quotes: activeQuotes || 0,
+                pending_orders: pendingOrders || 0
             },
-            recent: recentShipments || []
+            recent_shipments: recentShipments || [],
+            recent_orders: recentOrders || []
         });
 
     } catch (error) {

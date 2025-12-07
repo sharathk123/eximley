@@ -73,7 +73,7 @@ export default function ProductsPage() {
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [deletingProduct, setDeletingProduct] = useState<any>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+    const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
     const itemsPerPage = 12;
     const { toast } = useToast();
 
@@ -538,7 +538,7 @@ export default function ProductsPage() {
                             ))}
                         </div>
                     ) : (
-                        <div className="border rounded-lg">
+                        <div className="border rounded-md bg-card">
                             <Table>
                                 <TableHeader>
                                     <TableRow>

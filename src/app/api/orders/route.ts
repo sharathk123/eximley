@@ -18,6 +18,10 @@ export async function GET(request: Request) {
                 *,
                 entities (name),
                 currencies (symbol),
+                proforma_invoices (
+                    id,
+                    invoice_number
+                ),
                 order_items (
                     *,
                     skus (sku_code, name)
@@ -76,8 +80,10 @@ export async function POST(request: Request) {
             items // Array of { sku_id, quantity, unit_price }
         } = body;
 
-        // Auto-generate order number
-        const order_number = `SO-${Date.now().toString().slice(-6)}`;
+        // Auto-generate order number (Standardize to match convert logic if possible, or keep simple)
+        // Using simple date-based for now to avoid complex locking logic in this snippet, 
+        // but ideally should match the ORD-YYYY-XXX format from PI conversion.
+        const order_number = `ORD-${Date.now().toString().slice(-6)}`;
 
         // Calculate total
         const total_amount = items.reduce((sum: number, item: any) => sum + (item.quantity * item.unit_price), 0);
@@ -122,6 +128,72 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json({ order });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    const supabase = await createSessionClient();
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ error: "ID required" }, { status: 400 });
+        }
+
+        const { error } = await supabase
+            .from("export_orders")
+            .delete()
+            .eq("id", id);
+
+        if (error) throw error;
+
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function PUT(request: Request) {
+    const supabase = await createSessionClient();
+    try {
+        const body = await request.json();
+        const { id, items, ...updateData } = body;
+
+        if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+
+        // Update order details
+        const { error: orderError } = await supabase
+            .from("export_orders")
+            .update(updateData)
+            .eq("id", id);
+
+        if (orderError) throw orderError;
+
+        // Update items if provided
+        if (items) {
+            // Delete existing items
+            await supabase.from("order_items").delete().eq("order_id", id);
+
+            // Insert new items
+            const { error: itemsError } = await supabase
+                .from("order_items")
+                .insert(
+                    items.map((item: any) => ({
+                        order_id: id,
+                        sku_id: item.sku_id,
+                        quantity: item.quantity,
+                        unit_price: item.unit_price,
+                        description: item.description
+                    }))
+                );
+
+            if (itemsError) throw itemsError;
+        }
+
+        return NextResponse.json({ success: true });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

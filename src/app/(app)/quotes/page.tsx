@@ -26,8 +26,44 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, Plus, Loader2, Edit, Trash2, LayoutGrid, List, FileText, Copy } from "lucide-react";
+import { Search, Plus, Loader2, Edit, Trash2, LayoutGrid, List, FileText, Copy, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useToast } from "@/components/ui/use-toast";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { IncotermSelect } from "@/components/common/IncotermSelect";
+
+const quoteSchema = z.object({
+    buyer_id: z.string().min(1, "Buyer required"),
+    quote_date: z.string().min(1, "Date required"),
+    valid_until: z.string().optional(),
+    currency_code: z.string().min(1, "Currency required"),
+    incoterm: z.string().optional(),
+    incoterm_place: z.string().optional(),
+    notes: z.string().optional(),
+    items: z.array(z.object({
+        sku_id: z.string().min(1, "SKU required"),
+        quantity: z.coerce.number().min(1),
+        unit_price: z.coerce.number().min(0.01),
+        description: z.string().optional(),
+    })).min(1, "At least one item required"),
+});
 
 export default function QuotesPage() {
     const [quotes, setQuotes] = useState<any[]>([]);
@@ -38,13 +74,53 @@ export default function QuotesPage() {
     const [convertingQuote, setConvertingQuote] = useState<any>(null);
     const [revisingQuote, setRevisingQuote] = useState<any>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+    const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
     const itemsPerPage = 12;
     const { toast } = useToast();
 
+    // Form Data
+    const [buyers, setBuyers] = useState<any[]>([]);
+    const [skus, setSkus] = useState<any[]>([]);
+    const [currencies, setCurrencies] = useState<any[]>([]);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+    const form = useForm<z.infer<typeof quoteSchema>>({
+        resolver: zodResolver(quoteSchema) as any,
+        defaultValues: {
+            quote_date: new Date().toISOString().split('T')[0],
+            currency_code: "USD",
+            items: [{ sku_id: "", quantity: 1, unit_price: 0 }]
+        }
+    });
+
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: "items"
+    });
+
     useEffect(() => {
         fetchQuotes();
+        fetchFormData();
     }, []);
+
+    async function fetchFormData() {
+        try {
+            const [entRes, skuRes, currRes] = await Promise.all([
+                fetch("/api/entities?type=buyer"),
+                fetch("/api/skus"),
+                fetch("/api/currencies")
+            ]);
+            const entData = await entRes.json();
+            const skuData = await skuRes.json();
+            const currData = await currRes.json();
+
+            if (entData.entities) setBuyers(entData.entities);
+            if (skuData.skus) setSkus(skuData.skus);
+            if (currData.currencies) setCurrencies(currData.currencies);
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     async function fetchQuotes() {
         setLoading(true);
@@ -162,9 +238,194 @@ export default function QuotesPage() {
                     <h2 className="text-3xl font-bold tracking-tight">Quotes</h2>
                     <p className="text-muted-foreground">Manage quotations and convert to Proforma Invoices.</p>
                 </div>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" /> New Quote
-                </Button>
+                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" /> New Quote
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>Create New Quote</DialogTitle>
+                        </DialogHeader>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(async (values) => {
+                                try {
+                                    const res = await fetch("/api/quotes", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify(values),
+                                    });
+                                    if (!res.ok) throw new Error("Failed to create quote");
+                                    await fetchQuotes();
+                                    setIsCreateOpen(false);
+                                    form.reset();
+                                    toast({ title: "Success", description: "Quote created successfully" });
+                                } catch (error) {
+                                    toast({ title: "Error", description: "Failed to create quote", variant: "destructive" });
+                                }
+                            })} className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="buyer_id"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Buyer</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select Buyer" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {buyers.map(b => (
+                                                            <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="quote_date"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Date</FormLabel>
+                                                <FormControl>
+                                                    <Input type="date" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="currency_code"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Currency</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select Currency" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {currencies.map(c => (
+                                                            <SelectItem key={c.code} value={c.code}>{c.code} - {c.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="valid_until"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Valid Until</FormLabel>
+                                                <FormControl>
+                                                    <Input type="date" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <IncotermSelect form={form} name="incoterm" />
+                                    <FormField
+                                        control={form.control}
+                                        name="incoterm_place"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Incoterm Place</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g. Mumbai Port" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <h4 className="font-semibold">Items</h4>
+                                        <Button type="button" variant="outline" size="sm" onClick={() => append({ sku_id: "", quantity: 1, unit_price: 0 })}>
+                                            <Plus className="h-4 w-4 mr-2" /> Add Item
+                                        </Button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {fields.map((field, index) => (
+                                            <div key={field.id} className="grid grid-cols-12 gap-2 items-end">
+                                                <div className="col-span-5">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name={`items.${index}.sku_id`}
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                    <FormControl>
+                                                                        <SelectTrigger>
+                                                                            <SelectValue placeholder="Item" />
+                                                                        </SelectTrigger>
+                                                                    </FormControl>
+                                                                    <SelectContent>
+                                                                        {skus.map(s => (
+                                                                            <SelectItem key={s.id} value={s.id}>{s.name} ({s.sku_code})</SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name={`items.${index}.quantity`}
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormControl>
+                                                                    <Input type="number" placeholder="Qty" {...field} />
+                                                                </FormControl>
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </div>
+                                                <div className="col-span-3">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name={`items.${index}.unit_price`}
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormControl>
+                                                                    <Input type="number" placeholder="Price" {...field} />
+                                                                </FormControl>
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+                                    <Button type="submit">Create Quote</Button>
+                                </div>
+                            </form>
+                        </Form>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -262,6 +523,16 @@ export default function QuotesPage() {
                                                     {quote.quote_items && (
                                                         <div>{quote.quote_items.length} item(s)</div>
                                                     )}
+                                                    {quote.enquiries && (
+                                                        <div className="pt-1 text-xs">
+                                                            Enquiry: <Link href="/enquiries" className="text-primary hover:underline">{quote.enquiries.enquiry_number}</Link>
+                                                        </div>
+                                                    )}
+                                                    {quote.proforma_invoices && (
+                                                        <div className="pt-1 text-xs">
+                                                            PI: <span className="font-medium">{quote.proforma_invoices.invoice_number}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 {quote.status !== 'converted' && quote.status !== 'rejected' && (
@@ -287,7 +558,7 @@ export default function QuotesPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="border rounded-lg">
+                                <div className="border rounded-md bg-card">
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
@@ -438,6 +709,6 @@ export default function QuotesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </div >
     );
 }
