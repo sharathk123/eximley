@@ -3,22 +3,10 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Plus, Loader2, Pencil, Trash2, ChevronLeft, ChevronRight, Search, FileCheck } from "lucide-react";
 import {
     Select,
     SelectContent,
@@ -36,33 +24,27 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
-import { Plus, FileCheck, Trash2, Search, Ship, Grid3x3, List, Edit, ChevronLeft, ChevronRight } from "lucide-react";
-import { Label } from "@/components/ui/label";
 
 export default function ShippingBillsPage() {
     const [shippingBills, setShippingBills] = useState<any[]>([]);
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [isEditOpen, setIsEditOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [statusFilter, setStatusFilter] = useState("all");
-    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-    const [currentPage, setCurrentPage] = useState(1);
+
+    // Dialog States
+    const [openAdd, setOpenAdd] = useState(false);
+    const [openEdit, setOpenEdit] = useState(false);
     const [deletingSB, setDeletingSB] = useState<any>(null);
+
+    // Selection
     const [editingSB, setEditingSB] = useState<any>(null);
+
+    // Pagination & Search State
+    const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    // Form Data
     const [formData, setFormData] = useState({
         sb_number: "",
         sb_date: new Date().toISOString().split('T')[0],
@@ -78,38 +60,46 @@ export default function ShippingBillsPage() {
         notes: ""
     });
 
-    const { toast } = useToast();
+    // Derived State
+    const filteredBills = shippingBills.filter(sb =>
+        sb.sb_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        sb.export_orders?.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        sb.export_orders?.entities?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
+    const paginatedBills = filteredBills.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    // Reset page on search
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
+
+    const fetchData = () => {
+        setLoading(true);
+        fetch("/api/shipping-bills")
+            .then(res => res.json())
+            .then(data => {
+                if (data.shippingBills) setShippingBills(data.shippingBills);
+            })
+            .finally(() => setLoading(false));
+    };
+
+    const fetchOrders = () => {
+        fetch("/api/orders")
+            .then(res => res.json())
+            .then(data => {
+                if (data.orders) setOrders(data.orders);
+            });
+    };
 
     useEffect(() => {
         fetchData();
         fetchOrders();
     }, []);
 
-    const fetchData = async () => {
-        try {
-            const res = await fetch("/api/shipping-bills");
-            const data = await res.json();
-            setShippingBills(data.shippingBills || []);
-        } catch (error) {
-            toast({ title: "Error fetching shipping bills", variant: "destructive" });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchOrders = async () => {
-        try {
-            const res = await fetch("/api/orders");
-            const data = await res.json();
-            setOrders(data.orders || []);
-        } catch (error) {
-            console.error("Error fetching orders:", error);
-        }
-    };
-
-    const handleOrderSelect = async (orderId: string) => {
+    const handleOrderSelect = (orderId: string) => {
         setFormData(prev => ({ ...prev, export_order_id: orderId }));
-
         const order = orders.find(o => o.id === orderId);
         if (order) {
             setFormData(prev => ({
@@ -120,18 +110,17 @@ export default function ShippingBillsPage() {
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const onAddSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!formData.export_order_id) {
-            toast({ title: "Please select an order", variant: "destructive" });
+            alert("Please select an order");
             return;
         }
 
         try {
             const order = orders.find(o => o.id === formData.export_order_id);
             if (!order || !order.order_items) {
-                toast({ title: "Order items not found", variant: "destructive" });
+                alert("Order items not found");
                 return;
             }
 
@@ -144,35 +133,40 @@ export default function ShippingBillsPage() {
                 order_item_id: item.id
             }));
 
-            const url = editingSB ? `/api/shipping-bills` : "/api/shipping-bills";
-            const method = editingSB ? "PUT" : "POST";
-            const body = editingSB
-                ? { id: editingSB.id, ...formData }
-                : { ...formData, items };
-
-            const res = await fetch(url, {
-                method,
+            const res = await fetch("/api/shipping-bills", {
+                method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
+                body: JSON.stringify({ ...formData, items })
             });
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || "Failed to save shipping bill");
-            }
-
-            toast({ title: editingSB ? "Shipping bill updated" : "Shipping bill created successfully" });
-            setIsCreateOpen(false);
-            setIsEditOpen(false);
-            fetchData();
+            if (!res.ok) throw new Error("Failed to create");
+            setOpenAdd(false);
             resetForm();
-        } catch (error: any) {
-            toast({ title: error.message, variant: "destructive" });
+            fetchData();
+        } catch (error) {
+            alert("Error creating shipping bill");
         }
     };
 
-    const handleEdit = (sb: any) => {
+    const onEditSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const res = await fetch("/api/shipping-bills", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: editingSB.id, ...formData })
+            });
+
+            if (!res.ok) throw new Error("Failed to update");
+            setOpenEdit(false);
+            resetForm();
+            fetchData();
+        } catch (error) {
+            alert("Error updating shipping bill");
+        }
+    };
+
+    const startEdit = (sb: any) => {
         setEditingSB(sb);
         setFormData({
             sb_number: sb.sb_number,
@@ -188,43 +182,28 @@ export default function ShippingBillsPage() {
             let_export_date: sb.let_export_date || "",
             notes: sb.notes || ""
         });
-        setIsEditOpen(true);
+        setOpenEdit(true);
     };
 
-    const handleDelete = async () => {
+    const onDelete = async () => {
         if (!deletingSB) return;
-
         try {
-            const res = await fetch(`/api/shipping-bills?id=${deletingSB.id}`, {
-                method: "DELETE"
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error);
-            }
-
-            toast({ title: "Shipping bill deleted" });
-            fetchData();
-        } catch (error: any) {
-            toast({ title: error.message, variant: "destructive" });
-        } finally {
+            const res = await fetch(`/api/shipping-bills?id=${deletingSB.id}`, { method: "DELETE" });
+            if (!res.ok) throw new Error("Failed to delete");
             setDeletingSB(null);
+            fetchData();
+        } catch (error) {
+            alert("Error deleting shipping bill");
         }
     };
 
     const handleMarkAsFiled = async (id: string) => {
         try {
-            const res = await fetch(`/api/shipping-bills/${id}/file`, {
-                method: "POST"
-            });
-
+            const res = await fetch(`/api/shipping-bills/${id}/file`, { method: "POST" });
             if (!res.ok) throw new Error("Failed to mark as filed");
-
-            toast({ title: "Marked as filed with customs" });
             fetchData();
-        } catch (error: any) {
-            toast({ title: error.message, variant: "destructive" });
+        } catch (error) {
+            alert("Error marking as filed");
         }
     };
 
@@ -246,46 +225,30 @@ export default function ShippingBillsPage() {
         });
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'drafted': return 'secondary';
-            case 'filed': return 'default';
-            case 'cleared': return 'default';
-            case 'shipped': return 'default';
-            case 'cancelled': return 'destructive';
-            default: return 'outline';
-        }
+    const getStatusBadge = (status: string) => {
+        const variants: any = {
+            drafted: 'secondary',
+            filed: 'default',
+            cleared: 'default',
+            shipped: 'default',
+            cancelled: 'destructive'
+        };
+        return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
     };
 
-    const filteredBills = shippingBills.filter(sb => {
-        const matchesSearch = sb.sb_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            sb.export_orders?.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === "all" || sb.status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
-
-    const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedBills = filteredBills.slice(startIndex, startIndex + itemsPerPage);
-
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Shipping Bills</h2>
-                    <p className="text-muted-foreground">Customs export declarations for all shipments</p>
-                </div>
-                <Dialog open={isCreateOpen} onOpenChange={(open) => { setIsCreateOpen(open); if (!open) resetForm(); }}>
+                <h1 className="text-3xl font-bold">Shipping Bills</h1>
+                <Dialog open={openAdd} onOpenChange={(open) => { setOpenAdd(open); if (!open) resetForm(); }}>
                     <DialogTrigger asChild>
                         <Button>
-                            <Plus className="mr-2 h-4 w-4" /> New Shipping Bill
+                            <Plus className="w-4 h-4 mr-2" /> Add Shipping Bill
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>Create Shipping Bill</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <DialogHeader><DialogTitle>Add New Shipping Bill</DialogTitle></DialogHeader>
+                        <form onSubmit={onAddSubmit} className="space-y-4 pt-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2">
                                     <Label>Sales Order *</Label>
@@ -304,412 +267,184 @@ export default function ShippingBillsPage() {
                                 </div>
                                 <div>
                                     <Label>SB Number *</Label>
-                                    <Input
-                                        value={formData.sb_number}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, sb_number: e.target.value }))}
-                                        placeholder="e.g., SB/2024/001"
-                                        required
-                                    />
+                                    <Input value={formData.sb_number} onChange={(e) => setFormData(prev => ({ ...prev, sb_number: e.target.value }))} required />
                                 </div>
                                 <div>
                                     <Label>SB Date *</Label>
-                                    <Input
-                                        type="date"
-                                        value={formData.sb_date}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, sb_date: e.target.value }))}
-                                        required
-                                    />
+                                    <Input type="date" value={formData.sb_date} onChange={(e) => setFormData(prev => ({ ...prev, sb_date: e.target.value }))} required />
                                 </div>
                                 <div>
                                     <Label>Port Code</Label>
-                                    <Input
-                                        value={formData.port_code}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, port_code: e.target.value }))}
-                                        placeholder="e.g., INMAA1 (Chennai)"
-                                    />
+                                    <Input value={formData.port_code} onChange={(e) => setFormData(prev => ({ ...prev, port_code: e.target.value }))} placeholder="e.g., INMAA1" />
                                 </div>
                                 <div>
                                     <Label>Customs House</Label>
-                                    <Input
-                                        value={formData.customs_house}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, customs_house: e.target.value }))}
-                                        placeholder="e.g., Chennai Customs"
-                                    />
+                                    <Input value={formData.customs_house} onChange={(e) => setFormData(prev => ({ ...prev, customs_house: e.target.value }))} />
                                 </div>
                                 <div>
                                     <Label>FOB Value *</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.fob_value}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, fob_value: e.target.value }))}
-                                        required
-                                    />
+                                    <Input type="number" step="0.01" value={formData.fob_value} onChange={(e) => setFormData(prev => ({ ...prev, fob_value: e.target.value }))} required />
                                 </div>
                                 <div>
                                     <Label>Freight Value</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.freight_value}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, freight_value: e.target.value }))}
-                                    />
+                                    <Input type="number" step="0.01" value={formData.freight_value} onChange={(e) => setFormData(prev => ({ ...prev, freight_value: e.target.value }))} />
                                 </div>
                                 <div>
                                     <Label>Insurance Value</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.insurance_value}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, insurance_value: e.target.value }))}
-                                    />
+                                    <Input type="number" step="0.01" value={formData.insurance_value} onChange={(e) => setFormData(prev => ({ ...prev, insurance_value: e.target.value }))} />
                                 </div>
                                 <div>
                                     <Label>LEO Number</Label>
-                                    <Input
-                                        value={formData.let_export_order_number}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, let_export_order_number: e.target.value }))}
-                                        placeholder="Let Export Order"
-                                    />
+                                    <Input value={formData.let_export_order_number} onChange={(e) => setFormData(prev => ({ ...prev, let_export_order_number: e.target.value }))} />
                                 </div>
-                                <div>
-                                    <Label>LEO Date</Label>
-                                    <Input
-                                        type="date"
-                                        value={formData.let_export_date}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, let_export_date: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <Label>Notes</Label>
-                                <Input
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                                    placeholder="Additional notes"
-                                />
                             </div>
                             <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => { setIsCreateOpen(false); resetForm(); }}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit">Create Shipping Bill</Button>
+                                <Button type="button" variant="outline" onClick={() => { setOpenAdd(false); resetForm(); }}>Cancel</Button>
+                                <Button type="submit">Create</Button>
                             </div>
                         </form>
                     </DialogContent>
                 </Dialog>
 
                 {/* Edit Dialog */}
-                <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if (!open) resetForm(); }}>
+                <Dialog open={openEdit} onOpenChange={(open) => { setOpenEdit(false); if (!open) resetForm(); }}>
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>Edit Shipping Bill</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <DialogHeader><DialogTitle>Edit Shipping Bill</DialogTitle></DialogHeader>
+                        <form onSubmit={onEditSubmit} className="space-y-4 pt-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label>SB Number *</Label>
-                                    <Input
-                                        value={formData.sb_number}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, sb_number: e.target.value }))}
-                                        required
-                                    />
+                                    <Input value={formData.sb_number} onChange={(e) => setFormData(prev => ({ ...prev, sb_number: e.target.value }))} required />
                                 </div>
                                 <div>
                                     <Label>SB Date *</Label>
-                                    <Input
-                                        type="date"
-                                        value={formData.sb_date}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, sb_date: e.target.value }))}
-                                        required
-                                    />
+                                    <Input type="date" value={formData.sb_date} onChange={(e) => setFormData(prev => ({ ...prev, sb_date: e.target.value }))} required />
                                 </div>
                                 <div>
                                     <Label>Port Code</Label>
-                                    <Input
-                                        value={formData.port_code}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, port_code: e.target.value }))}
-                                    />
+                                    <Input value={formData.port_code} onChange={(e) => setFormData(prev => ({ ...prev, port_code: e.target.value }))} />
                                 </div>
                                 <div>
                                     <Label>Customs House</Label>
-                                    <Input
-                                        value={formData.customs_house}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, customs_house: e.target.value }))}
-                                    />
+                                    <Input value={formData.customs_house} onChange={(e) => setFormData(prev => ({ ...prev, customs_house: e.target.value }))} />
                                 </div>
                                 <div>
                                     <Label>FOB Value *</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.fob_value}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, fob_value: e.target.value }))}
-                                        required
-                                    />
+                                    <Input type="number" step="0.01" value={formData.fob_value} onChange={(e) => setFormData(prev => ({ ...prev, fob_value: e.target.value }))} required />
                                 </div>
                                 <div>
                                     <Label>Freight Value</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.freight_value}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, freight_value: e.target.value }))}
-                                    />
+                                    <Input type="number" step="0.01" value={formData.freight_value} onChange={(e) => setFormData(prev => ({ ...prev, freight_value: e.target.value }))} />
                                 </div>
                                 <div>
                                     <Label>Insurance Value</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.insurance_value}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, insurance_value: e.target.value }))}
-                                    />
+                                    <Input type="number" step="0.01" value={formData.insurance_value} onChange={(e) => setFormData(prev => ({ ...prev, insurance_value: e.target.value }))} />
                                 </div>
                                 <div>
                                     <Label>LEO Number</Label>
-                                    <Input
-                                        value={formData.let_export_order_number}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, let_export_order_number: e.target.value }))}
-                                    />
+                                    <Input value={formData.let_export_order_number} onChange={(e) => setFormData(prev => ({ ...prev, let_export_order_number: e.target.value }))} />
                                 </div>
-                                <div>
-                                    <Label>LEO Date</Label>
-                                    <Input
-                                        type="date"
-                                        value={formData.let_export_date}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, let_export_date: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <Label>Notes</Label>
-                                <Input
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                                />
                             </div>
                             <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => { setIsEditOpen(false); resetForm(); }}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit">Update Shipping Bill</Button>
+                                <Button type="button" variant="outline" onClick={() => { setOpenEdit(false); resetForm(); }}>Cancel</Button>
+                                <Button type="submit">Update</Button>
                             </div>
                         </form>
                     </DialogContent>
                 </Dialog>
             </div>
 
-            <Card className="p-4">
-                <div className="flex gap-4 mb-4">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search by SB number or order..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                        />
-                    </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="drafted">Drafted</SelectItem>
-                            <SelectItem value="filed">Filed</SelectItem>
-                            <SelectItem value="cleared">Cleared</SelectItem>
-                            <SelectItem value="shipped">Shipped</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <div className="flex gap-2">
-                        <Button
-                            variant={viewMode === 'list' ? 'default' : 'outline'}
-                            size="icon"
-                            onClick={() => setViewMode('list')}
-                        >
-                            <List className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant={viewMode === 'grid' ? 'default' : 'outline'}
-                            size="icon"
-                            onClick={() => setViewMode('grid')}
-                        >
-                            <Grid3x3 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
+            {/* SEARCH BOX */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Search by SB number or order..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                />
+            </div>
 
-                {loading ? (
-                    <div className="text-center py-8">Loading...</div>
-                ) : filteredBills.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                        <Ship className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No shipping bills found</p>
-                    </div>
-                ) : viewMode === 'list' ? (
-                    <div className="border rounded-md">
-                        <Table className="table-fixed">
-                            <TableHeader className="bg-muted/50">
-                                <TableRow>
-                                    <TableHead className="w-[140px]">SB Number</TableHead>
-                                    <TableHead className="w-[120px]">Date</TableHead>
-                                    <TableHead className="w-[150px]">Order</TableHead>
-                                    <TableHead className="w-[180px]">Buyer</TableHead>
-                                    <TableHead className="w-[120px]">FOB Value</TableHead>
-                                    <TableHead className="w-[100px]">Port</TableHead>
-                                    <TableHead className="w-[120px]">Status</TableHead>
-                                    <TableHead className="w-[150px] text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {paginatedBills.map((sb) => (
-                                    <TableRow key={sb.id}>
-                                        <TableCell className="font-medium">{sb.sb_number}</TableCell>
-                                        <TableCell>{new Date(sb.sb_date).toLocaleDateString()}</TableCell>
-                                        <TableCell>{sb.export_orders?.order_number || "—"}</TableCell>
-                                        <TableCell>{sb.export_orders?.entities?.name || "—"}</TableCell>
-                                        <TableCell>
-                                            {sb.currency_code} {Number(sb.fob_value).toFixed(2)}
-                                        </TableCell>
-                                        <TableCell>{sb.port_code || "—"}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={getStatusColor(sb.status)}>{sb.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
-                                                {sb.status === 'drafted' && (
-                                                    <>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8"
-                                                            onClick={() => handleEdit(sb)}
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleMarkAsFiled(sb.id)}
-                                                        >
-                                                            <FileCheck className="h-4 w-4 mr-1" />
-                                                            File
-                                                        </Button>
-                                                    </>
-                                                )}
-                                                {(sb.status === 'drafted' || sb.status === 'cancelled') && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        onClick={() => setDeletingSB(sb)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
+            {/* TABLE */}
+            <div className="border rounded-md">
+                <Table>
+                    <TableHeader className="bg-muted/50">
+                        <TableRow>
+                            <TableHead>SB Number</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Order</TableHead>
+                            <TableHead>Buyer</TableHead>
+                            <TableHead>FOB Value</TableHead>
+                            <TableHead>Port</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {loading ? (
+                            <TableRow><TableCell colSpan={8} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                        ) : paginatedBills.length === 0 ? (
+                            <TableRow><TableCell colSpan={8} className="h-24 text-center text-muted-foreground">No shipping bills found.</TableCell></TableRow>
+                        ) : (
+                            paginatedBills.map(sb => (
+                                <TableRow key={sb.id}>
+                                    <TableCell className="font-medium">{sb.sb_number}</TableCell>
+                                    <TableCell>{new Date(sb.sb_date).toLocaleDateString()}</TableCell>
+                                    <TableCell>{sb.export_orders?.order_number || '-'}</TableCell>
+                                    <TableCell>{sb.export_orders?.entities?.name || '-'}</TableCell>
+                                    <TableCell>{sb.currency_code} {Number(sb.fob_value).toFixed(2)}</TableCell>
+                                    <TableCell>{sb.port_code || '-'}</TableCell>
+                                    <TableCell>{getStatusBadge(sb.status)}</TableCell>
+                                    <TableCell>
+                                        <div className="flex gap-2">
+                                            {sb.status === 'drafted' && (
+                                                <>
+                                                    <Button variant="ghost" size="icon" onClick={() => startEdit(sb)}>
+                                                        <Pencil className="w-4 h-4 text-primary" />
                                                     </Button>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {paginatedBills.map((sb) => (
-                            <Card key={sb.id} className="hover:shadow-md transition-shadow">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">
-                                        {sb.sb_number}
-                                    </CardTitle>
-                                    <Badge variant={getStatusColor(sb.status)}>{sb.status}</Badge>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold">{sb.export_orders?.entities?.name || "—"}</div>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {sb.export_orders?.order_number} • {new Date(sb.sb_date).toLocaleDateString()}
-                                    </p>
-                                    <div className="mt-4 space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">FOB Value:</span>
-                                            <span className="font-medium">{sb.currency_code} {Number(sb.fob_value).toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Port:</span>
-                                            <span>{sb.port_code || "—"}</span>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 flex gap-2">
-                                        {sb.status === 'drafted' && (
-                                            <>
-                                                <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(sb)}>
-                                                    <Edit className="h-4 w-4 mr-1" />
-                                                    Edit
+                                                    <Button variant="ghost" size="icon" onClick={() => handleMarkAsFiled(sb.id)} title="Mark as Filed">
+                                                        <FileCheck className="w-4 h-4 text-green-600" />
+                                                    </Button>
+                                                </>
+                                            )}
+                                            {(sb.status === 'drafted' || sb.status === 'cancelled') && (
+                                                <Button variant="ghost" size="icon" onClick={() => setDeletingSB(sb)}>
+                                                    <Trash2 className="w-4 h-4 text-red-600" />
                                                 </Button>
-                                                <Button variant="outline" size="sm" className="flex-1" onClick={() => handleMarkAsFiled(sb.id)}>
-                                                    <FileCheck className="h-4 w-4 mr-1" />
-                                                    File
-                                                </Button>
-                                            </>
-                                        )}
-                                        {(sb.status === 'drafted' || sb.status === 'cancelled') && (
-                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeletingSB(sb)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                )}
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
 
-                {totalPages > 1 && (
-                    <div className="mt-4 flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">
-                            Page {currentPage} of {totalPages} ({filteredBills.length} total)
-                        </p>
-                        <Pagination>
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                        disabled={currentPage === 1}
-                                    >
-                                        <ChevronLeft className="h-4 w-4 mr-1" />
-                                        Previous
-                                    </Button>
-                                </PaginationItem>
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                    <PaginationItem key={page}>
-                                        <PaginationLink
-                                            onClick={() => setCurrentPage(page)}
-                                            isActive={currentPage === page}
-                                        >
-                                            {page}
-                                        </PaginationLink>
-                                    </PaginationItem>
-                                ))}
-                                <PaginationItem>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                        disabled={currentPage === totalPages}
-                                    >
-                                        Next
-                                        <ChevronRight className="h-4 w-4 ml-1" />
-                                    </Button>
-                                </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
+            {/* PAGINATION CONTROLS */}
+            {!loading && filteredBills.length > 0 && (
+                <div className="flex items-center justify-end gap-2 text-sm">
+                    <div className="text-muted-foreground mr-4">
+                        Page {currentPage} of {totalPages} ({filteredBills.length} total)
                     </div>
-                )}
-            </Card>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+                </div>
+            )}
 
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={!!deletingSB} onOpenChange={() => setDeletingSB(null)}>
@@ -722,7 +457,7 @@ export default function ShippingBillsPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                             Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>
