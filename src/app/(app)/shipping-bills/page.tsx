@@ -91,7 +91,14 @@ export default function ShippingBillsPage() {
         fetch("/api/orders")
             .then(res => res.json())
             .then(data => {
-                if (data.orders) setOrders(data.orders);
+                console.log("Orders API response:", data);
+                if (data.orders) {
+                    console.log("Orders count:", data.orders.length);
+                    setOrders(data.orders);
+                }
+            })
+            .catch(err => {
+                console.error("Error fetching orders:", err);
             });
     };
 
@@ -266,11 +273,17 @@ export default function ShippingBillsPage() {
                                             <SelectValue placeholder="Select order" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {orders.map(order => (
-                                                <SelectItem key={order.id} value={order.id}>
-                                                    {order.order_number} - {order.entities?.name} ({order.currency_code} {Number(order.total_amount).toFixed(2)})
-                                                </SelectItem>
-                                            ))}
+                                            {orders.length === 0 ? (
+                                                <div className="p-2 text-sm text-muted-foreground text-center">
+                                                    No orders available. Please create an order first.
+                                                </div>
+                                            ) : (
+                                                orders.map(order => (
+                                                    <SelectItem key={order.id} value={order.id}>
+                                                        {order.order_number} - {order.entities?.name} ({order.currency_code} {Number(order.total_amount).toFixed(2)})
+                                                    </SelectItem>
+                                                ))
+                                            )}
                                         </SelectContent>
                                     </Select>
                                 </div>
