@@ -237,7 +237,7 @@ export default function ShippingBillsPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">Shipping Bills</h1>
                 <Dialog open={openAdd} onOpenChange={(open) => { setOpenAdd(open); if (!open) resetForm(); }}>
@@ -366,18 +366,18 @@ export default function ShippingBillsPage() {
             </div>
 
             {/* TABLE */}
-            <div className="border rounded-md">
+            <div className="border rounded-md bg-card">
                 <Table>
                     <TableHeader className="bg-muted/50">
                         <TableRow>
-                            <TableHead>SB Number</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Order</TableHead>
-                            <TableHead>Buyer</TableHead>
-                            <TableHead>FOB Value</TableHead>
-                            <TableHead>Port</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Actions</TableHead>
+                            <TableHead className="font-bold text-foreground">SB Number</TableHead>
+                            <TableHead className="font-bold text-foreground">Date</TableHead>
+                            <TableHead className="font-bold text-foreground">Order</TableHead>
+                            <TableHead className="font-bold text-foreground">Buyer</TableHead>
+                            <TableHead className="font-bold text-foreground">FOB Value</TableHead>
+                            <TableHead className="font-bold text-foreground">Port</TableHead>
+                            <TableHead className="font-bold text-foreground">Status</TableHead>
+                            <TableHead className="font-bold text-foreground">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
