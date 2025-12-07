@@ -1,27 +1,12 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server";
+import { getUserAndCompany } from "@/lib/helpers/api";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/incentives/claims - List all claims
 export async function GET(req: NextRequest) {
     try {
-        const supabase = createRouteHandlerClient({ cookies });
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        // Get user's company
-        const { data: userCompany } = await supabase
-            .from("company_users")
-            .select("company_id")
-            .eq("user_id", user.id)
-            .single();
-
-        if (!userCompany) {
-            return NextResponse.json({ error: "No company found" }, { status: 404 });
-        }
+        const supabase = await createSessionClient();
+        const { companyId } = await getUserAndCompany(supabase);
 
         // Fetch claims with shipping bill details
         const { data: claims, error } = await supabase
@@ -39,7 +24,7 @@ export async function GET(req: NextRequest) {
                     )
                 )
             `)
-            .eq("company_id", userCompany.company_id)
+            .eq("company_id", companyId)
             .order("created_at", { ascending: false });
 
         if (error) {
@@ -95,7 +80,7 @@ export async function POST(req: NextRequest) {
             .from("shipping_bills")
             .select("id")
             .eq("id", shipping_bill_id)
-            .eq("company_id", userCompany.company_id)
+            .eq("company_id", companyId)
             .single();
 
         if (!sb) {
@@ -163,7 +148,7 @@ export async function PUT(req: NextRequest) {
             .from("incentive_claims")
             .update({ ...updates, updated_at: new Date().toISOString() })
             .eq("id", id)
-            .eq("company_id", userCompany.company_id)
+            .eq("company_id", companyId)
             .select()
             .single();
 
@@ -216,7 +201,7 @@ export async function DELETE(req: NextRequest) {
             .from("incentive_claims")
             .delete()
             .eq("id", id)
-            .eq("company_id", userCompany.company_id);
+            .eq("company_id", companyId);
 
         if (error) {
             return NextResponse.json({ error: error.message }, { status: 500 });

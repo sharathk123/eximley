@@ -1,34 +1,19 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server";
+import { getUserAndCompany } from "@/lib/helpers/api";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST /api/incentives/duty-drawback/calculate
 // Calculate Duty Drawback incentive for a shipping bill
 export async function POST(req: NextRequest) {
     try {
-        const supabase = createRouteHandlerClient({ cookies });
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const supabase = await createSessionClient();
+        const { companyId } = await getUserAndCompany(supabase);
 
         const body = await req.json();
         const { shipping_bill_id } = body;
 
         if (!shipping_bill_id) {
             return NextResponse.json({ error: "shipping_bill_id is required" }, { status: 400 });
-        }
-
-        // Get user's company
-        const { data: userCompany } = await supabase
-            .from("company_users")
-            .select("company_id")
-            .eq("user_id", user.id)
-            .single();
-
-        if (!userCompany) {
-            return NextResponse.json({ error: "No company found" }, { status: 404 });
         }
 
         // Fetch shipping bill with items
@@ -51,7 +36,7 @@ export async function POST(req: NextRequest) {
                 )
             `)
             .eq("id", shipping_bill_id)
-            .eq("company_id", userCompany.company_id)
+            .eq("company_id", companyId)
             .single();
 
         if (sbError || !shippingBill) {
