@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2, Edit, Trash2, ChevronLeft, ChevronRight, Search, FileCheck, LayoutGrid, List, Ship } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import {
     Select,
     SelectContent,
@@ -41,9 +43,10 @@ export default function ShippingBillsPage() {
     const [editingSB, setEditingSB] = useState<any>(null);
 
     // Pagination & Search State
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+    const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
+    const [activeTab, setActiveTab] = useState("all");
     const itemsPerPage = 12;
 
     // Form Data
@@ -63,11 +66,13 @@ export default function ShippingBillsPage() {
     });
 
     // Derived State
-    const filteredBills = shippingBills.filter(sb =>
-        sb.sb_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sb.export_orders?.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sb.export_orders?.entities?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredBills = shippingBills.filter(sb => {
+        const matchesSearch = sb.sb_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            sb.export_orders?.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            sb.export_orders?.entities?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesTab = activeTab === "all" || sb.status === activeTab;
+        return matchesSearch && matchesTab;
+    });
 
     const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
     const paginatedBills = filteredBills.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -97,7 +102,7 @@ export default function ShippingBillsPage() {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm]);
+    }, [searchQuery]);
 
     const handleOrderSelect = (orderId: string) => {
         setFormData(prev => ({ ...prev, export_order_id: orderId }));
@@ -240,7 +245,10 @@ export default function ShippingBillsPage() {
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">Shipping Bills</h1>
+                <div>
+                    <h1 className="text-3xl font-bold">Shipping Bills</h1>
+                    <p className="text-sm text-muted-foreground mt-1">Manage customs export declarations and compliance documents.</p>
+                </div>
                 <Dialog open={openAdd} onOpenChange={(open) => { setOpenAdd(open); if (!open) resetForm(); }}>
                     <DialogTrigger asChild>
                         <Button>
@@ -355,35 +363,46 @@ export default function ShippingBillsPage() {
                 </Dialog>
             </div>
 
-            {/* SEARCH & VIEW TOGGLE */}
-            <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search shipping bills..."
-                        className="pl-8"
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                    />
-                </div>
-                <div className="flex gap-1 border rounded-md p-1">
-                    <Button
-                        variant={viewMode === 'card' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('card')}
-                    >
-                        <LayoutGrid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant={viewMode === 'list' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('list')}
-                    >
-                        <List className="h-4 w-4" />
-                    </Button>
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }} className="w-full md:w-auto">
+                    <TabsList>
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="drafted">Drafted</TabsTrigger>
+                        <TabsTrigger value="filed">Filed</TabsTrigger>
+                        <TabsTrigger value="cleared">Cleared</TabsTrigger>
+                        <TabsTrigger value="shipped">Shipped</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+
+                <div className="flex gap-2 w-full md:w-auto">
+                    <div className="relative flex-1 md:w-64">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search shipments..."
+                            className="pl-8"
+                            value={searchQuery}
+                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                        />
+                    </div>
+                    <div className="flex items-center border rounded-md bg-background">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-9 w-9 rounded-none ${viewMode === 'list' ? 'bg-muted' : ''}`}
+                            onClick={() => setViewMode('list')}
+                        >
+                            <List className="h-4 w-4" />
+                        </Button>
+                        <Separator orientation="vertical" className="h-6" />
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-9 w-9 rounded-none ${viewMode === 'card' ? 'bg-muted' : ''}`}
+                            onClick={() => setViewMode('card')}
+                        >
+                            <LayoutGrid className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
             </div>
 
