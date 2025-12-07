@@ -42,12 +42,8 @@ export async function GET(req: NextRequest) {
 // POST /api/incentives/claims - Create new claim
 export async function POST(req: NextRequest) {
     try {
-        const supabase = createRouteHandlerClient({ cookies });
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const supabase = await createSessionClient();
+        const { companyId } = await getUserAndCompany(supabase);
 
         const body = await req.json();
         const {
@@ -62,17 +58,6 @@ export async function POST(req: NextRequest) {
 
         if (!shipping_bill_id || !claim_type) {
             return NextResponse.json({ error: "shipping_bill_id and claim_type are required" }, { status: 400 });
-        }
-
-        // Get user's company
-        const { data: userCompany } = await supabase
-            .from("company_users")
-            .select("company_id")
-            .eq("user_id", user.id)
-            .single();
-
-        if (!userCompany) {
-            return NextResponse.json({ error: "No company found" }, { status: 404 });
         }
 
         // Verify shipping bill belongs to user's company
@@ -91,7 +76,7 @@ export async function POST(req: NextRequest) {
         const { data: claim, error } = await supabase
             .from("incentive_claims")
             .insert({
-                company_id: userCompany.company_id,
+                company_id: companyId,
                 shipping_bill_id,
                 claim_type,
                 rodtep_amount,
@@ -118,29 +103,14 @@ export async function POST(req: NextRequest) {
 // PUT /api/incentives/claims - Update claim
 export async function PUT(req: NextRequest) {
     try {
-        const supabase = createRouteHandlerClient({ cookies });
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const supabase = await createSessionClient();
+        const { companyId } = await getUserAndCompany(supabase);
 
         const body = await req.json();
         const { id, ...updates } = body;
 
         if (!id) {
             return NextResponse.json({ error: "Claim ID is required" }, { status: 400 });
-        }
-
-        // Get user's company
-        const { data: userCompany } = await supabase
-            .from("company_users")
-            .select("company_id")
-            .eq("user_id", user.id)
-            .single();
-
-        if (!userCompany) {
-            return NextResponse.json({ error: "No company found" }, { status: 404 });
         }
 
         // Update claim
@@ -171,29 +141,14 @@ export async function PUT(req: NextRequest) {
 // DELETE /api/incentives/claims - Delete claim
 export async function DELETE(req: NextRequest) {
     try {
-        const supabase = createRouteHandlerClient({ cookies });
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const supabase = await createSessionClient();
+        const { companyId } = await getUserAndCompany(supabase);
 
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
 
         if (!id) {
             return NextResponse.json({ error: "Claim ID is required" }, { status: 400 });
-        }
-
-        // Get user's company
-        const { data: userCompany } = await supabase
-            .from("company_users")
-            .select("company_id")
-            .eq("user_id", user.id)
-            .single();
-
-        if (!userCompany) {
-            return NextResponse.json({ error: "No company found" }, { status: 404 });
         }
 
         // Delete claim
