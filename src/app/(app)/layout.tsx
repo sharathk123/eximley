@@ -50,6 +50,7 @@ export default async function AppLayout({
                     <NavItem href="/orders" icon={<ClipboardList className="w-5 h-5" />} label="Orders" />
                     <NavItem href="/purchase-orders" icon={<ShoppingCart className="w-5 h-5" />} label="Purchase Orders" />
                     <NavItem href="/shipments" icon={<Package className="w-5 h-5" />} label="Shipments" />
+                    <NavItem href="/shipping-bills" icon={<FileCheck className="w-5 h-5" />} label="Shipping Bills" />
                     <NavItem href="/skus" icon={<Tags className="w-5 h-5" />} label="SKU Management" />
                     <NavItem href="/hsn" icon={<FileText className="w-5 h-5" />} label="HSN Codes" />
                     {/* <NavItem href="/calculator" icon={<Calculator className="w-5 h-5"/>} label="Landed Cost" /> */}
