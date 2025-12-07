@@ -222,7 +222,7 @@ export default function IncentivesPage() {
                                 </div>
                             </div>
 
-                            <Button onClick={handleCalculate} disabled={calculating || !selectedSB} className="w-full">
+                            <Button onClick={handleCalculate} disabled={calculating || !selectedSB}>
                                 {calculating ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
