@@ -280,7 +280,7 @@ export default function HSNPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto">
+        <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">HSN Codes</h1>
                 <div className="flex gap-2">
@@ -410,7 +410,7 @@ export default function HSNPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="font-bold text-foreground">HSN Code</TableHead>
+                            <TableHead className="font-bold text-foreground w-[120px]">HSN Code</TableHead>
                             <TableHead className="font-bold text-foreground">Description</TableHead>
                             <TableHead className="font-bold text-foreground text-right">GST Rate</TableHead>
                             <TableHead className="font-bold text-foreground text-right">Duty Rate</TableHead>
@@ -425,7 +425,7 @@ export default function HSNPage() {
                         ) : (
                             paginatedCodes.map(hsn => (
                                 <TableRow key={hsn.id}>
-                                    <TableCell className="font-medium">{hsn.hsn_code}</TableCell>
+                                    <TableCell className="font-medium whitespace-normal break-words w-[120px]">{hsn.hsn_code}</TableCell>
                                     <TableCell className="whitespace-normal break-words max-w-[300px]">{hsn.description}</TableCell>
                                     <TableCell className="text-right">{(() => {
                                         const rate = hsn.gst_rate || 0;

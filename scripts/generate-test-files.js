@@ -68,6 +68,49 @@ const entitiesWorkbook = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(entitiesWorkbook, entitiesWorksheet, 'Entities');
 XLSX.writeFile(entitiesWorkbook, path.join(testDataDir, 'entities-bulk-upload-sample.xlsx'));
 
+// Generate INVALID format files for testing validation
+// Products data formatted as Entities (should fail on Products page)
+const invalidProductsData = [
+    { Name: 'Cotton T-Shirt', Type: 'buyer', Email: 'products@invalid.com', Phone: '+1-555-0001', Country: 'USA', Address: '123 Product St', 'Tax ID': 'PROD-001' },
+    { Name: 'Wireless Mouse', Type: 'supplier', Email: 'mouse@invalid.com', Phone: '+1-555-0002', Country: 'China', Address: '456 Tech Ave', 'Tax ID': 'PROD-002' },
+    { Name: 'Basmati Rice', Type: 'partner', Email: 'rice@invalid.com', Phone: '+91-555-0003', Country: 'India', Address: '789 Food Plaza', 'Tax ID': 'PROD-003' },
+    { Name: 'Leather Wallet', Type: 'buyer', Email: 'wallet@invalid.com', Phone: '+1-555-0004', Country: 'Italy', Address: '321 Fashion Rd', 'Tax ID': 'PROD-004' },
+    { Name: 'USB Cable', Type: 'supplier', Email: 'cable@invalid.com', Phone: '+86-555-0005', Country: 'China', Address: '654 Electronics Blvd', 'Tax ID': 'PROD-005' },
+    { Name: 'Green Tea', Type: 'other', Email: 'tea@invalid.com', Phone: '+81-555-0006', Country: 'Japan', Address: '987 Tea Garden', 'Tax ID': 'PROD-006' },
+    { Name: 'Running Shoes', Type: 'buyer', Email: 'shoes@invalid.com', Phone: '+49-555-0007', Country: 'Germany', Address: '147 Sports St', 'Tax ID': 'PROD-007' },
+    { Name: 'Bluetooth Speaker', Type: 'supplier', Email: 'speaker@invalid.com', Phone: '+82-555-0008', Country: 'South Korea', Address: '258 Audio Ave', 'Tax ID': 'PROD-008' },
+    { Name: 'Cashew Nuts', Type: 'partner', Email: 'nuts@invalid.com', Phone: '+91-555-0009', Country: 'India', Address: '369 Nut Farm', 'Tax ID': 'PROD-009' },
+    { Name: 'Denim Jeans', Type: 'buyer', Email: 'jeans@invalid.com', Phone: '+1-555-0010', Country: 'USA', Address: '741 Denim Dr', 'Tax ID': 'PROD-010' }
+];
+
+const invalidProductsWorksheet = XLSX.utils.json_to_sheet(invalidProductsData);
+const invalidProductsWorkbook = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(invalidProductsWorkbook, invalidProductsWorksheet, 'Products');
+XLSX.writeFile(invalidProductsWorkbook, path.join(testDataDir, 'products-INVALID-format.xlsx'));
+
+// Entities data formatted as Products (should fail on Entities page)
+const invalidEntitiesData = [
+    { Name: 'Global Imports LLC', Category: 'electronics', Description: 'Large import company specializing in electronics', 'HSN Code': '8471' },
+    { Name: 'Shanghai Textiles Co', Category: 'apparel', Description: 'Textile manufacturing and export company', 'HSN Code': '6109' },
+    { Name: 'Euro Fashion GmbH', Category: 'apparel', Description: 'European fashion distributor', 'HSN Code': '6203' },
+    { Name: 'Mumbai Exports Pvt Ltd', Category: 'food', Description: 'Food products export company', 'HSN Code': '1006' },
+    { Name: 'Tokyo Electronics KK', Category: 'electronics', Description: 'Electronics manufacturer and supplier', 'HSN Code': '8518' },
+    { Name: 'London Trading Partners', Category: 'general', Description: 'General trading and distribution', 'HSN Code': '9999' },
+    { Name: 'Dubai Commodities FZE', Category: 'food', Description: 'Commodities trading in Middle East', 'HSN Code': '0901' },
+    { Name: 'Singapore Logistics Pte', Category: 'general', Description: 'Logistics and supply chain services', 'HSN Code': '9999' },
+    { Name: 'Paris Wholesale SARL', Category: 'apparel', Description: 'Wholesale fashion and apparel', 'HSN Code': '6404' },
+    { Name: 'Seoul Manufacturing Ltd', Category: 'electronics', Description: 'Electronics manufacturing facility', 'HSN Code': '8473' }
+];
+
+const invalidEntitiesWorksheet = XLSX.utils.json_to_sheet(invalidEntitiesData);
+const invalidEntitiesWorkbook = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(invalidEntitiesWorkbook, invalidEntitiesWorksheet, 'Entities');
+XLSX.writeFile(invalidEntitiesWorkbook, path.join(testDataDir, 'entities-INVALID-format.xlsx'));
+
 console.log('✅ Test files generated successfully!');
 console.log('📁 Products: test-data/products-bulk-upload-sample.xlsx');
 console.log('📁 Entities: test-data/entities-bulk-upload-sample.xlsx');
+console.log('');
+console.log('⚠️  Invalid format test files (for validation testing):');
+console.log('📁 Products (wrong format): test-data/products-INVALID-format.xlsx');
+console.log('📁 Entities (wrong format): test-data/entities-INVALID-format.xlsx');

@@ -30,7 +30,7 @@ export default function SettingsPage() {
     if (loading) return <div className="flex p-10 justify-center"><Loader2 className="animate-spin" /></div>;
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="space-y-6 max-w-7xl mx-auto">
             <h1 className="text-3xl font-bold">Settings</h1>
 
             <Tabs defaultValue="company" className="w-full">

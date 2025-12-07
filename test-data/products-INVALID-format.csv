@@ -1,0 +1,11 @@
+Name,Type,Email,Phone,Country,Address,Tax ID
+Cotton T-Shirt,buyer,products@invalid.com,+1-555-0001,USA,123 Product St,PROD-001
+Wireless Mouse,supplier,mouse@invalid.com,+1-555-0002,China,456 Tech Ave,PROD-002
+Basmati Rice,partner,rice@invalid.com,+91-555-0003,India,789 Food Plaza,PROD-003
+Leather Wallet,buyer,wallet@invalid.com,+1-555-0004,Italy,321 Fashion Rd,PROD-004
+USB Cable,supplier,cable@invalid.com,+86-555-0005,China,654 Electronics Blvd,PROD-005
+Green Tea,other,tea@invalid.com,+81-555-0006,Japan,987 Tea Garden,PROD-006
+Running Shoes,buyer,shoes@invalid.com,+49-555-0007,Germany,147 Sports St,PROD-007
+Bluetooth Speaker,supplier,speaker@invalid.com,+82-555-0008,South Korea,258 Audio Ave,PROD-008
+Cashew Nuts,partner,nuts@invalid.com,+91-555-0009,India,369 Nut Farm,PROD-009
+Denim Jeans,buyer,jeans@invalid.com,+1-555-0010,USA,741 Denim Dr,PROD-010

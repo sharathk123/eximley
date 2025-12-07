@@ -74,3 +74,68 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+export async function PUT(request: Request) {
+    const supabase = await createSessionClient();
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const body = await request.json();
+        const { id, name, description, category, image_url } = body;
+
+        if (!id) {
+            return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
+        }
+
+        const { data, error } = await supabase
+            .from("products")
+            .update({
+                name,
+                description,
+                category,
+                image_url,
+            })
+            .eq("id", id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return NextResponse.json({ product: data });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    const supabase = await createSessionClient();
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
+
+        if (!id) {
+            return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
+        }
+
+        const { error } = await supabase
+            .from("products")
+            .delete()
+            .eq("id", id);
+
+        if (error) throw error;
+
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

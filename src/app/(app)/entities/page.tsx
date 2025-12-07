@@ -8,11 +8,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, MapPin, Mail, Phone, Loader2, CheckCircle2, XCircle, Upload } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Search, Plus, MapPin, Mail, Phone, Loader2, CheckCircle2, Upload, Edit, Trash2, LayoutGrid, List } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import * as XLSX from 'xlsx';
 
@@ -37,6 +56,11 @@ export default function EntitiesPage() {
     const [bulkData, setBulkData] = useState<any[]>([]);
     const [uploading, setUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [editingEntity, setEditingEntity] = useState<any>(null);
+    const [deletingEntity, setDeletingEntity] = useState<any>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+    const itemsPerPage = 12;
     const { toast } = useToast();
 
     const form = useForm<z.infer<typeof entitySchema>>({
@@ -65,6 +89,7 @@ export default function EntitiesPage() {
             if (data.entities) setEntities(data.entities);
         } catch (error) {
             console.error("Failed to fetch entities:", error);
+            toast({ title: "Error", description: "Failed to fetch entities", variant: "destructive" });
         } finally {
             setLoading(false);
         }
@@ -72,23 +97,66 @@ export default function EntitiesPage() {
 
     async function onAddSubmit(values: z.infer<typeof entitySchema>) {
         try {
-            const res = await fetch("/api/entities", {
-                method: "POST",
+            const url = "/api/entities";
+            const method = editingEntity ? "PUT" : "POST";
+            const body = editingEntity ? { ...values, id: editingEntity.id } : values;
+
+            const res = await fetch(url, {
+                method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(values),
+                body: JSON.stringify(body),
             });
 
-            if (!res.ok) throw new Error("Failed to create entity");
+            if (!res.ok) throw new Error("Failed to save entity");
 
             await fetchEntities();
             setOpenAdd(false);
+            setEditingEntity(null);
             form.reset();
-            toast({ title: "Success", description: "Contact added successfully." });
+            toast({
+                title: "Success",
+                description: editingEntity ? "Contact updated successfully" : "Contact added successfully"
+            });
         } catch (error) {
             console.error(error);
-            toast({ title: "Error", description: "Failed to add contact.", variant: "destructive" });
+            toast({ title: "Error", description: "Failed to save contact", variant: "destructive" });
         }
     }
+
+    const handleEdit = (entity: any) => {
+        setEditingEntity(entity);
+        form.reset({
+            type: entity.type,
+            name: entity.name,
+            email: entity.email || "",
+            phone: entity.phone || "",
+            country: entity.country,
+            address: entity.address || "",
+            tax_id: entity.tax_id || "",
+            verification_status: entity.verification_status || "unverified",
+        });
+        setOpenAdd(true);
+    };
+
+    const handleDelete = async () => {
+        if (!deletingEntity) return;
+
+        try {
+            const res = await fetch(`/api/entities?id=${deletingEntity.id}`, {
+                method: "DELETE",
+            });
+
+            if (!res.ok) throw new Error("Failed to delete entity");
+
+            await fetchEntities();
+            toast({ title: "Success", description: "Contact deleted successfully" });
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to delete contact", variant: "destructive" });
+        } finally {
+            setDeletingEntity(null);
+        }
+    };
 
     // Bulk Upload Functions
     const processFile = (file: File) => {
@@ -109,7 +177,6 @@ export default function EntitiesPage() {
 
                 const headers = rows[0].map((h: any) => String(h).toLowerCase().replace(/[^a-z0-9]/g, ''));
 
-                // Check if this looks like a Products file
                 const hasProductColumns = headers.some((h: string) =>
                     h.includes('category') || h.includes('hsn') && !h.includes('type')
                 );
@@ -176,6 +243,10 @@ export default function EntitiesPage() {
         const matchesTab = activeTab === "all" || entity.type === activeTab;
         return matchesSearch && matchesTab;
     });
+
+    const totalPages = Math.ceil(filteredEntities.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedEntities = filteredEntities.slice(startIndex, startIndex + itemsPerPage);
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
@@ -284,7 +355,13 @@ export default function EntitiesPage() {
                         </DialogContent>
                     </Dialog>
 
-                    <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+                    <Dialog open={openAdd} onOpenChange={(open) => {
+                        setOpenAdd(open);
+                        if (!open) {
+                            setEditingEntity(null);
+                            form.reset();
+                        }
+                    }}>
                         <DialogTrigger asChild>
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" /> Add Contact
@@ -292,7 +369,7 @@ export default function EntitiesPage() {
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Add New Contact</DialogTitle>
+                                <DialogTitle>{editingEntity ? "Edit Contact" : "Add New Contact"}</DialogTitle>
                             </DialogHeader>
                             <Form {...form}>
                                 <form onSubmit={form.handleSubmit(onAddSubmit)} className="space-y-4">
@@ -300,7 +377,7 @@ export default function EntitiesPage() {
                                         <FormField control={form.control} name="type" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Type</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                                                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                                     <SelectContent>
                                                         <SelectItem value="buyer">Buyer / Customer</SelectItem>
@@ -315,7 +392,7 @@ export default function EntitiesPage() {
                                         <FormField control={form.control} name="verification_status" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Status</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                                                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                                     <SelectContent>
                                                         <SelectItem value="verified">Verified</SelectItem>
@@ -377,9 +454,18 @@ export default function EntitiesPage() {
                                         </FormItem>
                                     )} />
 
-                                    <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                                        {form.formState.isSubmitting ? "Saving..." : "Save Contact"}
-                                    </Button>
+                                    <div className="flex justify-end space-x-2 pt-4">
+                                        <Button variant="outline" type="button" onClick={() => {
+                                            setOpenAdd(false);
+                                            setEditingEntity(null);
+                                            form.reset();
+                                        }}>
+                                            Cancel
+                                        </Button>
+                                        <Button type="submit" disabled={form.formState.isSubmitting}>
+                                            {form.formState.isSubmitting ? "Saving..." : editingEntity ? "Update Contact" : "Save Contact"}
+                                        </Button>
+                                    </div>
                                 </form>
                             </Form>
                         </DialogContent>
@@ -387,19 +473,41 @@ export default function EntitiesPage() {
                 </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Search entities..."
                         className="pl-8"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setCurrentPage(1);
+                        }}
                     />
+                </div>
+                <div className="flex gap-1 border rounded-md p-1">
+                    <Button
+                        variant={viewMode === 'card' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('card')}
+                    >
+                        <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant={viewMode === 'list' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('list')}
+                    >
+                        <List className="h-4 w-4" />
+                    </Button>
                 </div>
             </div>
 
-            <Tabs defaultValue="all" onValueChange={setActiveTab}>
+            <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
+                setActiveTab(value);
+                setCurrentPage(1);
+            }}>
                 <TabsList>
                     <TabsTrigger value="all">All Contacts</TabsTrigger>
                     <TabsTrigger value="buyer">Buyers</TabsTrigger>
@@ -409,55 +517,185 @@ export default function EntitiesPage() {
 
                 <TabsContent value={activeTab} className="mt-4">
                     {loading ? (
-                        <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
+                        <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8" /></div>
                     ) : filteredEntities.length === 0 ? (
                         <div className="text-center py-10 text-muted-foreground border rounded-md bg-card">
                             No contacts found. Click "Add Contact" to create one.
                         </div>
                     ) : (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {filteredEntities.map((entity) => (
-                                <Card key={entity.id} className="shadow-sm hover:shadow-md transition-shadow">
-                                    <CardContent className="p-5 space-y-3">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <div className="font-semibold text-lg flex items-center gap-2">
-                                                    {entity.name}
-                                                    {entity.verification_status === 'verified' && (
-                                                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                        <>
+                            {viewMode === 'card' ? (
+                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {paginatedEntities.map((entity) => (
+                                        <Card key={entity.id} className="shadow-sm hover:shadow-md transition-shadow">
+                                            <CardContent className="p-5 space-y-3">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex-1">
+                                                        <div className="font-semibold text-lg flex items-center gap-2">
+                                                            {entity.name}
+                                                            {entity.verification_status === 'verified' && (
+                                                                <CheckCircle2 className="w-4 h-4 text-primary" />
+                                                            )}
+                                                        </div>
+                                                        <div className="text-sm text-muted-foreground capitalize">{entity.type}</div>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            onClick={() => handleEdit(entity)}
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-destructive"
+                                                            onClick={() => setDeletingEntity(entity)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                                <Badge variant={entity.verification_status === 'verified' ? "default" : "secondary"}>
+                                                    {entity.verification_status === 'verified' ? "Verified" : "Unverified"}
+                                                </Badge>
+
+                                                <div className="space-y-1 text-sm text-muted-foreground pt-2">
+                                                    {entity.country && (
+                                                        <div className="flex items-center gap-2">
+                                                            <MapPin className="w-4 h-4 text-muted-foreground" /> {entity.country}
+                                                        </div>
+                                                    )}
+                                                    {entity.email && (
+                                                        <div className="flex items-center gap-2">
+                                                            <Mail className="w-4 h-4 text-muted-foreground" /> {entity.email}
+                                                        </div>
+                                                    )}
+                                                    {entity.phone && (
+                                                        <div className="flex items-center gap-2">
+                                                            <Phone className="w-4 h-4 text-muted-foreground" /> {entity.phone}
+                                                        </div>
                                                     )}
                                                 </div>
-                                                <div className="text-sm text-muted-foreground capitalize">{entity.type}</div>
-                                            </div>
-                                            <Badge variant={entity.verification_status === 'verified' ? "default" : "secondary"}>
-                                                {entity.verification_status === 'verified' ? "Verified" : "Unverified"}
-                                            </Badge>
-                                        </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="border rounded-lg">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Type</TableHead>
+                                                <TableHead>Email</TableHead>
+                                                <TableHead>Country</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {paginatedEntities.map((entity) => (
+                                                <TableRow key={entity.id}>
+                                                    <TableCell className="font-medium">
+                                                        <div className="flex items-center gap-2">
+                                                            {entity.name}
+                                                            {entity.verification_status === 'verified' && (
+                                                                <CheckCircle2 className="w-4 h-4 text-primary" />
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline" className="capitalize">{entity.type}</Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-muted-foreground">
+                                                        {entity.email || "—"}
+                                                    </TableCell>
+                                                    <TableCell>{entity.country || "—"}</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={entity.verification_status === 'verified' ? "default" : "secondary"}>
+                                                            {entity.verification_status === 'verified' ? "Verified" : "Unverified"}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8"
+                                                                onClick={() => handleEdit(entity)}
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-destructive"
+                                                                onClick={() => setDeletingEntity(entity)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            )}
 
-                                        <div className="space-y-1 text-sm text-muted-foreground pt-2">
-                                            {entity.country && (
-                                                <div className="flex items-center gap-2">
-                                                    <MapPin className="w-4 h-4 text-muted-foreground" /> {entity.country}
-                                                </div>
-                                            )}
-                                            {entity.email && (
-                                                <div className="flex items-center gap-2">
-                                                    <Mail className="w-4 h-4 text-muted-foreground" /> {entity.email}
-                                                </div>
-                                            )}
-                                            {entity.phone && (
-                                                <div className="flex items-center gap-2">
-                                                    <Phone className="w-4 h-4 text-muted-foreground" /> {entity.phone}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
+                            {totalPages > 1 && (
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious
+                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                            <PaginationItem key={page}>
+                                                <PaginationLink
+                                                    onClick={() => setCurrentPage(page)}
+                                                    isActive={currentPage === page}
+                                                    className="cursor-pointer"
+                                                >
+                                                    {page}
+                                                </PaginationLink>
+                                            </PaginationItem>
+                                        ))}
+                                        <PaginationItem>
+                                            <PaginationNext
+                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                            )}
+                        </>
                     )}
                 </TabsContent>
             </Tabs>
+
+            <AlertDialog open={!!deletingEntity} onOpenChange={(open) => !open && setDeletingEntity(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the contact "{deletingEntity?.name}". This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Search, Package, Box, Filter, Upload, Loader2 } from "lucide-react";
+import { Plus, Search, Package, Box, Upload, Loader2, Edit, Trash2, LayoutGrid, List } from "lucide-react";
 import * as XLSX from 'xlsx';
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,16 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
     Form,
     FormControl,
@@ -33,6 +43,16 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useToast } from "@/components/ui/use-toast";
 
 const productSchema = z.object({
     name: z.string().min(1, "Product name is required"),
@@ -50,6 +70,12 @@ export default function ProductsPage() {
     const [bulkData, setBulkData] = useState<any[]>([]);
     const [uploading, setUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<any>(null);
+    const [deletingProduct, setDeletingProduct] = useState<any>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+    const itemsPerPage = 12;
+    const { toast } = useToast();
 
     const form = useForm<z.infer<typeof productSchema>>({
         resolver: zodResolver(productSchema),
@@ -69,6 +95,7 @@ export default function ProductsPage() {
             if (data.products) setProducts(data.products);
         } catch (err) {
             console.error(err);
+            toast({ title: "Error", description: "Failed to fetch products", variant: "destructive" });
         } finally {
             setLoading(false);
         }
@@ -80,21 +107,64 @@ export default function ProductsPage() {
 
     const onSubmit = async (values: z.infer<typeof productSchema>) => {
         try {
-            const res = await fetch("/api/products", {
-                method: "POST",
+            const url = editingProduct ? "/api/products" : "/api/products";
+            const method = editingProduct ? "PUT" : "POST";
+            const body = editingProduct ? { ...values, id: editingProduct.id } : values;
+
+            const res = await fetch(url, {
+                method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(values),
+                body: JSON.stringify(body),
             });
 
             if (res.ok) {
                 setIsOpen(false);
+                setEditingProduct(null);
                 form.reset();
                 fetchProducts();
+                toast({
+                    title: "Success",
+                    description: editingProduct ? "Product updated successfully" : "Product created successfully",
+                });
             } else {
-                console.error("Failed to create product");
+                throw new Error("Failed to save product");
             }
         } catch (err) {
             console.error(err);
+            toast({ title: "Error", description: "Failed to save product", variant: "destructive" });
+        }
+    };
+
+    const handleEdit = (product: any) => {
+        setEditingProduct(product);
+        form.reset({
+            name: product.name,
+            category: product.category,
+            description: product.description || "",
+            image_url: product.image_url || "",
+        });
+        setIsOpen(true);
+    };
+
+    const handleDelete = async () => {
+        if (!deletingProduct) return;
+
+        try {
+            const res = await fetch(`/api/products?id=${deletingProduct.id}`, {
+                method: "DELETE",
+            });
+
+            if (res.ok) {
+                fetchProducts();
+                toast({ title: "Success", description: "Product deleted successfully" });
+            } else {
+                throw new Error("Failed to delete product");
+            }
+        } catch (err) {
+            console.error(err);
+            toast({ title: "Error", description: "Failed to delete product", variant: "destructive" });
+        } finally {
+            setDeletingProduct(null);
         }
     };
 
@@ -117,7 +187,6 @@ export default function ProductsPage() {
 
                 const headers = rows[0].map((h: any) => String(h).toLowerCase().replace(/[^a-z0-9]/g, ''));
 
-                // Check if this looks like an Entities file
                 const hasEntityColumns = headers.some((h: string) =>
                     h.includes('buyer') || h.includes('supplier') || h.includes('entity') || h.includes('taxid')
                 );
@@ -164,12 +233,12 @@ export default function ProductsPage() {
 
             if (!res.ok) throw new Error(data.error || "Failed");
 
-            alert(`Successfully uploaded ${data.count} products!`);
+            toast({ title: "Success", description: `Successfully uploaded ${data.count} products!` });
             setOpenBulk(false);
             setBulkData([]);
             fetchProducts();
         } catch (e: any) {
-            alert(e.message);
+            toast({ title: "Error", description: e.message, variant: "destructive" });
         } finally {
             setUploading(false);
         }
@@ -180,8 +249,12 @@ export default function ProductsPage() {
         p.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Products</h1>
@@ -287,7 +360,13 @@ export default function ProductsPage() {
                         </DialogContent>
                     </Dialog>
 
-                    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                    <Dialog open={isOpen} onOpenChange={(open) => {
+                        setIsOpen(open);
+                        if (!open) {
+                            setEditingProduct(null);
+                            form.reset();
+                        }
+                    }}>
                         <DialogTrigger asChild>
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" /> Add Product
@@ -295,7 +374,7 @@ export default function ProductsPage() {
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Add New Product</DialogTitle>
+                                <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
                             </DialogHeader>
                             <Form {...form}>
                                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -318,7 +397,7 @@ export default function ProductsPage() {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Category</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                                                     <FormControl>
                                                         <SelectTrigger>
                                                             <SelectValue placeholder="Select Category" />
@@ -350,10 +429,14 @@ export default function ProductsPage() {
                                         )}
                                     />
                                     <div className="flex justify-end space-x-2 pt-4">
-                                        <Button variant="outline" type="button" onClick={() => setIsOpen(false)}>
+                                        <Button variant="outline" type="button" onClick={() => {
+                                            setIsOpen(false);
+                                            setEditingProduct(null);
+                                            form.reset();
+                                        }}>
                                             Cancel
                                         </Button>
-                                        <Button type="submit">Create Product</Button>
+                                        <Button type="submit">{editingProduct ? "Update Product" : "Create Product"}</Button>
                                     </div>
                                 </form>
                             </Form>
@@ -362,62 +445,200 @@ export default function ProductsPage() {
                 </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Search products..."
                         className="pl-8"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setCurrentPage(1);
+                        }}
                     />
+                </div>
+                <div className="flex gap-1 border rounded-md p-1">
+                    <Button
+                        variant={viewMode === 'card' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('card')}
+                    >
+                        <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant={viewMode === 'list' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('list')}
+                    >
+                        <List className="h-4 w-4" />
+                    </Button>
                 </div>
             </div>
 
-            {
-                loading ? (
-                    <div>Loading products...</div>
-                ) : filteredProducts.length === 0 ? (
-                    <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50">
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900">
-                            <Package className="h-6 w-6 text-orange-600 dark:text-orange-200" />
+            {loading ? (
+                <div className="flex justify-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+            ) : filteredProducts.length === 0 ? (
+                <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900">
+                        <Package className="h-6 w-6 text-orange-600 dark:text-orange-200" />
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold">No products found</h3>
+                    <p className="mb-4 mt-2 text-sm text-muted-foreground max-w-sm">
+                        Create your first product (e.g., "Men's T-Shirt") then you can add specific SKUs (e.g., "Size L, Red") to it.
+                    </p>
+                    <Button onClick={() => setIsOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" /> Add Product
+                    </Button>
+                </div>
+            ) : (
+                <>
+                    {viewMode === 'card' ? (
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            {paginatedProducts.map((product) => (
+                                <Card key={product.id} className="hover:shadow-md transition-shadow">
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">
+                                            {product.category.toUpperCase()}
+                                        </CardTitle>
+                                        <div className="flex gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={() => handleEdit(product)}
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-destructive"
+                                                onClick={() => setDeletingProduct(product)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">{product.name}</div>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            {product.description || "No description"}
+                                        </p>
+                                        <div className="mt-4 flex items-center justify-between">
+                                            <Badge variant="secondary" className="text-xs">
+                                                <Box className="mr-1 h-3 w-3" />
+                                                {product._count?.skus || 0} SKUs
+                                            </Badge>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold">No products found</h3>
-                        <p className="mb-4 mt-2 text-sm text-muted-foreground max-w-sm">
-                            Create your first product (e.g., "Men's T-Shirt") then you can add specific SKUs (e.g., "Size L, Red") to it.
-                        </p>
-                        <Button onClick={() => setIsOpen(true)}>
-                            <Plus className="mr-2 h-4 w-4" /> Add Product
-                        </Button>
-                    </div>
-                ) : (
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {filteredProducts.map((product) => (
-                            <Card key={product.id} className="hover:shadow-md transition-shadow">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">
-                                        {product.category.toUpperCase()}
-                                    </CardTitle>
-                                    <Package className="h-4 w-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold">{product.name}</div>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {product.description || "No description"}
-                                    </p>
-                                    <div className="mt-4 flex items-center justify-between">
-                                        <Badge variant="secondary" className="text-xs">
-                                            <Box className="mr-1 h-3 w-3" />
-                                            {/* _count is returned by supabase select count */}
-                                            {product._count?.skus || 0} SKUs
-                                        </Badge>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                )
-            }
-        </div >
+                    ) : (
+                        <div className="border rounded-lg">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Category</TableHead>
+                                        <TableHead>Description</TableHead>
+                                        <TableHead className="text-center">SKUs</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {paginatedProducts.map((product) => (
+                                        <TableRow key={product.id}>
+                                            <TableCell className="font-medium">{product.name}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">{product.category}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {product.description || "—"}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <Badge variant="secondary">
+                                                    {product._count?.skus || 0}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8"
+                                                        onClick={() => handleEdit(product)}
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-destructive"
+                                                        onClick={() => setDeletingProduct(product)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    )}
+
+                    {totalPages > 1 && (
+                        <Pagination>
+                            <PaginationContent>
+                                <PaginationItem>
+                                    <PaginationPrevious
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    />
+                                </PaginationItem>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                    <PaginationItem key={page}>
+                                        <PaginationLink
+                                            onClick={() => setCurrentPage(page)}
+                                            isActive={currentPage === page}
+                                            className="cursor-pointer"
+                                        >
+                                            {page}
+                                        </PaginationLink>
+                                    </PaginationItem>
+                                ))}
+                                <PaginationItem>
+                                    <PaginationNext
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    />
+                                </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
+                    )}
+                </>
+            )}
+
+            <AlertDialog open={!!deletingProduct} onOpenChange={(open) => !open && setDeletingProduct(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the product "{deletingProduct?.name}". This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
     );
 }

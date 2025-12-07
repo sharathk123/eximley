@@ -83,3 +83,74 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export async function PUT(request: Request) {
+    try {
+        const body = await request.json();
+        const { id, type, name, email, phone, country, address, tax_id, verification_status } = body;
+
+        if (!id) {
+            return NextResponse.json({ error: "Entity ID is required" }, { status: 400 });
+        }
+
+        const supabase = await createSessionClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const { data: entity, error } = await supabase
+            .from("entities")
+            .update({
+                type,
+                name,
+                email,
+                phone,
+                country,
+                address,
+                tax_id,
+                verification_status
+            })
+            .eq("id", id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Update Entity Error:", error);
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true, entity });
+    } catch (error) {
+        console.error("Internal Error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
+
+        if (!id) {
+            return NextResponse.json({ error: "Entity ID is required" }, { status: 400 });
+        }
+
+        const supabase = await createSessionClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const { error } = await supabase
+            .from("entities")
+            .delete()
+            .eq("id", id);
+
+        if (error) {
+            console.error("Delete Entity Error:", error);
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("Internal Error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}

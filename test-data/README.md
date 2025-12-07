@@ -64,6 +64,22 @@ The application includes intelligent file type detection:
 - ❌ Uploading an **Entities** file on the **Products** page will show an error
 - ✅ Only the correct file type for each page will be accepted
 
+### Testing File Type Validation
+
+To test that the validation is working correctly, use these **INVALID** format files:
+
+#### Products Page Validation Test
+- **File:** `products-INVALID-format.csv` or `products-INVALID-format.xlsx`
+- **Format:** Contains entity data (Type, Email, Phone, Tax ID columns)
+- **Expected Result:** ❌ Error message: "This appears to be an Entities file, not a Products file"
+
+#### Entities Page Validation Test
+- **File:** `entities-INVALID-format.csv` or `entities-INVALID-format.xlsx`
+- **Format:** Contains product data (Category, Description, HSN Code columns)
+- **Expected Result:** ❌ Error message: "This appears to be a Products file, not an Entities file"
+
+These files are intentionally formatted incorrectly to verify that the smart validation is working properly.
+
 ## Regenerating Test Files
 
 To regenerate the Excel files with updated data:
