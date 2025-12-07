@@ -1,0 +1,21 @@
+Name,Type,Email,Phone,Country,Address,Tax ID
+Global Imports LLC,buyer,contact@globalimports.com,+1-555-0123,United States,"123 Trade St, New York, NY 10001",US-TAX-12345
+Shanghai Textiles Co,supplier,sales@shanghaitextiles.cn,+86-21-5555-0100,China,"45 Manufacturing Rd, Shanghai 200000",CN-VAT-67890
+Euro Fashion GmbH,buyer,orders@eurofashion.de,+49-30-5555-0200,Germany,"78 Fashion Ave, Berlin 10115",DE-UST-11223
+Mumbai Exports Pvt Ltd,supplier,info@mumbaiexports.in,+91-22-5555-0300,India,"12 Export Plaza, Mumbai 400001",GSTIN-27AABCU9603R1ZM
+Tokyo Electronics KK,supplier,procurement@tokyoelectronics.jp,+81-3-5555-0400,Japan,"56 Tech Park, Tokyo 100-0001",JP-TIN-44556
+London Trading Partners,buyer,purchasing@londontrading.co.uk,+44-20-5555-0500,United Kingdom,"89 Commerce Rd, London EC1A 1BB",GB-VAT-77889
+Dubai Commodities FZE,partner,business@dubaicommodities.ae,+971-4-555-0600,United Arab Emirates,"34 Free Zone, Dubai 12345",AE-TRN-99001
+Singapore Logistics Pte,partner,logistics@sglogistics.sg,+65-6555-0700,Singapore,"23 Warehouse Blvd, Singapore 018956",SG-GST-22334
+Paris Wholesale SARL,buyer,achats@pariswholesale.fr,+33-1-5555-0800,France,"67 Rue du Commerce, Paris 75001",FR-TVA-55667
+Seoul Manufacturing Ltd,supplier,export@seoulmanufacturing.kr,+82-2-5555-0900,South Korea,"90 Industrial Complex, Seoul 04524",KR-BRN-88990
+Sydney Imports Pty,buyer,imports@sydneyimports.com.au,+61-2-5555-1000,Australia,"45 Harbor St, Sydney NSW 2000",AU-ABN-12345678901
+Bangkok Traders Co,supplier,sales@bangkoktraders.th,+66-2-555-1100,Thailand,"78 Market Rd, Bangkok 10200",TH-TIN-33445
+Toronto Distribution Inc,buyer,orders@torontodist.ca,+1-416-555-1200,Canada,"123 Distribution Ave, Toronto ON M5H 2N2",CA-BN-66778899
+Milan Fashion House SRL,buyer,acquisti@milanfashion.it,+39-02-5555-1300,Italy,"56 Via Moda, Milan 20121",IT-IVA-99887766
+Mexico City Exports SA,supplier,ventas@mexicityexports.mx,+52-55-5555-1400,Mexico,"34 Zona Industrial, Mexico City 01000",MX-RFC-XAXX010101000
+Amsterdam Goods BV,partner,info@amsterdamgoods.nl,+31-20-555-1500,Netherlands,"12 Canal St, Amsterdam 1012",NL-BTW-112233445
+Hong Kong Trade Ltd,buyer,procurement@hktrade.hk,+852-2555-1600,Hong Kong,"89 Central Plaza, Hong Kong",HK-BR-55667788
+Stockholm Supplies AB,supplier,sales@stockholmsupplies.se,+46-8-555-1700,Sweden,"67 Supply Rd, Stockholm 111 22",SE-VAT-99001122
+Sao Paulo Importers Ltda,buyer,compras@saopauloimporters.br,+55-11-5555-1800,Brazil,"45 Rua Comercio, Sao Paulo 01310",BR-CNPJ-12345678000199
+Zurich Trading AG,partner,business@zurichtrading.ch,+41-44-555-1900,Switzerland,"23 Finance St, Zurich 8001",CH-UID-33445566
