@@ -10,7 +10,9 @@ import {
     Tags,
     Calculator,
     Users,
-    Box
+    Box,
+    Mail,
+    FileCheck
 } from "lucide-react";
 
 export default async function AppLayout({
@@ -39,6 +41,8 @@ export default async function AppLayout({
                     <NavItem href="/dashboard" icon={<LayoutDashboard className="w-5 h-5" />} label="Dashboard" />
                     <NavItem href="/products" icon={<Box className="w-5 h-5" />} label="Products" />
                     <NavItem href="/entities" icon={<Users className="w-5 h-5" />} label="Entities" />
+                    <NavItem href="/enquiries" icon={<Mail className="w-5 h-5" />} label="Enquiries" />
+                    <NavItem href="/quotes" icon={<FileCheck className="w-5 h-5" />} label="Quotes" />
                     <NavItem href="/shipments" icon={<Package className="w-5 h-5" />} label="Shipments" />
                     <NavItem href="/skus" icon={<Tags className="w-5 h-5" />} label="SKU Management" />
                     <NavItem href="/hsn" icon={<FileText className="w-5 h-5" />} label="HSN Codes" />
