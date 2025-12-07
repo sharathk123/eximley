@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2, Pencil, Trash2, ChevronLeft, ChevronRight, Search, FileCheck } from "lucide-react";
+import { Plus, Loader2, Edit, Trash2, ChevronLeft, ChevronRight, Search, FileCheck, LayoutGrid, List, Ship } from "lucide-react";
 import {
     Select,
     SelectContent,
@@ -25,6 +25,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ShippingBillsPage() {
     const [shippingBills, setShippingBills] = useState<any[]>([]);
@@ -40,9 +41,10 @@ export default function ShippingBillsPage() {
     const [editingSB, setEditingSB] = useState<any>(null);
 
     // Pagination & Search State
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+    const itemsPerPage = 12;
 
     // Form Data
     const [formData, setFormData] = useState({
@@ -62,18 +64,13 @@ export default function ShippingBillsPage() {
 
     // Derived State
     const filteredBills = shippingBills.filter(sb =>
-        sb.sb_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sb.export_orders?.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sb.export_orders?.entities?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        sb.sb_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sb.export_orders?.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sb.export_orders?.entities?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
     const paginatedBills = filteredBills.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-    // Reset page on search
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery]);
 
     const fetchData = () => {
         setLoading(true);
@@ -97,6 +94,10 @@ export default function ShippingBillsPage() {
         fetchData();
         fetchOrders();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
 
     const handleOrderSelect = (orderId: string) => {
         setFormData(prev => ({ ...prev, export_order_id: orderId }));
@@ -354,96 +355,185 @@ export default function ShippingBillsPage() {
                 </Dialog>
             </div>
 
-            {/* SEARCH BOX */}
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Search by SB number or order..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                />
+            {/* SEARCH & VIEW TOGGLE */}
+            <div className="flex items-center justify-between gap-4">
+                <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search shipping bills..."
+                        className="pl-8"
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                    />
+                </div>
+                <div className="flex gap-1 border rounded-md p-1">
+                    <Button
+                        variant={viewMode === 'card' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('card')}
+                    >
+                        <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant={viewMode === 'list' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('list')}
+                    >
+                        <List className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
 
-            {/* TABLE */}
-            <div className="border rounded-md bg-card">
-                <Table>
-                    <TableHeader className="bg-muted/50">
-                        <TableRow>
-                            <TableHead className="font-bold text-foreground">SB Number</TableHead>
-                            <TableHead className="font-bold text-foreground">Date</TableHead>
-                            <TableHead className="font-bold text-foreground">Order</TableHead>
-                            <TableHead className="font-bold text-foreground">Buyer</TableHead>
-                            <TableHead className="font-bold text-foreground">FOB Value</TableHead>
-                            <TableHead className="font-bold text-foreground">Port</TableHead>
-                            <TableHead className="font-bold text-foreground">Status</TableHead>
-                            <TableHead className="font-bold text-foreground">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
-                            <TableRow><TableCell colSpan={8} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
-                        ) : paginatedBills.length === 0 ? (
-                            <TableRow><TableCell colSpan={8} className="h-24 text-center text-muted-foreground">No shipping bills found.</TableCell></TableRow>
-                        ) : (
-                            paginatedBills.map(sb => (
-                                <TableRow key={sb.id}>
-                                    <TableCell className="font-medium">{sb.sb_number}</TableCell>
-                                    <TableCell>{new Date(sb.sb_date).toLocaleDateString()}</TableCell>
-                                    <TableCell>{sb.export_orders?.order_number || '-'}</TableCell>
-                                    <TableCell>{sb.export_orders?.entities?.name || '-'}</TableCell>
-                                    <TableCell>{sb.currency_code} {Number(sb.fob_value).toFixed(2)}</TableCell>
-                                    <TableCell>{sb.port_code || '-'}</TableCell>
-                                    <TableCell>{getStatusBadge(sb.status)}</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
+            {loading ? (
+                <div className="flex justify-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+            ) : filteredBills.length === 0 ? (
+                <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                        <Ship className="h-6 w-6 text-blue-600 dark:text-blue-200" />
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold">No shipping bills found</h3>
+                    <p className="mb-4 mt-2 text-sm text-muted-foreground max-w-sm">
+                        Create your first shipping bill to track customs export declarations.
+                    </p>
+                    <Button onClick={() => setOpenAdd(true)}>
+                        <Plus className="mr-2 h-4 w-4" /> Add Shipping Bill
+                    </Button>
+                </div>
+            ) : (
+                <>
+                    {viewMode === 'card' ? (
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {paginatedBills.map((sb) => (
+                                <Card key={sb.id} className="hover:shadow-md transition-shadow">
+                                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                                        <div className="space-y-1">
+                                            <CardTitle className="text-base font-bold">{sb.sb_number}</CardTitle>
+                                            <p className="text-sm text-muted-foreground">
+                                                {new Date(sb.sb_date).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        {getStatusBadge(sb.status)}
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">Buyer</p>
+                                            <p className="font-medium">{sb.export_orders?.entities?.name || '—'}</p>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 text-sm">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Order</p>
+                                                <p className="font-mono text-xs">{sb.export_orders?.order_number || '—'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Port</p>
+                                                <p className="text-xs">{sb.port_code || '—'}</p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">FOB Value</p>
+                                            <p className="text-lg font-bold">{sb.currency_code} {Number(sb.fob_value).toFixed(2)}</p>
+                                        </div>
+                                        <div className="flex gap-2 pt-2">
                                             {sb.status === 'drafted' && (
                                                 <>
-                                                    <Button variant="ghost" size="icon" onClick={() => startEdit(sb)}>
-                                                        <Pencil className="w-4 h-4 text-primary" />
+                                                    <Button variant="outline" size="sm" className="flex-1" onClick={() => startEdit(sb)}>
+                                                        <Edit className="h-3 w-3 mr-1" /> Edit
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" onClick={() => handleMarkAsFiled(sb.id)} title="Mark as Filed">
-                                                        <FileCheck className="w-4 h-4 text-green-600" />
+                                                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleMarkAsFiled(sb.id)}>
+                                                        <FileCheck className="h-3 w-3 mr-1" /> File
                                                     </Button>
                                                 </>
                                             )}
                                             {(sb.status === 'drafted' || sb.status === 'cancelled') && (
-                                                <Button variant="ghost" size="icon" onClick={() => setDeletingSB(sb)}>
-                                                    <Trash2 className="w-4 h-4 text-red-600" />
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeletingSB(sb)}>
+                                                    <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             )}
                                         </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="border rounded-md bg-card">
+                            <Table className="table-fixed">
+                                <TableHeader className="bg-muted/50">
+                                    <TableRow>
+                                        <TableHead className="w-[140px]">SB Number</TableHead>
+                                        <TableHead className="w-[110px]">Date</TableHead>
+                                        <TableHead className="w-[130px]">Order</TableHead>
+                                        <TableHead className="w-[180px]">Buyer</TableHead>
+                                        <TableHead className="w-[130px]">FOB Value</TableHead>
+                                        <TableHead className="w-[100px]">Port</TableHead>
+                                        <TableHead className="w-[100px]">Status</TableHead>
+                                        <TableHead className="w-[120px] text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {paginatedBills.map(sb => (
+                                        <TableRow key={sb.id}>
+                                            <TableCell className="font-medium">{sb.sb_number}</TableCell>
+                                            <TableCell>{new Date(sb.sb_date).toLocaleDateString()}</TableCell>
+                                            <TableCell>{sb.export_orders?.order_number || '—'}</TableCell>
+                                            <TableCell>{sb.export_orders?.entities?.name || '—'}</TableCell>
+                                            <TableCell>{sb.currency_code} {Number(sb.fob_value).toFixed(2)}</TableCell>
+                                            <TableCell>{sb.port_code || '—'}</TableCell>
+                                            <TableCell>{getStatusBadge(sb.status)}</TableCell>
+                                            <TableCell>
+                                                <div className="flex gap-2 justify-end">
+                                                    {sb.status === 'drafted' && (
+                                                        <>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(sb)}>
+                                                                <Edit className="h-4 w-4 text-primary" />
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkAsFiled(sb.id)} title="Mark as Filed">
+                                                                <FileCheck className="h-4 w-4 text-green-600" />
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                    {(sb.status === 'drafted' || sb.status === 'cancelled') && (
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeletingSB(sb)}>
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    )}
 
-            {/* PAGINATION CONTROLS */}
-            {!loading && filteredBills.length > 0 && (
-                <div className="flex items-center justify-end gap-2 text-sm">
-                    <div className="text-muted-foreground mr-4">
-                        Page {currentPage} of {totalPages} ({filteredBills.length} total)
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                </div>
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-end gap-2 text-sm">
+                            <div className="text-muted-foreground mr-4">
+                                Page {currentPage} of {totalPages} ({filteredBills.length} total)
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Delete Confirmation Dialog */}
