@@ -22,7 +22,14 @@ export async function GET(request: Request) {
                 currencies(symbol),
                 proforma_items(
                     *,
-                    skus(sku_code, name)
+                    skus(
+                        sku_code,
+                        name,
+                        hsn_code,
+                        products (
+                            hsn_code
+                        )
+                    )
                 ),
                 quotes(
                     id,

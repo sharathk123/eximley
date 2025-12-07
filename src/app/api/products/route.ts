@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
         let query = supabase
             .from("products")
-            .select("*, _count:skus(count)") // Get SKU count for each product
+            .select("*, skus(sku_code)") // Get actual SKU codes for display
             .order("created_at", { ascending: false });
 
         if (category) {

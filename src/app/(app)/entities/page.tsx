@@ -31,7 +31,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, Plus, MapPin, Mail, Phone, Loader2, CheckCircle2, Upload, Edit, Trash2, LayoutGrid, List } from "lucide-react";
+import { Plus, Search, Building2, User, Upload, Loader2, Edit, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, CheckCircle2, MapPin, Mail, Phone } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import * as XLSX from 'xlsx';
 
@@ -80,6 +80,10 @@ export default function EntitiesPage() {
     useEffect(() => {
         fetchEntities();
     }, []);
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentPage]);
 
     async function fetchEntities() {
         setLoading(true);
@@ -585,15 +589,15 @@ export default function EntitiesPage() {
                                 </div>
                             ) : (
                                 <div className="border rounded-md bg-card">
-                                    <Table>
-                                        <TableHeader>
+                                    <Table className="table-fixed">
+                                        <TableHeader className="bg-muted/50">
                                             <TableRow>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Type</TableHead>
-                                                <TableHead>Email</TableHead>
-                                                <TableHead>Country</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
+                                                <TableHead className="w-[200px]">Name</TableHead>
+                                                <TableHead className="w-[120px]">Type</TableHead>
+                                                <TableHead className="w-[220px]">Email</TableHead>
+                                                <TableHead className="w-[150px]">Country</TableHead>
+                                                <TableHead className="w-[120px]">Status</TableHead>
+                                                <TableHead className="w-[120px] text-right">Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -647,33 +651,27 @@ export default function EntitiesPage() {
                             )}
 
                             {totalPages > 1 && (
-                                <Pagination>
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious
-                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                            <PaginationItem key={page}>
-                                                <PaginationLink
-                                                    onClick={() => setCurrentPage(page)}
-                                                    isActive={currentPage === page}
-                                                    className="cursor-pointer"
-                                                >
-                                                    {page}
-                                                </PaginationLink>
-                                            </PaginationItem>
-                                        ))}
-                                        <PaginationItem>
-                                            <PaginationNext
-                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
+                                <div className="flex items-center justify-end gap-2 text-sm mt-4">
+                                    <div className="text-muted-foreground mr-4">
+                                        Page {currentPage} of {totalPages} ({filteredEntities.length} total)
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             )}
                         </>
                     )}

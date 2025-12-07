@@ -102,6 +102,10 @@ export default function ProformaPage() {
         fetchFormData();
     }, []);
 
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentPage]);
+
     const fetchFormData = async () => {
         try {
             const [entRes, skuRes, currRes] = await Promise.all([
@@ -395,15 +399,15 @@ export default function ProformaPage() {
                                 </div>
                             ) : (
                                 <div className="border rounded-md bg-card">
-                                    <Table>
-                                        <TableHeader>
+                                    <Table className="table-fixed">
+                                        <TableHeader className="bg-muted/50">
                                             <TableRow>
-                                                <TableHead>Invoice #</TableHead>
-                                                <TableHead>Buyer</TableHead>
-                                                <TableHead>Date</TableHead>
-                                                <TableHead>Total</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
+                                                <TableHead className="w-[140px]">Invoice #</TableHead>
+                                                <TableHead className="w-[200px]">Buyer</TableHead>
+                                                <TableHead className="w-[120px]">Date</TableHead>
+                                                <TableHead className="w-[150px]">Total</TableHead>
+                                                <TableHead className="w-[140px]">Status</TableHead>
+                                                <TableHead className="w-[120px] text-right">Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>

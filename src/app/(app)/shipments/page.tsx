@@ -190,6 +190,10 @@ function ShipmentsPage() {
     }, []);
 
     useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentPage]);
+
+    useEffect(() => {
         const createMode = searchParams.get('create');
         const orderId = searchParams.get('order_id');
         if (createMode === 'true') {
@@ -546,15 +550,15 @@ function ShipmentsPage() {
                 </div>
             ) : viewMode === 'list' ? (
                 <div className="rounded-md border bg-card">
-                    <Table>
-                        <TableHeader>
+                    <Table className="table-fixed">
+                        <TableHeader className="bg-muted/50">
                             <TableRow>
-                                <TableHead>Shipment #</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Order</TableHead>
-                                <TableHead>Buyer</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className="w-[140px]">Shipment #</TableHead>
+                                <TableHead className="w-[120px]">Date</TableHead>
+                                <TableHead className="w-[150px]">Order</TableHead>
+                                <TableHead className="w-[180px]">Buyer</TableHead>
+                                <TableHead className="w-[130px]">Status</TableHead>
+                                <TableHead className="w-[120px] text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

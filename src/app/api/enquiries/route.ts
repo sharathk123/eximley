@@ -31,6 +31,10 @@ export async function GET(request: Request) {
             .from("enquiries")
             .select(`
                 *,
+                enquiry_items (
+                    *,
+                    skus (name, sku_code)
+                ),
                 entities (
                     id,
                     name,
@@ -133,6 +137,25 @@ export async function POST(request: Request) {
 
         if (error) throw error;
 
+        if (error) throw error;
+
+        // Insert Items if present
+        if (body.items && body.items.length > 0) {
+            const itemsToInsert = body.items.map((item: any) => ({
+                enquiry_id: enquiry.id,
+                sku_id: item.sku_id,
+                quantity: item.quantity || 1,
+                target_price: item.target_price,
+                notes: item.notes
+            }));
+
+            const { error: itemsError } = await supabase
+                .from("enquiry_items")
+                .insert(itemsToInsert);
+
+            if (itemsError) throw itemsError;
+        }
+
         return NextResponse.json({ enquiry }, { status: 201 });
     } catch (error: any) {
         console.error("POST /api/enquiries error:", error);
@@ -145,7 +168,7 @@ export async function PUT(request: Request) {
     try {
         const supabase = await createSessionClient();
         const body = await request.json();
-        const { id, ...updates } = body;
+        const { id, items, ...updates } = body;
 
         if (!id) {
             return NextResponse.json({ error: "Enquiry ID required" }, { status: 400 });
@@ -167,6 +190,28 @@ export async function PUT(request: Request) {
             .single();
 
         if (error) throw error;
+
+        // Update Items: Delete all and re-insert (Simple strategy)
+        if (body.items) {
+            // Delete existing
+            await supabase.from("enquiry_items").delete().eq("enquiry_id", id);
+
+            if (body.items.length > 0) {
+                const itemsToInsert = body.items.map((item: any) => ({
+                    enquiry_id: id,
+                    sku_id: item.sku_id,
+                    quantity: item.quantity || 1,
+                    target_price: item.target_price,
+                    notes: item.notes
+                }));
+
+                const { error: itemsError } = await supabase
+                    .from("enquiry_items")
+                    .insert(itemsToInsert);
+
+                if (itemsError) throw itemsError;
+            }
+        }
 
         return NextResponse.json({ enquiry });
     } catch (error: any) {

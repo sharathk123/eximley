@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -31,9 +31,9 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, Plus, Loader2, Upload, Edit, Trash2, LayoutGrid, List, FileText, CheckCircle2, XCircle } from "lucide-react";
+import { Search, Plus, Loader2, Upload, Edit, Trash2, LayoutGrid, List, FileText, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "../../../components/ui/textarea";
 import * as XLSX from 'xlsx';
 
 const enquirySchema = z.object({
@@ -47,8 +47,15 @@ const enquirySchema = z.object({
     description: z.string().optional(),
     priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
     next_follow_up_date: z.string().optional(),
+    items: z.array(z.object({
+        sku_id: z.string().min(1, "Product is required"),
+        quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
+        target_price: z.coerce.number().optional(),
+        notes: z.string().optional(),
+    })).default([]),
 });
 
+type EnquiryFormValues = z.infer<typeof enquirySchema>;
 
 export default function EnquiriesPage() {
     const [enquiries, setEnquiries] = useState<any[]>([]);
@@ -57,6 +64,7 @@ export default function EnquiriesPage() {
     const [activeTab, setActiveTab] = useState("all");
     const [openAdd, setOpenAdd] = useState(false);
     const [openBulk, setOpenBulk] = useState(false);
+    const [skus, setSkus] = useState<any[]>([]); // To store fetched products
     const [bulkData, setBulkData] = useState<any[]>([]);
     const [uploading, setUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -68,7 +76,7 @@ export default function EnquiriesPage() {
     const itemsPerPage = 12;
     const { toast } = useToast();
 
-    const form = useForm<z.infer<typeof enquirySchema>>({
+    const form = useForm<EnquiryFormValues>({
         resolver: zodResolver(enquirySchema),
         defaultValues: {
             customer_name: "",
@@ -81,12 +89,38 @@ export default function EnquiriesPage() {
             description: "",
             priority: "medium",
             next_follow_up_date: "",
+            items: [],
         },
+    });
+
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: "items",
     });
 
     useEffect(() => {
         fetchEnquiries();
     }, []);
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentPage]);
+
+    useEffect(() => {
+        fetchSkus();
+    }, []);
+
+    const fetchSkus = async () => {
+        try {
+            const res = await fetch("/api/skus");
+            if (res.ok) {
+                const data = await res.json();
+                if (data.skus) setSkus(data.skus);
+            }
+        } catch (e) {
+            console.error("Failed to fetch SKUs", e);
+        }
+    };
 
     async function fetchEnquiries() {
         setLoading(true);
@@ -143,6 +177,12 @@ export default function EnquiriesPage() {
             description: enquiry.description || "",
             priority: enquiry.priority || "medium",
             next_follow_up_date: enquiry.next_follow_up_date || "",
+            items: enquiry.enquiry_items?.map((item: any) => ({
+                sku_id: item.sku_id,
+                quantity: item.quantity,
+                target_price: item.target_price,
+                notes: item.notes
+            })) || [],
         });
         setOpenAdd(true);
     };
@@ -423,7 +463,7 @@ export default function EnquiriesPage() {
                             </DialogHeader>
                             <Form {...form}>
                                 <form onSubmit={form.handleSubmit(onAddSubmit)} className="space-y-4">
-                                    <FormField control={form.control} name="customer_name" render={({ field }) => (
+                                    <FormField control={form.control as any} name="customer_name" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Customer Name *</FormLabel>
                                             <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
@@ -483,21 +523,29 @@ export default function EnquiriesPage() {
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
-                                        <FormField control={form.control} name="priority" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Priority</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="low">Low</SelectItem>
-                                                        <SelectItem value="medium">Medium</SelectItem>
-                                                        <SelectItem value="high">High</SelectItem>
-                                                        <SelectItem value="urgent">Urgent</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
+                                        <FormField
+                                            control={form.control}
+                                            name="priority"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Priority</FormLabel>
+                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select priority" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="low">Low</SelectItem>
+                                                            <SelectItem value="medium">Medium</SelectItem>
+                                                            <SelectItem value="high">High</SelectItem>
+                                                            <SelectItem value="urgent">Urgent</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
                                     </div>
 
                                     <FormField control={form.control} name="subject" render={({ field }) => (
@@ -516,13 +564,73 @@ export default function EnquiriesPage() {
                                         </FormItem>
                                     )} />
 
-                                    <FormField control={form.control} name="next_follow_up_date" render={({ field }) => (
+                                    <FormField control={form.control as any} name="next_follow_up_date" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Next Follow-up Date</FormLabel>
                                             <FormControl><Input type="date" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )} />
+
+                                    <div className="space-y-4 pt-4 border-t">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-medium text-sm">Interested Products</h4>
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => append({ sku_id: "", quantity: 1 })}>
+                                                <Plus className="h-4 w-4 mr-2" /> Add Product
+                                            </Button>
+                                        </div>
+                                        {fields.length === 0 && <p className="text-sm text-muted-foreground italic">No products added yet.</p>}
+                                        {fields.map((field, index) => (
+                                            <div key={field.id} className="grid grid-cols-12 gap-2 items-end border p-2 rounded-md bg-muted/20">
+                                                <div className="col-span-12">
+                                                    <FormLabel className="text-xs">Product *</FormLabel>
+                                                    <Select
+                                                        value={form.watch(`items.${index}.sku_id`)}
+                                                        onValueChange={(val) => form.setValue(`items.${index}.sku_id`, val)}
+                                                    >
+                                                        <SelectTrigger className="h-8 text-xs w-full">
+                                                            <SelectValue placeholder="Select SKU" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {skus.map((sku) => (
+                                                                <SelectItem key={sku.id} value={sku.id} className="text-xs">
+                                                                    {sku.sku_code} - {sku.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="col-span-3">
+                                                    <FormLabel className="text-xs">Qty *</FormLabel>
+                                                    <Input
+                                                        type="number"
+                                                        className="h-8 text-xs"
+                                                        {...form.register(`items.${index}.quantity`)}
+                                                    />
+                                                </div>
+                                                <div className="col-span-3">
+                                                    <FormLabel className="text-xs">Target Price</FormLabel>
+                                                    <Input
+                                                        type="number"
+                                                        className="h-8 text-xs"
+                                                        {...form.register(`items.${index}.target_price`)}
+                                                    />
+                                                </div>
+                                                <div className="col-span-5">
+                                                    <FormLabel className="text-xs">Notes</FormLabel>
+                                                    <Input
+                                                        className="h-8 text-xs"
+                                                        {...form.register(`items.${index}.notes`)}
+                                                    />
+                                                </div>
+                                                <div className="col-span-1 flex justify-end">
+                                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(index)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
 
                                     <div className="flex justify-end space-x-2 pt-4">
                                         <Button variant="outline" type="button" onClick={() => {
@@ -665,16 +773,17 @@ export default function EnquiriesPage() {
                                 </div>
                             ) : (
                                 <div className="border rounded-md bg-card">
-                                    <Table>
-                                        <TableHeader>
+                                    <Table className="table-fixed">
+                                        <TableHeader className="bg-muted/50">
                                             <TableRow>
-                                                <TableHead>Enquiry #</TableHead>
-                                                <TableHead>Customer</TableHead>
-                                                <TableHead>Company</TableHead>
-                                                <TableHead>Source</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead>Priority</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
+                                                <TableHead className="w-[120px]">Enquiry #</TableHead>
+                                                <TableHead className="w-[150px]">Customer</TableHead>
+                                                <TableHead className="w-[150px]">Company</TableHead>
+                                                <TableHead className="w-[200px]">Products</TableHead>
+                                                <TableHead className="w-[120px]">Source</TableHead>
+                                                <TableHead className="w-[120px]">Status</TableHead>
+                                                <TableHead className="w-[100px]">Priority</TableHead>
+                                                <TableHead className="w-[100px] text-right">Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -683,6 +792,19 @@ export default function EnquiriesPage() {
                                                     <TableCell className="font-medium">{enquiry.enquiry_number}</TableCell>
                                                     <TableCell>{enquiry.customer_name}</TableCell>
                                                     <TableCell>{enquiry.customer_company || "—"}</TableCell>
+                                                    <TableCell>
+                                                        {enquiry.enquiry_items && enquiry.enquiry_items.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                                                {enquiry.enquiry_items.map((item: any, index: number) => (
+                                                                    <Badge key={index} variant="secondary" className="px-1 py-0 text-[10px] font-normal h-5">
+                                                                        {item.skus?.sku_code || "SKU"} <span className="text-muted-foreground ml-1">x{item.quantity}</span>
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-muted-foreground text-xs italic">—</span>
+                                                        )}
+                                                    </TableCell>
                                                     <TableCell className="capitalize">{enquiry.source || "—"}</TableCell>
                                                     <TableCell>
                                                         <Badge variant={getStatusColor(enquiry.status)}>{enquiry.status}</Badge>
@@ -718,33 +840,27 @@ export default function EnquiriesPage() {
                             )}
 
                             {totalPages > 1 && (
-                                <Pagination>
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious
-                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                            <PaginationItem key={page}>
-                                                <PaginationLink
-                                                    onClick={() => setCurrentPage(page)}
-                                                    isActive={currentPage === page}
-                                                    className="cursor-pointer"
-                                                >
-                                                    {page}
-                                                </PaginationLink>
-                                            </PaginationItem>
-                                        ))}
-                                        <PaginationItem>
-                                            <PaginationNext
-                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
+                                <div className="flex items-center justify-end gap-2 text-sm">
+                                    <div className="text-muted-foreground mr-4">
+                                        Page {currentPage} of {totalPages} ({filteredEnquiries.length} total)
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             )}
                         </>
                     )}

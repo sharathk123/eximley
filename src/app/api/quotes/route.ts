@@ -52,7 +52,16 @@ export async function GET(request: Request) {
                     unit_price,
                     discount_percent,
                     tax_percent,
-                    line_total
+                    line_total,
+                    total_price,
+                    skus (
+                        sku_code,
+                        name,
+                        hsn_code,
+                        products (
+                            hsn_code
+                        )
+                    )
                 )
             `)
             .eq("company_id", companyUser.company_id)

@@ -386,7 +386,7 @@ export default function SKUPage() {
 
             <div className="border rounded-md bg-card">
                 <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-muted/50">
                         <TableRow>
                             <TableHead className="font-bold text-foreground">Code</TableHead>
                             <TableHead className="font-bold text-foreground">Product</TableHead>

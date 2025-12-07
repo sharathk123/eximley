@@ -34,7 +34,14 @@ export async function GET(request: Request) {
                 quantity,
                 package_number,
                 order_items (
-                    skus (sku_code, name)
+                    skus (
+                        sku_code,
+                        name,
+                        hsn_code,
+                        products (
+                            hsn_code
+                        )
+                    )
                 )
             )
         `)

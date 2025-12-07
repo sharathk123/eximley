@@ -24,7 +24,14 @@ export async function GET(request: Request) {
                 ),
                 order_items (
                     *,
-                    skus (sku_code, name)
+                    skus (
+                        sku_code,
+                        name,
+                        hsn_code,
+                        products (
+                            hsn_code
+                        )
+                    )
                 ),
                 order_payments (
                     id,

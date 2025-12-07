@@ -408,7 +408,7 @@ export default function HSNPage() {
             </div>
             <div className="border rounded-md bg-card">
                 <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-muted/50">
                         <TableRow>
                             <TableHead className="font-bold text-foreground w-[120px]">HSN Code</TableHead>
                             <TableHead className="font-bold text-foreground">Description</TableHead>
@@ -426,7 +426,7 @@ export default function HSNPage() {
                             paginatedCodes.map(hsn => (
                                 <TableRow key={hsn.id}>
                                     <TableCell className="font-medium whitespace-normal break-words w-[120px]">{hsn.hsn_code}</TableCell>
-                                    <TableCell className="whitespace-normal break-words max-w-[300px]">{hsn.description}</TableCell>
+                                    <TableCell className="text-xs whitespace-normal break-words max-w-[300px]">{hsn.description}</TableCell>
                                     <TableCell className="text-right">{(() => {
                                         const rate = hsn.gst_rate || 0;
                                         return rate < 1 && rate > 0 ? (rate * 100).toFixed(2) : rate;

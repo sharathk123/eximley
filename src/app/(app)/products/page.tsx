@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Search, Package, Box, Upload, Loader2, Edit, Trash2, LayoutGrid, List } from "lucide-react";
+import { Plus, Search, Package, Box, Upload, Loader2, Edit, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
 import * as XLSX from 'xlsx';
 
 import { Button } from "@/components/ui/button";
@@ -104,6 +104,11 @@ export default function ProductsPage() {
     useEffect(() => {
         fetchProducts();
     }, []);
+
+    useEffect(() => {
+        // Scroll to top when page changes to prevent jumping
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentPage]);
 
     const onSubmit = async (values: z.infer<typeof productSchema>) => {
         try {
@@ -527,11 +532,30 @@ export default function ProductsPage() {
                                         <p className="text-xs text-muted-foreground mt-1">
                                             {product.description || "No description"}
                                         </p>
-                                        <div className="mt-4 flex items-center justify-between">
-                                            <Badge variant="secondary" className="text-xs">
-                                                <Box className="mr-1 h-3 w-3" />
-                                                {product._count?.skus || 0} SKUs
-                                            </Badge>
+                                        {product.hsn_code && (
+                                            <div className="mt-2">
+                                                <span className="text-xs text-muted-foreground">HSN: </span>
+                                                <span className="text-xs font-mono">{product.hsn_code}</span>
+                                            </div>
+                                        )}
+                                        <div className="mt-3">
+                                            <span className="text-xs text-muted-foreground mb-1 block">SKUs:</span>
+                                            {product.skus && product.skus.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {product.skus.slice(0, 4).map((sku: any, idx: number) => (
+                                                        <Badge key={idx} variant="secondary" className="px-1 py-0 text-[10px] font-normal h-5">
+                                                            {sku.sku_code}
+                                                        </Badge>
+                                                    ))}
+                                                    {product.skus.length > 4 && (
+                                                        <Badge variant="outline" className="px-1 py-0 text-[10px] h-5">
+                                                            +{product.skus.length - 4}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs italic text-muted-foreground">No SKUs</span>
+                                            )}
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -539,14 +563,15 @@ export default function ProductsPage() {
                         </div>
                     ) : (
                         <div className="border rounded-md bg-card">
-                            <Table>
-                                <TableHeader>
+                            <Table className="table-fixed">
+                                <TableHeader className="bg-muted/50">
                                     <TableRow>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Category</TableHead>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead className="text-center">SKUs</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
+                                        <TableHead className="w-[180px]">Name</TableHead>
+                                        <TableHead className="w-[120px]">Category</TableHead>
+                                        <TableHead className="w-[100px]">HSN Code</TableHead>
+                                        <TableHead className="w-[200px]">Description</TableHead>
+                                        <TableHead className="w-[280px]">SKUs</TableHead>
+                                        <TableHead className="w-[100px] text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -556,13 +581,29 @@ export default function ProductsPage() {
                                             <TableCell>
                                                 <Badge variant="outline">{product.category}</Badge>
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground">
+                                            <TableCell className="font-mono text-xs">
+                                                {product.hsn_code || "—"}
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground text-xs whitespace-normal break-words max-w-[250px]">
                                                 {product.description || "—"}
                                             </TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge variant="secondary">
-                                                    {product._count?.skus || 0}
-                                                </Badge>
+                                            <TableCell>
+                                                {product.skus && product.skus.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1 max-w-[250px]">
+                                                        {product.skus.slice(0, 3).map((sku: any, idx: number) => (
+                                                            <Badge key={idx} variant="secondary" className="px-1 py-0 text-[10px] font-normal h-5">
+                                                                {sku.sku_code}
+                                                            </Badge>
+                                                        ))}
+                                                        {product.skus.length > 3 && (
+                                                            <Badge variant="outline" className="px-1 py-0 text-[10px] h-5">
+                                                                +{product.skus.length - 3} more
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted-foreground text-xs italic">No SKUs</span>
+                                                )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
@@ -592,33 +633,27 @@ export default function ProductsPage() {
                     )}
 
                     {totalPages > 1 && (
-                        <Pagination>
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                    <PaginationItem key={page}>
-                                        <PaginationLink
-                                            onClick={() => setCurrentPage(page)}
-                                            isActive={currentPage === page}
-                                            className="cursor-pointer"
-                                        >
-                                            {page}
-                                        </PaginationLink>
-                                    </PaginationItem>
-                                ))}
-                                <PaginationItem>
-                                    <PaginationNext
-                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
+                        <div className="flex items-center justify-end gap-2 text-sm">
+                            <div className="text-muted-foreground mr-4">
+                                Page {currentPage} of {totalPages} ({filteredProducts.length} total)
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
                     )}
                 </>
             )}

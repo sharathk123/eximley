@@ -14,7 +14,8 @@ import {
     Mail,
     FileCheck,
     ScrollText,
-    ClipboardList
+    ClipboardList,
+    ShoppingCart
 } from "lucide-react";
 
 export default async function AppLayout({
@@ -47,6 +48,7 @@ export default async function AppLayout({
                     <NavItem href="/quotes" icon={<FileCheck className="w-5 h-5" />} label="Quotes" />
                     <NavItem href="/invoices/proforma" icon={<ScrollText className="w-5 h-5" />} label="Proforma Invoices" />
                     <NavItem href="/orders" icon={<ClipboardList className="w-5 h-5" />} label="Orders" />
+                    <NavItem href="/purchase-orders" icon={<ShoppingCart className="w-5 h-5" />} label="Purchase Orders" />
                     <NavItem href="/shipments" icon={<Package className="w-5 h-5" />} label="Shipments" />
                     <NavItem href="/skus" icon={<Tags className="w-5 h-5" />} label="SKU Management" />
                     <NavItem href="/hsn" icon={<FileText className="w-5 h-5" />} label="HSN Codes" />
