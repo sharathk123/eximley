@@ -17,7 +17,8 @@ import {
     ClipboardList,
     ShoppingCart,
     TrendingUp,
-    Banknote
+    Banknote,
+    Scale
 } from "lucide-react";
 
 export default async function AppLayout({
@@ -55,6 +56,7 @@ export default async function AppLayout({
                     <NavItem href="/shipping-bills" icon={<FileCheck className="w-5 h-5" />} label="Shipping Bills" />
                     <NavItem href="/incentives" icon={<TrendingUp className="w-5 h-5" />} label="Incentives" />
                     <NavItem href="/brcs" icon={<Banknote className="w-5 h-5" />} label="e-BRC" />
+                    <NavItem href="/compliance/lut" icon={<Scale className="w-5 h-5" />} label="LUT Management" />
                     <NavItem href="/skus" icon={<Tags className="w-5 h-5" />} label="SKU Management" />
                     <NavItem href="/hsn" icon={<FileText className="w-5 h-5" />} label="HSN Codes" />
                     {/* <NavItem href="/calculator" icon={<Calculator className="w-5 h-5"/>} label="Landed Cost" /> */}

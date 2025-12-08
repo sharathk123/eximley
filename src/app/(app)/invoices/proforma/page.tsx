@@ -39,6 +39,7 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
+    FormDescription,
 } from "@/components/ui/form";
 import {
     Select,
@@ -60,6 +61,7 @@ const invoiceSchema = z.object({
         quantity: z.coerce.number().min(1),
         unit_price: z.coerce.number().min(0),
     })).min(1, "At least one item required"),
+    lut_id: z.string().optional(),
 });
 
 export default function ProformaPage() {
@@ -78,6 +80,7 @@ export default function ProformaPage() {
     const [buyers, setBuyers] = useState<any[]>([]);
     const [skus, setSkus] = useState<any[]>([]);
     const [currencies, setCurrencies] = useState<any[]>([]);
+    const [luts, setLuts] = useState<any[]>([]);
 
     const itemsPerPage = 12;
     const { toast } = useToast();
@@ -108,18 +111,21 @@ export default function ProformaPage() {
 
     const fetchFormData = async () => {
         try {
-            const [entRes, skuRes, currRes] = await Promise.all([
+            const [entRes, skuRes, currRes, lutRes] = await Promise.all([
                 fetch("/api/entities?type=buyer"),
                 fetch("/api/skus"),
-                fetch("/api/currencies")
+                fetch("/api/currencies"),
+                fetch("/api/compliance/lut?status=active")
             ]);
             const entData = await entRes.json();
             const skuData = await skuRes.json();
             const currData = await currRes.json();
+            const lutData = await lutRes.json();
 
             if (entData.entities) setBuyers(entData.entities);
             if (skuData.skus) setSkus(skuData.skus);
             if (currData.currencies) setCurrencies(currData.currencies);
+            if (lutData.luts) setLuts(lutData.luts);
         } catch (err) {
             console.error(err);
         }
@@ -147,6 +153,7 @@ export default function ProformaPage() {
             currency_code: pi.currency_code,
             date: pi.date.split('T')[0],
             conversion_rate: pi.conversion_rate,
+            lut_id: pi.lut_id || "",
             items: pi.proforma_items.map((item: any) => ({
                 sku_id: item.sku_id,
                 quantity: item.quantity,
@@ -162,6 +169,7 @@ export default function ProformaPage() {
             date: new Date().toISOString().split('T')[0],
             currency_code: "USD",
             conversion_rate: 1,
+            lut_id: "",
             items: [{ sku_id: "", quantity: 1, unit_price: 0 }]
         });
         setIsOpen(true);
@@ -551,6 +559,8 @@ export default function ProformaPage() {
                                         </FormItem>
                                     )}
                                 />
+                                    )}
+                                />
                                 <FormField
                                     control={form.control}
                                     name="conversion_rate"
@@ -563,6 +573,31 @@ export default function ProformaPage() {
                                     )}
                                 />
                             </div>
+
+                            <FormField
+                                control={form.control}
+                                name="lut_id"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Letter of Undertaking (LUT)</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select active LUT for zero-rated export" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value=" ">None (IGST Paid)</SelectItem>
+                                                {luts.map(lut => (
+                                                    <SelectItem key={lut.id} value={lut.id}>
+                                                        {lut.lut_number} (FY {lut.financial_year})
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormDescription className="text-xs text-muted-foreground">
+                                            Select LUT to export without paying IGST. Leave empty if paying IGST.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                             <Separator />
 
