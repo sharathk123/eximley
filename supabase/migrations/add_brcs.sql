@@ -56,7 +56,7 @@ CREATE INDEX idx_brcs_overdue ON brcs(is_overdue);
 CREATE TABLE IF NOT EXISTS brc_payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     brc_id UUID NOT NULL REFERENCES brcs(id) ON DELETE CASCADE,
-    payment_id UUID REFERENCES payments(id) ON DELETE SET NULL,
+    payment_id UUID, -- Optional link to payments table (if it exists)
     
     amount DECIMAL(15,2) NOT NULL,
     payment_date DATE NOT NULL,
