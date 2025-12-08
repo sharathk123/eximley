@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2, Upload, Pencil, Trash2, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Plus, Loader2, Upload, Pencil, Trash2, ChevronLeft, ChevronRight, Search, CheckCircle2 } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 
 const skuSchema = z.object({
     sku_code: z.string().min(1, "Required"),
@@ -28,6 +29,7 @@ const skuSchema = z.object({
 });
 
 export default function SKUPage() {
+    const { toast } = useToast();
     const [skus, setSkus] = useState<any[]>([]);
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -108,7 +110,7 @@ export default function SKUPage() {
             form.reset();
             fetchSkus();
         } catch (e: any) {
-            alert(e.message);
+            toast({ title: "Error", description: e.message || "Failed to create SKU", variant: "destructive" });
         }
     };
 
@@ -138,7 +140,7 @@ export default function SKUPage() {
             setEditingSku(null);
             fetchSkus();
         } catch (e: any) {
-            alert(e.message);
+            toast({ title: "Error", description: e.message || "Failed to update SKU", variant: "destructive" });
         }
     };
 
@@ -153,7 +155,7 @@ export default function SKUPage() {
 
             fetchSkus();
         } catch (e: any) {
-            alert(e.message);
+            toast({ title: "Error", description: e.message || "Failed to delete SKU", variant: "destructive" });
         }
     };
 
@@ -170,7 +172,7 @@ export default function SKUPage() {
             const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
 
             if (!rows || rows.length === 0) {
-                alert("File appears empty");
+                toast({ title: "Invalid File", description: "File appears empty", variant: "destructive" });
                 return;
             }
 
@@ -189,17 +191,12 @@ export default function SKUPage() {
             );
 
             if (hasHsnColumns && !hasSkuColumns) {
-                alert(
-                    `❌ Wrong file type!\n\n` +
-                    `This appears to be an HSN file, not a SKU file.\n\n` +
-                    `Found columns: ${rows[0].join(', ')}\n\n` +
-                    `For SKU bulk upload, please use a file with:\n` +
-                    `• SKU Code (required)\n` +
-                    `• Name (required)\n` +
-                    `• Unit (optional)\n` +
-                    `• Base Price (optional)\n\n` +
-                    `To upload HSN codes, please use the HSN Codes page.`
-                );
+                toast({
+                    title: "Wrong File Type",
+                    description: "This appears to be an HSN file. For SKU bulk upload, use a file with: SKU Code, Name, Unit, Base Price.",
+                    variant: "destructive",
+                    duration: 6000
+                });
                 return;
             }
 
@@ -207,7 +204,7 @@ export default function SKUPage() {
             const data = XLSX.utils.sheet_to_json(ws);
 
             if (data.length === 0) {
-                alert("No data found in file");
+                toast({ title: "No Data", description: "No data found in file", variant: "destructive" });
                 return;
             }
 
@@ -233,12 +230,16 @@ export default function SKUPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed");
 
-            alert(`Successfully uploaded ${data.count} SKUs!`);
+            toast({
+                title: "Success!",
+                description: `Successfully uploaded ${data.count} SKUs to the database.`,
+                duration: 5000,
+            });
             setOpenBulk(false);
             setBulkData([]);
             fetchSkus();
         } catch (e: any) {
-            alert(e.message);
+            toast({ title: "Upload Failed", description: e.message, variant: "destructive" });
         } finally {
             setUploading(false);
         }
@@ -303,7 +304,7 @@ export default function SKUPage() {
                                 </div>
 
                                 {bulkData.length > 0 && (
-                                    <div className="max-h-60 overflow-auto border rounded-md">
+                                    <div className="max-h-60 overflow-auto border rounded-md overflow-hidden">
                                         <Table>
                                             <TableHeader className="bg-muted sticky top-0 shadow-sm">
                                                 <TableRow>
@@ -316,10 +317,10 @@ export default function SKUPage() {
                                             <TableBody>
                                                 {bulkData.slice(0, 5).map((row, i) => (
                                                     <TableRow key={i}>
-                                                        <TableCell className="font-medium">{row.sku_code}</TableCell>
-                                                        <TableCell className="truncate max-w-[200px]">{row.name}</TableCell>
-                                                        <TableCell>{row.unit}</TableCell>
-                                                        <TableCell className="text-right">{row.base_price}</TableCell>
+                                                        <TableCell className="font-medium text-xs whitespace-normal break-words max-w-[150px]">{row.sku_code}</TableCell>
+                                                        <TableCell className="text-xs whitespace-normal break-words max-w-[200px]">{row.name}</TableCell>
+                                                        <TableCell className="text-xs">{row.unit}</TableCell>
+                                                        <TableCell className="text-right text-xs">{row.base_price}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>

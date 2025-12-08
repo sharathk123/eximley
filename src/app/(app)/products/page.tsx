@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Search, Package, Box, Upload, Loader2, Edit, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Package, Box, Upload, Loader2, Edit, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, Sparkles, Link as LinkIcon } from "lucide-react";
 import * as XLSX from 'xlsx';
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
     Dialog,
     DialogContent,
@@ -65,6 +66,7 @@ const productSchema = z.object({
 
 export default function ProductsPage() {
     const [products, setProducts] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [isOpen, setIsOpen] = useState(false);
@@ -76,6 +78,11 @@ export default function ProductsPage() {
     const [deletingProduct, setDeletingProduct] = useState<any>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+    const [hsnDialogOpen, setHsnDialogOpen] = useState(false);
+    const [selectedProductForHSN, setSelectedProductForHSN] = useState<any>(null);
+    const [hsnCodeInput, setHsnCodeInput] = useState("");
+    const [hsnSuggestions, setHsnSuggestions] = useState<any[]>([]);
+    const [loadingHSN, setLoadingHSN] = useState(false);
     const itemsPerPage = 12;
     const { toast } = useToast();
 
@@ -83,7 +90,7 @@ export default function ProductsPage() {
         resolver: zodResolver(productSchema),
         defaultValues: {
             name: "",
-            category: "general",
+            category: "",
             description: "",
             image_url: "",
         },
@@ -105,7 +112,18 @@ export default function ProductsPage() {
 
     useEffect(() => {
         fetchProducts();
+        fetchCategories();
     }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const res = await fetch("/api/categories");
+            const data = await res.json();
+            if (data.categories) setCategories(data.categories);
+        } catch (err) {
+            console.error("Failed to fetch categories:", err);
+        }
+    };
 
     useEffect(() => {
         // Scroll to top when page changes to prevent jumping
@@ -175,6 +193,125 @@ export default function ProductsPage() {
         }
     };
 
+    const handleGenerateSKU = async (product: any) => {
+        try {
+            // Generate SKU code automatically
+            const categoryPrefix = product.category.substring(0, 4).toUpperCase();
+            const productSlug = product.name.replace(/\s+/g, '-').toUpperCase().substring(0, 15);
+            const skuCode = `${categoryPrefix}-${productSlug}-001`;
+
+            // Create SKU via API
+            const res = await fetch("/api/skus", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    product_id: product.id,
+                    sku_code: skuCode,
+                    name: product.name,
+                    unit: "pcs",
+                    base_price: 0
+                })
+            });
+
+            if (res.ok) {
+                fetchProducts();
+                toast({
+                    title: "Success!",
+                    description: `SKU ${skuCode} generated successfully`,
+                    duration: 3000
+                });
+            } else {
+                throw new Error("Failed to generate SKU");
+            }
+        } catch (err) {
+            console.error(err);
+            toast({ title: "Error", description: "Failed to generate SKU", variant: "destructive" });
+        }
+    };
+
+    const handleLinkHSN = async (product: any) => {
+        setSelectedProductForHSN(product);
+        setHsnCodeInput("");
+        setHsnSuggestions([]); // Reset suggestions
+        setHsnDialogOpen(true);
+
+        // Fetch HSN suggestions based on product category and name
+        setLoadingHSN(true);
+        try {
+            // Smart search term selection
+            // Avoid generic words like "oil", "powder", "product", etc.
+            const genericWords = ['oil', 'powder', 'product', 'organic', 'pure', 'natural', 'premium'];
+            const words = product.name.trim().split(' ').filter((w: string) => w.length > 2);
+
+            // Find the most specific word (not generic)
+            let searchTerm = words[words.length - 1]; // Default to last word
+            for (let i = words.length - 1; i >= 0; i--) {
+                if (!genericWords.includes(words[i].toLowerCase())) {
+                    searchTerm = words[i];
+                    break;
+                }
+            }
+
+            console.log('Searching HSN for:', searchTerm, 'in category:', product.category);
+
+            // Pass both search term and category for better filtering
+            const params = new URLSearchParams({
+                search: searchTerm,
+                category: product.category || ''
+            });
+
+            const res = await fetch(`/api/hsn?${params.toString()}`);
+            const data = await res.json();
+            console.log('HSN API response:', data);
+            if (data.hsnCodes && data.hsnCodes.length > 0) {
+                setHsnSuggestions(data.hsnCodes.slice(0, 5)); // Top 5 suggestions
+                console.log('HSN suggestions set:', data.hsnCodes.slice(0, 5));
+            } else {
+                console.log('No HSN suggestions found');
+            }
+        } catch (err) {
+            console.error('Error fetching HSN:', err);
+        } finally {
+            setLoadingHSN(false);
+        }
+    };
+
+    const submitHSNLink = async () => {
+        if (!selectedProductForHSN || !hsnCodeInput) return;
+
+        try {
+            const res = await fetch("/api/products", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: selectedProductForHSN.id,
+                    name: selectedProductForHSN.name,
+                    category: selectedProductForHSN.category,
+                    description: selectedProductForHSN.description,
+                    image_url: selectedProductForHSN.image_url,
+                    hsn_code: hsnCodeInput
+                })
+            });
+
+            if (res.ok) {
+                fetchProducts();
+                toast({
+                    title: "Success!",
+                    description: `HSN code ${hsnCodeInput} linked successfully`,
+                    duration: 3000
+                });
+                setHsnDialogOpen(false);
+                setSelectedProductForHSN(null);
+                setHsnCodeInput("");
+            } else {
+                throw new Error("Failed to link HSN");
+            }
+        } catch (err) {
+            console.error(err);
+            toast({ title: "Error", description: "Failed to link HSN code", variant: "destructive" });
+        }
+    };
+
     // Bulk Upload Functions
     const processFile = (file: File) => {
         const reader = new FileReader();
@@ -188,7 +325,7 @@ export default function ProductsPage() {
                 const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
 
                 if (!rows || rows.length === 0) {
-                    alert("File appears empty");
+                    toast({ title: "Invalid File", description: "File appears empty", variant: "destructive" });
                     return;
                 }
 
@@ -199,30 +336,26 @@ export default function ProductsPage() {
                 );
 
                 if (hasEntityColumns) {
-                    alert(
-                        `❌ Wrong file type!\n\n` +
-                        `This appears to be an Entities file, not a Products file.\n\n` +
-                        `For Products bulk upload, please use a file with:\n` +
-                        `• Name (required)\n` +
-                        `• Category (required)\n` +
-                        `• Description (optional)\n` +
-                        `• HSN Code (optional)\n\n` +
-                        `To upload Entities, please use the Entities page.`
-                    );
+                    toast({
+                        title: "Wrong File Type",
+                        description: "This appears to be an Entities file. For Products bulk upload, use a file with: Name, Category, Description.",
+                        variant: "destructive",
+                        duration: 6000
+                    });
                     return;
                 }
 
                 const data = XLSX.utils.sheet_to_json(ws);
 
                 if (data.length === 0) {
-                    alert("No data found in file");
+                    toast({ title: "No Data", description: "No data found in file", variant: "destructive" });
                     return;
                 }
 
                 setBulkData(data);
             } catch (e: any) {
                 console.error(e);
-                alert("Error parsing file: " + e.message);
+                toast({ title: "Parse Error", description: "Error parsing file: " + e.message, variant: "destructive" });
             }
         };
         reader.readAsBinaryString(file);
@@ -320,7 +453,7 @@ export default function ProductsPage() {
                                             Browse Files
                                         </Button>
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-4">Expected columns: Name, Category, Description, HSN Code</p>
+                                    <p className="text-xs text-muted-foreground mt-4">Expected columns: Name, Category, Description</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -411,11 +544,11 @@ export default function ProductsPage() {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        <SelectItem value="general">General</SelectItem>
-                                                        <SelectItem value="apparel">Apparel</SelectItem>
-                                                        <SelectItem value="electronics">Electronics</SelectItem>
-                                                        <SelectItem value="food">Food & Agro</SelectItem>
-                                                        <SelectItem value="raw_material">Raw Materials</SelectItem>
+                                                        {categories.map((cat) => (
+                                                            <SelectItem key={cat.id} value={cat.name}>
+                                                                {cat.name}
+                                                            </SelectItem>
+                                                        ))}
                                                     </SelectContent>
                                                 </Select>
                                                 <FormMessage />
@@ -590,7 +723,33 @@ export default function ProductsPage() {
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <div className="flex justify-end gap-2">
+                                                <div className="flex justify-end gap-1">
+                                                    {/* Generate SKU Button */}
+                                                    {(!product.skus || product.skus.length === 0) && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-7 text-xs"
+                                                            onClick={() => handleGenerateSKU(product)}
+                                                            title="Generate SKU"
+                                                        >
+                                                            <Sparkles className="h-3 w-3 mr-1" />
+                                                            SKU
+                                                        </Button>
+                                                    )}
+                                                    {/* Link HSN Button */}
+                                                    {!product.hsn_code && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-7 text-xs"
+                                                            onClick={() => handleLinkHSN(product)}
+                                                            title="Link HSN Code"
+                                                        >
+                                                            <LinkIcon className="h-3 w-3 mr-1" />
+                                                            HSN
+                                                        </Button>
+                                                    )}
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -658,6 +817,105 @@ export default function ProductsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* HSN Code Link Dialog */}
+            <Dialog open={hsnDialogOpen} onOpenChange={setHsnDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Link HSN Code</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                        {/* Product Info */}
+                        <div>
+                            <Label>Product</Label>
+                            <Input value={selectedProductForHSN?.name || ""} disabled className="bg-muted" />
+                            <Badge variant="outline" className="mt-1">{selectedProductForHSN?.category}</Badge>
+                        </div>
+
+                        {/* Verified HSN Suggestions */}
+                        {loadingHSN ? (
+                            <div className="flex justify-center p-4">
+                                <Loader2 className="h-6 w-6 animate-spin" />
+                            </div>
+                        ) : hsnSuggestions.length > 0 ? (
+                            <div>
+                                <Label>Verified HSN Codes (Select One)</Label>
+                                <div className="space-y-2 mt-2">
+                                    {hsnSuggestions.map((hsn) => (
+                                        <Card
+                                            key={hsn.hsn_code}
+                                            className={`cursor-pointer hover:bg-accent transition-colors ${hsnCodeInput === hsn.hsn_code ? 'border-primary bg-accent' : ''}`}
+                                            onClick={() => setHsnCodeInput(hsn.hsn_code)}
+                                        >
+                                            <CardContent className="p-4">
+                                                <div className="space-y-2">
+                                                    {/* HSN Code and Chapter */}
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <p className="font-bold text-xl">{hsn.hsn_code}</p>
+                                                            {hsn.chapter && (
+                                                                <p className="text-xs text-muted-foreground">Chapter {hsn.chapter}</p>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            {hsn.gst_rate !== null && (
+                                                                <Badge variant="secondary">GST: {hsn.gst_rate}%</Badge>
+                                                            )}
+                                                            {hsn.duty_rate !== null && (
+                                                                <Badge variant="outline">Duty: {hsn.duty_rate}%</Badge>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {/* Description */}
+                                                    <p className="text-sm text-muted-foreground leading-relaxed">{hsn.description}</p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-sm text-muted-foreground p-4 bg-muted rounded-md">
+                                No HSN suggestions found for "{selectedProductForHSN?.name}". Please enter HSN code manually below.
+                            </div>
+                        )}
+
+                        {/* Manual Entry */}
+                        <div>
+                            <Label>Or Enter HSN Code Manually</Label>
+                            <div className="flex gap-2">
+                                <Input 
+                                    value={hsnCodeInput} 
+                                    onChange={(e) => setHsnCodeInput(e.target.value)}
+                                    placeholder="Enter HSN code (e.g., 1006)"
+                                    className="flex-1"
+                                />
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        const url = `/hsn-codes?returnTo=products&productId=${selectedProductForHSN?.id}`;
+                                        window.open(url, '_blank');
+                                    }}
+                                >
+                                    Browse HSN
+                                </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                💡 Tip: Click "Browse HSN" to explore all HSN codes by chapter
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setHsnDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={submitHSNLink} disabled={!hsnCodeInput}>
+                                Link HSN Code
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

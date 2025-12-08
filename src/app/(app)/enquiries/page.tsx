@@ -272,14 +272,14 @@ export default function EnquiriesPage() {
                 const data = XLSX.utils.sheet_to_json(ws);
 
                 if (data.length === 0) {
-                    alert("No data found in file");
+                    toast({ title: "No Data", description: "No data found in file", variant: "destructive" });
                     return;
                 }
 
                 setBulkData(data);
             } catch (e: any) {
                 console.error(e);
-                alert("Error parsing file: " + e.message);
+                toast({ title: "Parse Error", description: "Error parsing file: " + e.message, variant: "destructive" });
             }
         };
         reader.readAsBinaryString(file);

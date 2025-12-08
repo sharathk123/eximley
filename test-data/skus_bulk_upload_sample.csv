@@ -1,0 +1,82 @@
+sku_code,name,unit,base_price
+RICE-BASMATI-1121-25KG,Premium 1121 Basmati Rice - 25kg bag,bag,45.00
+RICE-BASMATI-1121-50KG,Premium 1121 Basmati Rice - 50kg bag,bag,85.00
+FLOUR-WHEAT-ORG-10KG,Organic Stone-Ground Wheat Flour - 10kg,kg,18.00
+SEED-COTTON-BT-1KG,BT Cotton Seeds - 1kg pack,kg,25.00
+TURMERIC-PWD-500G,Organic Turmeric Powder - 500g,g,12.00
+ASHWA-CAP-60CT,Ashwagandha Capsules - 60 count,pcs,22.00
+NEEM-OIL-500ML,Pure Cold-Pressed Neem Oil - 500ml,ml,15.00
+HONEY-ORG-500G,100% Pure Organic Wildflower Honey - 500g,g,18.00
+COFFEE-ORG-ARABICA-1KG,Fair Trade Organic Arabica Coffee Beans - 1kg,kg,28.00
+QUINOA-ORG-WHITE-1KG,Certified Organic White Quinoa - 1kg,kg,15.00
+ACID-SULFURIC-98-25L,98% Concentrated Sulfuric Acid - 25L,L,85.00
+NAOH-FLAKES-25KG,Caustic Soda Flakes - 25kg bag,kg,35.00
+H2O2-35-10L,35% Food-Grade Hydrogen Peroxide - 10L,L,42.00
+MANGO-DRY-500G,Sun-Dried Mango Slices - 500g,g,12.00
+ONION-DRY-1KG,Premium Dehydrated White Onion Flakes - 1kg,kg,8.50
+TOMATO-PWD-500G,Spray-Dried Tomato Powder - 500g,g,10.00
+LED-9W-WARM,9W LED Bulb - Warm White,pcs,2.50
+LED-9W-COOL,9W LED Bulb - Cool White,pcs,2.50
+CHARGER-USBC-20W,Fast Charging USB-C Charger - 20W,pcs,8.00
+SPEAKER-BT-PORTABLE,Portable Wireless Bluetooth Speaker,pcs,25.00
+CNC-PART-SHAFT-SS,Precision CNC Machined Shaft - Stainless Steel,pcs,45.00
+VALVE-GATE-SS-2IN,Stainless Steel Gate Valve - 2 inch,pcs,120.00
+GEAR-ASSY-CUSTOM-A1,Custom Gear Assembly - Model A1,pcs,85.00
+ROSE-RED-STEM-50CM,Premium Long-Stem Red Roses - 50cm,stem,1.50
+ORCHID-PHAL-WHITE,Phalaenopsis Orchid Plant - White,plant,18.00
+TULIP-BULB-MIX-10PC,Dutch Tulip Bulbs - Mixed Colors - 10 pack,pack,12.00
+CASHEW-ROAST-SALT-500G,Whole Roasted Salted Cashew Nuts - 500g,g,15.00
+MANGO-PULP-ALPHONSO-1KG,Alphonso Mango Pulp Concentrate - 1kg,kg,8.50
+MANGO-ALPHONSO-FRESH-5KG,Premium Alphonso Mangoes - 5kg box,box,35.00
+POMEGRANATE-ORG-3KG,Organic Pomegranates - 3kg box,box,22.00
+CHILI-GREEN-FRESH-1KG,Spicy Green Chilies - 1kg,kg,4.50
+BRASS-LAMP-DIYA-MED,Hand-Carved Brass Oil Lamp - Medium,pcs,12.00
+WOOD-ELEPHANT-25CM,Traditional Wooden Elephant Sculpture - 25cm,pcs,28.00
+MARBLE-COASTER-SET4,Handcrafted Marble Inlay Coasters - Set of 4,set,35.00
+TOY-WOOD-PUZZLE-ABC,Eco-Friendly Wooden ABC Puzzle,pcs,15.00
+DOLL-TRAD-INDIAN-MED,Handmade Traditional Indian Doll - Medium,pcs,18.00
+PUZZLE-WOOD-BRAIN-SET,Wooden Brain Teaser Puzzle Set,set,12.00
+COOK-SS-POT-5L,Stainless Steel Cooking Pot - 5L,pcs,35.00
+DIN-CERAMIC-16PC,Hand-Painted Ceramic Dinner Set - 16 pieces,set,75.00
+KNIFE-CHEF-SET-5PC,Professional Chef Knife Set - 5 pieces with block,set,85.00
+SHEET-COTTON-KING,100% Egyptian Cotton Bed Sheet - King Size,set,45.00
+CUSHION-EMBR-45CM,Embroidered Decorative Cushion - 45x45cm,pcs,18.00
+ART-CANVAS-MODERN-L,Canvas Wall Art - Modern Design - Large,pcs,65.00
+WALLET-LEATHER-BIFOLD,Genuine Leather Bi-Fold Wallet,pcs,25.00
+BAG-LEATHER-TOTE-BRN,Premium Leather Tote Handbag - Brown,pcs,120.00
+BELT-LEATHER-DRESS-BLK,Full-Grain Leather Dress Belt - Black,pcs,28.00
+CNC-MILL-3AXIS-METAL,3-Axis CNC Milling Machine for Metalworking,unit,15000.00
+PRESS-HYD-100TON,100-Ton Hydraulic Press,unit,25000.00
+LATHE-METAL-HEAVY,Heavy-Duty Metal Lathe Machine,unit,18000.00
+SS-SHEET-304-4X8,304 Grade Stainless Steel Sheet - 4x8 ft,sheet,180.00
+AL-INGOT-99.7-25KG,99.7% Pure Aluminum Ingots - 25kg,kg,65.00
+COPPER-WIRE-ELEC-100M,Electrical Grade Copper Wire - 100m coil,coil,85.00
+PARA-TAB-500MG-100CT,Paracetamol 500mg Tablets - 100 count,box,5.50
+AMOX-CAP-250MG-30CT,Amoxicillin 250mg Capsules - 30 count,box,12.00
+VITC-TAB-1000MG-60CT,Vitamin C 1000mg Tablets - 60 count,box,8.50
+IRON-ORE-GRADE-A-MT,High-Grade Iron Ore - Per Metric Ton,MT,120.00
+RUBBER-LATEX-NAT-25KG,Natural Rubber Latex - 25kg,kg,55.00
+SOLAR-PANEL-300W-MONO,300W Monocrystalline Solar Panel,pcs,180.00
+MC4-CONN-PAIR-10SET,Waterproof MC4 Connectors - 10 pairs,set,25.00
+INVERTER-SOLAR-5KW,5kW Grid-Tie Solar Inverter,pcs,850.00
+FABRIC-COTTON-100-10M,100% Pure Cotton Fabric - 10 meter roll,roll,35.00
+SAREE-SILK-PURE-TRAD,Pure Silk Traditional Saree,pcs,120.00
+YARN-WOOL-MERINO-1KG,Merino Wool Yarn - 1kg,kg,45.00
+TABLE-WOOD-6SEAT,Solid Wood 6-Seater Dining Table,pcs,450.00
+CHAIR-OFFICE-ERGO-MESH,Ergonomic Mesh Office Chair,pcs,180.00
+SOFA-LEATHER-3SEAT,3-Seater Leather Sofa Set,set,1200.00
+BRAKE-PAD-CERAMIC-FRONT,Ceramic Brake Pads - Front Set,set,45.00
+OIL-ENGINE-5W30-5L,Synthetic 5W-30 Engine Oil - 5L,L,35.00
+FILTER-AIR-PERF-CAR,High-Performance Air Filter for Cars,pcs,18.00
+CREAM-FACE-ANTIAGE-50ML,Anti-Aging Face Cream with Retinol - 50ml,ml,28.00
+SHAMPOO-HERBAL-300ML,Herbal Shampoo for Hair Growth - 300ml,ml,12.00
+LIPSTICK-MATTE-RED,Long-Lasting Matte Lipstick - Red,pcs,15.00
+MAT-YOGA-NONSLIP-6MM,Non-Slip Yoga Mat - 6mm with Strap,pcs,25.00
+DUMBBELL-ADJ-5-25KG,Adjustable Dumbbells Set - 5-25kg,set,120.00
+BAT-CRICKET-WILLOW-PRO,Professional Willow Cricket Bat,pcs,85.00
+GAME-BOARD-FAMILY,Family Board Game Set,set,28.00
+CAR-RC-ELECTRIC-KIDS,Electric RC Car for Kids,pcs,45.00
+BLOCKS-BUILD-EDU-200PC,Educational Building Blocks - 200 pieces,set,35.00
+TSHIRT-MEN-COTTON-M,100% Cotton Crew Neck T-Shirt - Medium,pcs,12.00
+DRESS-WOMEN-SUMMER-M,Casual Summer Dress - Medium,pcs,35.00
+JACKET-KIDS-WINTER-8Y,Warm Winter Jacket for Kids - 8 Years,pcs,45.00

@@ -5,6 +5,8 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search');
+        const category = searchParams.get('category');
+        const chapter = searchParams.get('chapter');
 
         const supabase = await createSessionClient();
         // RLS policy "master_hsn_read_all" handles auth check, but good to be explicit
@@ -16,11 +18,36 @@ export async function GET(request: Request) {
             .select("*")
             .order("hsn_code", { ascending: true });
 
+        // Filter by category/chapter if provided
+        // TEMPORARILY DISABLED FOR DEBUGGING
+        /*
+        if (category) {
+            // Map common categories to HSN chapters
+            const categoryChapterMap: Record<string, string[]> = {
+                'Agriculture': ['10', '07', '08', '09'], // Cereals, vegetables, fruits, spices
+                'Textiles': ['52', '54', '55', '60'], // Cotton, man-made, knitted fabrics
+                'Apparel': ['61', '62'], // Clothing
+                'Electronics': ['85'], // Electrical machinery
+                'Furniture': ['94'], // Furniture
+                'Ayush Products': ['30', '33'], // Pharmaceutical, cosmetics
+                'Certified Organics': ['07', '08', '09', '10'], // Organic produce
+            };
+
+            const chapters = categoryChapterMap[category];
+            if (chapters && chapters.length > 0) {
+                query = query.in('chapter', chapters);
+            }
+        }
+        */
+
+        // Filter by specific chapter if provided
+        if (chapter) {
+            query = query.eq('chapter', chapter);
+        }
+
         if (search) {
-            query = query.textSearch('description', search, {
-                type: 'websearch',
-                config: 'english'
-            });
+            // Search by HSN code OR description
+            query = query.or(`hsn_code.ilike.%${search}%,description.ilike.%${search}%`);
         }
 
         const { data: hsnCodes, error } = await query.limit(50); // Limit results for performance

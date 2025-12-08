@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useToast } from "@/components/ui/use-toast";
 
 const hsnSchema = z.object({
     hsn_code: z.string().min(1, "Required"),
@@ -20,6 +21,7 @@ const hsnSchema = z.object({
 });
 
 export default function HSNPage() {
+    const { toast } = useToast();
     const [hsnCodes, setHsnCodes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
@@ -83,9 +85,8 @@ export default function HSNPage() {
             setOpen(false);
             form.reset();
             fetchHsn();
-        } catch (e) {
-            console.error(e);
-            alert("Failed to create HSN");
+        } catch (e: any) {
+            toast({ title: "Error", description: "Failed to create HSN code", variant: "destructive" });
         }
     }
 
@@ -115,7 +116,7 @@ export default function HSNPage() {
             setEditingHsn(null);
             fetchHsn();
         } catch (e: any) {
-            alert(e.message || "Failed to update");
+            toast({ title: "Error", description: e.message || "Failed to update HSN code", variant: "destructive" });
         }
     };
 
@@ -127,7 +128,7 @@ export default function HSNPage() {
             if (!res.ok) throw new Error("Failed");
             fetchHsn();
         } catch (e: any) {
-            alert(e.message || "Failed to delete");
+            toast({ title: "Error", description: e.message || "Failed to delete HSN code", variant: "destructive" });
         }
     };
 
@@ -145,7 +146,7 @@ export default function HSNPage() {
                 const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
 
                 if (!rows || rows.length === 0) {
-                    alert("File appears empty");
+                    toast({ title: "Invalid File", description: "File appears empty", variant: "destructive" });
                     return;
                 }
 
@@ -195,31 +196,22 @@ export default function HSNPage() {
                 );
 
                 if (hasSkuColumns && !hasHsnColumn) {
-                    alert(
-                        `❌ Wrong file type!\n\n` +
-                        `This appears to be a SKU file, not an HSN file.\n\n` +
-                        `Found columns: ${originalHeaders.join(', ')}\n\n` +
-                        `For HSN bulk upload, please use a government HSN file with:\n` +
-                        `• ITC HS Code (required)\n` +
-                        `• Commodity (required)\n` +
-                        `• HS Codes as in GST Schedule (optional)\n` +
-                        `• GST Rate (optional)\n\n` +
-                        `To upload SKUs, please use the SKU Management page.`
-                    );
+                    toast({
+                        title: "Wrong File Type",
+                        description: "This appears to be a SKU file. For HSN bulk upload, use a government HSN file with: ITC HS Code, Commodity, GST Rate.",
+                        variant: "destructive",
+                        duration: 6000
+                    });
                     return;
                 }
 
                 if (!hasHsnColumn) {
-                    alert(
-                        `❌ Required column missing!\n\n` +
-                        `Your file must have HSN Code columns.\n\n` +
-                        `Found columns: ${originalHeaders.join(', ')}\n\n` +
-                        `Expected columns (from government HSN file):\n` +
-                        `• ITC HS Code (required)\n` +
-                        `• Commodity (required)\n` +
-                        `• HS Codes as in GST Schedule (optional)\n` +
-                        `• GST Rate (optional)`
-                    );
+                    toast({
+                        title: "Missing Required Column",
+                        description: "Your file must have HSN Code columns. Expected: ITC HS Code, Commodity, GST Rate.",
+                        variant: "destructive",
+                        duration: 6000
+                    });
                     return;
                 }
 
@@ -245,14 +237,14 @@ export default function HSNPage() {
                 }).filter(Boolean); // Remove nulls
 
                 if (normalizedData.length === 0) {
-                    alert(`No valid records found. Detected headers in row ${headerRowIndex + 1}: ${originalHeaders.join(", ")}\n\nPlease ensure you have columns for HSN Code and Description.`);
+                    toast({ title: "No Valid Records", description: "No valid records found. Please ensure you have columns for HSN Code and Description.", variant: "destructive" });
                     return;
                 }
 
                 setBulkData(normalizedData);
             } catch (e: any) {
                 console.error(e);
-                alert("Error parsing file: " + e.message);
+                toast({ title: "Parse Error", description: "Error parsing file: " + e.message, variant: "destructive" });
             }
         };
         reader.readAsArrayBuffer(file);
@@ -268,12 +260,16 @@ export default function HSNPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed");
 
-            alert(`Successfully processed ${data.count} codes!`);
+            toast({
+                title: "Success!",
+                description: `Successfully processed ${data.count} HSN codes.`,
+                duration: 5000
+            });
             setOpenBulk(false);
             setBulkData([]);
             fetchHsn();
         } catch (e: any) {
-            alert(e.message);
+            toast({ title: "Upload Failed", description: e.message, variant: "destructive" });
         } finally {
             setUploading(false);
         }
@@ -283,116 +279,7 @@ export default function HSNPage() {
         <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">HSN Codes</h1>
-                <div className="flex gap-2">
-                    <Dialog open={openBulk} onOpenChange={(open) => {
-                        setOpenBulk(open);
-                        if (!open) {
-                            // Clear data when dialog closes
-                            setBulkData([]);
-                        }
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline">
-                                <Upload className="w-4 h-4 mr-2" /> Bulk Upload
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-5xl">
-                            <DialogHeader><DialogTitle>Bulk Upload HSN (Excel)</DialogTitle></DialogHeader>
-                            <div className="space-y-4 pt-4">
-                                <div
-                                    className={`p-8 border-2 border-dashed rounded-md text-center transition-colors ${isDragging ? "border-primary bg-accent" : "border-border bg-muted hover:bg-muted"}`}
-                                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                                    onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
-                                    onDrop={(e) => {
-                                        e.preventDefault();
-                                        setIsDragging(false);
-                                        const file = e.dataTransfer.files?.[0];
-                                        if (file) processFile(file);
-                                    }}
-                                >
-                                    <div className="flex flex-col items-center justify-center gap-2">
-                                        <Upload className={`w-10 h-10 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
-                                        <p className="text-sm font-medium text-foreground">
-                                            {isDragging ? "Drop file here" : "Drag & drop Excel/CSV file here"}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">or click to browse</p>
-                                        <Input
-                                            type="file"
-                                            accept=".xlsx, .xls, .csv"
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) processFile(file);
-                                            }}
-                                            className="hidden"
-                                            id="file-upload-hsn"
-                                        />
-                                        <Button variant="secondary" size="sm" onClick={() => document.getElementById('file-upload-hsn')?.click()}>
-                                            Browse Files
-                                        </Button>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground mt-4 space-y-1">
-                                        <p>Expected columns: <strong>hsn_code, description, gst_rate, duty_rate</strong></p>
-                                        <p>Note: PDF files are not supported directly. Please convert to Excel first.</p>
-                                    </div>
-                                </div>
-
-                                {bulkData.length > 0 && (
-                                    <div className="max-h-60 overflow-auto border rounded-md">
-                                        <Table>
-                                            <TableHeader className="bg-muted sticky top-0 shadow-sm">
-                                                <TableRow>
-                                                    <TableHead className="font-bold text-foreground">Code</TableHead>
-                                                    <TableHead className="font-bold text-foreground">Description</TableHead>
-                                                    <TableHead className="font-bold text-foreground text-right">GST</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {bulkData.slice(0, 5).map((row, i) => (
-                                                    <TableRow key={i}>
-                                                        {/* Flexible matching so users don't need exact header case */}
-                                                        <TableCell className="font-medium">{row.hsn_code || row['HSN Code']}</TableCell>
-                                                        <TableCell className="whitespace-normal break-words max-w-[300px]">{row.description || row['Description']}</TableCell>
-                                                        <TableCell className="text-right">{(() => {
-                                                            const rate = row.gst_rate || row['GST Rate'] || 0;
-                                                            return rate < 1 && rate > 0 ? (rate * 100).toFixed(2) : rate;
-                                                        })()}%</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                        <p className="text-xs text-muted-foreground p-2 bg-muted border-t">
-                                            Showing {Math.min(5, bulkData.length)} of {bulkData.length} records
-                                        </p>
-                                    </div>
-                                )}
-
-                                <Button onClick={confirmBulkUpload} className="w-full" disabled={bulkData.length === 0 || uploading}>
-                                    {uploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                                    {uploading ? "Uploading..." : "Confirm Upload"}
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="w-4 h-4 mr-2" /> Add HSN
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader><DialogTitle>Add New HSN Code</DialogTitle></DialogHeader>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-                                <HSNFormFields form={form} />
-                                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                                    {form.formState.isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                    Save HSN
-                                </Button>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                </div>
             </div>
-
 
             {/* SEARCH & FILTERS */}
             <div className="flex items-center gap-2 max-w-sm">
@@ -414,14 +301,13 @@ export default function HSNPage() {
                             <TableHead className="font-bold text-foreground">Description</TableHead>
                             <TableHead className="font-bold text-foreground text-right">GST Rate</TableHead>
                             <TableHead className="font-bold text-foreground text-right">Duty Rate</TableHead>
-                            <TableHead className="font-bold text-foreground w-[100px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow><TableCell colSpan={5} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                            <TableRow><TableCell colSpan={4} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
                         ) : paginatedCodes.length === 0 ? (
-                            <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">No HSN codes found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">No HSN codes found.</TableCell></TableRow>
                         ) : (
                             paginatedCodes.map(hsn => (
                                 <TableRow key={hsn.id}>
@@ -435,16 +321,6 @@ export default function HSNPage() {
                                         const rate = hsn.duty_rate || 0;
                                         return rate < 1 && rate > 0 ? (rate * 100).toFixed(2) : rate;
                                     })()}%</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            <Button variant="ghost" size="icon" onClick={() => startEdit(hsn)}>
-                                                <Pencil className="w-4 h-4 text-primary" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => onDelete(hsn)}>
-                                                <Trash2 className="w-4 h-4 text-red-600" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
                                 </TableRow>
                             ))
                         )}
@@ -478,20 +354,6 @@ export default function HSNPage() {
                     </div>
                 )
             }
-
-
-            {/* EDIT DIALOG */}
-            <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-                <DialogContent>
-                    <DialogHeader><DialogTitle>Edit HSN Code</DialogTitle></DialogHeader>
-                    <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4 pt-4">
-                        <HSNFormFields form={form} />
-                        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                            Update HSN
-                        </Button>
-                    </form>
-                </DialogContent>
-            </Dialog>
         </div >
     );
 }

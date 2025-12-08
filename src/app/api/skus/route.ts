@@ -61,6 +61,9 @@ export async function POST(req: Request) {
             .select()
             .single();
 
+        if (error) throw error;
+
+        return NextResponse.json({ sku: data });
     } catch (error) {
         console.error("Internal Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

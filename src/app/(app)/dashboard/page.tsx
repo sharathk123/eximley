@@ -21,8 +21,11 @@ interface DashboardData {
 export default function DashboardPage() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [hasProducts, setHasProducts] = useState(true);
+    const [showOnboarding, setShowOnboarding] = useState(false);
 
     useEffect(() => {
+        // Fetch dashboard data
         fetch("/api/dashboard")
             .then((res) => {
                 if (!res.ok) throw new Error("Failed to fetch");
@@ -31,6 +34,16 @@ export default function DashboardPage() {
             .then((data) => setData(data))
             .catch((err) => console.error(err))
             .finally(() => setLoading(false));
+
+        // Check if user has products
+        fetch("/api/products?limit=1")
+            .then((res) => res.json())
+            .then((data) => {
+                const productCount = data.products?.length || 0;
+                setHasProducts(productCount > 0);
+                setShowOnboarding(productCount === 0);
+            })
+            .catch((err) => console.error(err));
     }, []);
 
     if (loading) {
@@ -55,6 +68,56 @@ export default function DashboardPage() {
                     </Link>
                 </div>
             </div>
+
+            {/* Onboarding Banner for New Users */}
+            {showOnboarding && (
+                <Card className="border-blue-200 bg-blue-50 shadow-md">
+                    <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                            <div className="p-3 bg-blue-100 rounded-full">
+                                <Package className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                                    Welcome to Eximley! Let's get you started 🎉
+                                </h3>
+                                <p className="text-sm text-blue-800 mb-4">
+                                    To begin managing your export operations, you'll need to set up your product catalog first.
+                                    Follow these steps to get started:
+                                </p>
+                                <div className="space-y-2 mb-4">
+                                    <div className="flex items-center gap-2 text-sm text-blue-900">
+                                        <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">1</div>
+                                        <span className="font-medium">Create Products</span>
+                                        <span className="text-blue-700">- Add your main product catalog items</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-blue-900">
+                                        <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">2</div>
+                                        <span className="font-medium">Add SKUs</span>
+                                        <span className="text-blue-700">- Create variants with HSN codes, pricing, and specifications</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-blue-900">
+                                        <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">3</div>
+                                        <span className="font-medium">Start Trading</span>
+                                        <span className="text-blue-700">- Create quotes, orders, and shipping bills</span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <Link href="/products">
+                                        <Button className="bg-blue-600 hover:bg-blue-700">
+                                            <Package className="mr-2 h-4 w-4" />
+                                            Set Up Products Now
+                                        </Button>
+                                    </Link>
+                                    <Button variant="outline" onClick={() => setShowOnboarding(false)} className="border-blue-300 text-blue-700 hover:bg-blue-100">
+                                        Dismiss
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Stats Grid */}
             <div className="grid gap-4 md:grid-cols-3">

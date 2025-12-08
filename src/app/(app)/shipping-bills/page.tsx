@@ -30,8 +30,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function ShippingBillsPage() {
+    const { toast } = useToast();
     const [shippingBills, setShippingBills] = useState<any[]>([]);
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -128,14 +130,14 @@ export default function ShippingBillsPage() {
     const onAddSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.export_order_id) {
-            alert("Please select an order");
+            toast({ title: "Validation Error", description: "Please select an order", variant: "destructive" });
             return;
         }
 
         try {
             const order = orders.find(o => o.id === formData.export_order_id);
             if (!order || !order.order_items) {
-                alert("Order items not found");
+                toast({ title: "Error", description: "Order items not found", variant: "destructive" });
                 return;
             }
 
@@ -159,7 +161,7 @@ export default function ShippingBillsPage() {
             resetForm();
             fetchData();
         } catch (error) {
-            alert("Error creating shipping bill");
+            toast({ title: "Error", description: "Error creating shipping bill", variant: "destructive" });
         }
     };
 
@@ -177,7 +179,7 @@ export default function ShippingBillsPage() {
             resetForm();
             fetchData();
         } catch (error) {
-            alert("Error updating shipping bill");
+            toast({ title: "Error", description: "Error updating shipping bill", variant: "destructive" });
         }
     };
 
@@ -208,7 +210,7 @@ export default function ShippingBillsPage() {
             setDeletingSB(null);
             fetchData();
         } catch (error) {
-            alert("Error deleting shipping bill");
+            toast({ title: "Error", description: "Error deleting shipping bill", variant: "destructive" });
         }
     };
 
@@ -218,7 +220,7 @@ export default function ShippingBillsPage() {
             if (!res.ok) throw new Error("Failed to mark as filed");
             fetchData();
         } catch (error) {
-            alert("Error marking as filed");
+            toast({ title: "Error", description: "Error marking as filed", variant: "destructive" });
         }
     };
 

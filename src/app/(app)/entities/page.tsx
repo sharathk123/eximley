@@ -177,7 +177,7 @@ export default function EntitiesPage() {
                 const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
 
                 if (!rows || rows.length === 0) {
-                    alert("File appears empty");
+                    toast({ title: "Invalid File", description: "File appears empty", variant: "destructive" });
                     return;
                 }
 
@@ -188,33 +188,26 @@ export default function EntitiesPage() {
                 );
 
                 if (hasProductColumns) {
-                    alert(
-                        `❌ Wrong file type!\n\n` +
-                        `This appears to be a Products file, not an Entities file.\n\n` +
-                        `For Entities bulk upload, please use a file with:\n` +
-                        `• Name (required)\n` +
-                        `• Type (required): buyer, supplier, partner, or other\n` +
-                        `• Email (optional)\n` +
-                        `• Phone (optional)\n` +
-                        `• Country (optional)\n` +
-                        `• Address (optional)\n` +
-                        `• Tax ID (optional)\n\n` +
-                        `To upload Products, please use the Products page.`
-                    );
+                    toast({
+                        title: "Wrong File Type",
+                        description: "This appears to be a Products file. For Entities bulk upload, use a file with: Name, Type, Email, Phone, Tax ID.",
+                        variant: "destructive",
+                        duration: 6000
+                    });
                     return;
                 }
 
                 const data = XLSX.utils.sheet_to_json(ws);
 
                 if (data.length === 0) {
-                    alert("No data found in file");
+                    toast({ title: "No Data", description: "No data found in file", variant: "destructive" });
                     return;
                 }
 
                 setBulkData(data);
             } catch (e: any) {
                 console.error(e);
-                alert("Error parsing file: " + e.message);
+                toast({ title: "Parse Error", description: "Error parsing file: " + e.message, variant: "destructive" });
             }
         };
         reader.readAsBinaryString(file);

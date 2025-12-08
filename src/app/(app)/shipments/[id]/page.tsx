@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 
 import { Separator } from "@/components/ui/separator";
 import { UploadDocumentDialog } from "@/components/upload-document-dialog";
+import { useToast } from "@/components/ui/use-toast";
 
 // Separate components would be better, but inline for MVP speed
 function DocumentsList({ documents }: { documents: any[] }) {
@@ -68,6 +69,7 @@ function ItemsList({ items }: { items: any[] }) {
 }
 
 export default function ShipmentDetailsPage() {
+    const { toast } = useToast();
     const params = useParams();
     const id = params.id as string;
     const [data, setData] = useState<any>(null);
@@ -105,11 +107,11 @@ export default function ShipmentDetailsPage() {
                 body: JSON.stringify({ shipmentId: id })
             });
             if (!res.ok) throw new Error("Failed to generate PDF");
-            alert("Invoice generated safely!");
+            toast({ title: "Success", description: "Invoice generated successfully!", duration: 3000 });
             refreshData();
         } catch (e) {
             console.error(e);
-            alert("Error generating invoice");
+            toast({ title: "Error", description: "Error generating invoice", variant: "destructive" });
         } finally {
             setGeneratingPdf(false);
         }
