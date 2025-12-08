@@ -82,6 +82,7 @@ export async function POST(request: Request) {
             date,
             currency_code,
             conversion_rate,
+            lut_id,
             items // Array of { sku_id, quantity, unit_price }
         } = body;
 
@@ -102,6 +103,7 @@ export async function POST(request: Request) {
                 date,
                 currency_code,
                 conversion_rate,
+                lut_id: lut_id || null,
                 total_amount,
                 status: 'draft'
             })
