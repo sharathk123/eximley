@@ -1,0 +1,6 @@
+sku_code,name,description,category,hsn_code,unit,weight_kg,base_price,cost_price,tax_rate,min_stock_level,max_stock_level,reorder_point,location,country_of_origin,unit_of_measure,gross_weight_kg,net_weight_kg
+TSHIRT-M-WHT,Men's Cotton T-Shirt White Medium,Standard White T-Shirt,Apparel,610910,pcs,0.25,499.00,200.00,5.0,10,100,20,Warehouse A,India,PCS,0.28,0.25
+FABRIC-COT-100,Cotton Fabric Roll 100gsm,Premium Cotton Fabric,Textiles,520811,mtr,15.0,120.50,80.00,12.0,5,50,10,Warehouse B,India,MTR,15.5,15.0
+SHOE-LTHR-BLK-9,Leather Formal Shoe Black Size 9,Genuine Leather Shoes,Footwear,640399,pair,0.8,2499.00,1200.00,18.0,5,30,8,Warehouse A,India,PAIR,1.0,0.8
+MUG-CERAMIC-001,White Ceramic Mug,Standard Coffee Mug,Home & Kitchen,691110,pcs,0.35,199.00,80.00,12.0,20,200,50,Warehouse C,India,PCS,0.4,0.35
+SPICE-TURM-500,Turmeric Powder 500g,Organic Turmeric Powder,Spices,091030,pack,0.5,250.00,150.00,5.0,50,500,100,Warehouse D,India,KGS,0.52,0.5

@@ -30,7 +30,7 @@ function LoginForm() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const justSignedUp = searchParams.get("welcome") === "true";
+    const signupSuccess = searchParams.get("signup") === "success";
 
     const form = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema),
@@ -57,8 +57,18 @@ function LoginForm() {
                 throw new Error(data.error || "Login failed");
             }
 
-            router.push("/dashboard");
-            router.refresh();
+            if (data.requirePasswordChange) {
+                router.push("/update-password");
+                return;
+            }
+
+            // Redirect based on user role
+            if (data.isSuperAdmin) {
+                router.push("/admin");
+            } else {
+                router.push("/dashboard");
+            }
+            router.refresh(); // Refresh to update server components with new auth state
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -75,12 +85,14 @@ function LoginForm() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                {justSignedUp && (
-                    <div className="mb-4 p-3 bg-green-50 text-green-700 rounded text-sm">
-                        Account created successfully! Please sign in if not redirected.
+                {signupSuccess && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm text-green-800 font-medium">✓ Account created successfully!</p>
+                        <p className="text-xs text-green-700 mt-1">
+                            Your account is pending approval. You'll be able to login once an administrator approves your company.
+                        </p>
                     </div>
                 )}
-
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField

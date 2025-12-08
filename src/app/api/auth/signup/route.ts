@@ -29,19 +29,9 @@ export async function POST(request: Request) {
 
         const userId = authData.user.id;
 
-        // 2. Sign In (Session Client) to set cookies
-        const { error: signInError } = await sessionClient.auth.signInWithPassword({
-            email,
-            password
-        });
+        // Note: We do NOT sign in the user automatically
+        // They must wait for admin approval before they can login
 
-        if (signInError) {
-            console.error("Sign in error:", signInError);
-            // Continue creating DB records anyway? Or fail?
-            // If sign in fails, user is created but not logged in.
-            // We'll proceed so the account exists, but let FE know?
-            // For MVP, proceed. FE will redirect. If no cookie, they might see login page.
-        }
 
         // 3. Create Company
         const { data: companyData, error: companyError } = await adminClient
@@ -49,6 +39,7 @@ export async function POST(request: Request) {
             .insert({
                 legal_name: companyName,
                 email: email,
+                status: 'pending',
             })
             .select()
             .single();
@@ -67,6 +58,7 @@ export async function POST(request: Request) {
                 company_id: companyId,
                 user_id: userId,
                 role: "admin",
+                force_password_change: true, // Force password change on first login
             });
 
         if (roleError) {

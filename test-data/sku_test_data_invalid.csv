@@ -1,0 +1,6 @@
+sku_code,name,description,category,hsn_code,unit,base_price,error_type,expected_error
+,Missing SKU Code,Should fail,,610910,pcs,499.00,Missing Required Field,sku_code is required
+INV-002,,Should fail,Apparel,610910,pcs,499.00,Missing Required Field,name is required
+INV-003,Invalid Price,Negative Price,Apparel,610910,pcs,-100.00,Validation Error,Price must be positive
+INV-004,Invalid Unit,Unknown Unit,Apparel,610910,unknown,499.00,Validation Error,Invalid unit type
+TSHIRT-M-WHT,Duplicate SKU,Should fail duplicate,,610910,pcs,499.00,Duplicate Error,SKU code already exists

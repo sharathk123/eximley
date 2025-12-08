@@ -1,30 +1,35 @@
 import { NextResponse } from "next/server";
-import { createAdminClient, createSessionClient } from "@/lib/supabase/server";
+import { createSessionClient } from "@/lib/supabase/server";
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const search = searchParams.get('search');
+
         const supabase = await createSessionClient();
+        // RLS policy "master_hsn_read_all" handles auth check, but good to be explicit
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const { data: userData } = await supabase
-            .from("company_users")
-            .select("company_id")
-            .eq("user_id", user.id)
-            .single();
-
-        if (!userData) return NextResponse.json({ error: "Company missing" }, { status: 404 });
-
-        const { data: hsnCodes, error } = await supabase
-            .from("company_hsn")
+        let query = supabase
+            .from("master_hsn_codes")
             .select("*")
-            .eq("company_id", userData.company_id)
-            .order("created_at", { ascending: false });
+            .order("hsn_code", { ascending: true });
+
+        if (search) {
+            query = query.textSearch('description', search, {
+                type: 'websearch',
+                config: 'english'
+            });
+        }
+
+        const { data: hsnCodes, error } = await query.limit(50); // Limit results for performance
 
         if (error) throw error;
 
         return NextResponse.json({ hsnCodes });
     } catch (error) {
+        console.error("Fetch HSN Error:", error);
         return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }
@@ -32,30 +37,30 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { hsn_code, description, gst_rate, duty_rate } = body;
+        const { hsn_code, description, gst_rate, chapter } = body;
 
-        const sessionClient = await createSessionClient();
-        const { data: { user } } = await sessionClient.auth.getUser();
+        const supabase = await createSessionClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const { data: userData } = await sessionClient
+        // Super Admin Check
+        const { data: userData, error: userError } = await supabase
             .from("company_users")
-            .select("company_id")
+            .select("is_super_admin")
             .eq("user_id", user.id)
             .single();
 
-        if (!userData) return NextResponse.json({ error: "Company missing" }, { status: 403 });
+        if (userError || !userData?.is_super_admin) {
+            return NextResponse.json({ error: "Forbidden: Only Super Admin can add HSN codes" }, { status: 403 });
+        }
 
-        const adminClient = createAdminClient();
-        const { data: hsn, error } = await adminClient
-            .from("company_hsn")
+        const { data: hsn, error } = await supabase
+            .from("master_hsn_codes")
             .insert({
-                company_id: userData.company_id,
                 hsn_code,
                 description,
-                gst_rate,
-                duty_rate,
-                is_active: true
+                gst_rate: gst_rate || 0,
+                chapter
             })
             .select()
             .single();

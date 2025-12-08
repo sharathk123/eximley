@@ -41,6 +41,7 @@ DROP TABLE IF EXISTS public.incentive_claims CASCADE;
 DROP TABLE IF EXISTS public.rodtep_rates CASCADE;
 DROP TABLE IF EXISTS public.duty_drawback_rates CASCADE;
 DROP TABLE IF EXISTS public.luts CASCADE;
+DROP TABLE IF EXISTS public.master_hsn_codes CASCADE;
 
 
 
@@ -56,7 +57,8 @@ CREATE TABLE public.entities (
     address TEXT,
     country TEXT,
     tax_id TEXT,
-    verification_status TEXT DEFAULT 'unverified'
+    verification_status TEXT DEFAULT 'unverified',
+    is_active BOOLEAN DEFAULT true
 );
 
 -- Create Companies table (Company Profile for Documents)
@@ -85,14 +87,16 @@ CREATE TABLE public.companies (
     bank_branch TEXT,
     -- Authorized signatory
     signatory_name TEXT,
-    signatory_designation TEXT
+    signatory_designation TEXT,
+    -- Multi-tenant fields
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'inactive')),
+    is_super_admin_company BOOLEAN DEFAULT false
 );
 
 -- Enable RLS for companies
 ALTER TABLE public.companies ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "companies_select_all" ON public.companies FOR SELECT USING (true);
-CREATE POLICY "companies_insert_auth" ON public.companies FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "companies_update_auth" ON public.companies FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+-- RLS Policies for companies moved to after company_users creation
 
 -- Create user_profiles table
 CREATE TABLE public.user_profiles (
@@ -134,6 +138,8 @@ CREATE TABLE public.company_users (
     company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     role TEXT DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member')),
+    is_super_admin BOOLEAN DEFAULT false,
+    force_password_change BOOLEAN DEFAULT false,
     UNIQUE(company_id, user_id)
 );
 
@@ -144,6 +150,87 @@ CREATE POLICY "company_users_insert_auth" ON public.company_users FOR INSERT WIT
 CREATE POLICY "company_users_update_own_company" ON public.company_users FOR UPDATE USING (
     auth.uid() IN (SELECT user_id FROM company_users WHERE company_id = company_users.company_id AND role IN ('owner', 'admin'))
 );
+
+-- Companies RLS Policies (Moved here to resolve dependency)
+-- 1. Super Admins can SELECT all companies
+CREATE POLICY "companies_select_super_admin" ON public.companies 
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.company_users 
+            WHERE user_id = auth.uid() AND is_super_admin = true
+        )
+    );
+
+-- 2. Members can SELECT their own company
+CREATE POLICY "companies_select_own" ON public.companies 
+    FOR SELECT USING (
+        id IN (
+            SELECT company_id FROM public.company_users WHERE user_id = auth.uid()
+        )
+    );
+
+-- 3. Insert access (for signup)
+CREATE POLICY "companies_insert_auth" ON public.companies FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+-- 4. Super Admin can UPDATE any company (e.g. to approve)
+CREATE POLICY "companies_update_super_admin" ON public.companies 
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM public.company_users 
+            WHERE user_id = auth.uid() AND is_super_admin = true
+        )
+    );
+
+-- 5. Owners/Admins can UPDATE their own company details
+CREATE POLICY "companies_update_own" ON public.companies 
+    FOR UPDATE USING (
+        id IN (
+            SELECT company_id FROM public.company_users 
+            WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+        )
+    );
+
+-- SECURITY: Protect Super Admin Company
+CREATE OR REPLACE FUNCTION public.protect_super_admin_company()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- 1. Prevent changing 'is_super_admin_company' flag by anyone
+    IF OLD.is_super_admin_company IS DISTINCT FROM NEW.is_super_admin_company THEN
+        RAISE EXCEPTION 'Cannot modify is_super_admin_company flag.';
+    END IF;
+
+    -- 2. If it is the Super Admin Company, protect critical fields
+    IF OLD.is_super_admin_company = true THEN
+        -- Prevent deactivation
+        IF NEW.status != 'active' THEN
+            RAISE EXCEPTION 'The Global Super Admin company cannot be deactivated.';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_company_update_protect
+    BEFORE UPDATE ON public.companies
+    FOR EACH ROW
+    EXECUTE FUNCTION public.protect_super_admin_company();
+
+-- Prevent Deletion of Super Admin Company
+CREATE OR REPLACE FUNCTION public.prevent_super_admin_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.is_super_admin_company = true THEN
+        RAISE EXCEPTION 'The Global Super Admin company cannot be deleted.';
+    END IF;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_company_delete_protect
+    BEFORE DELETE ON public.companies
+    FOR EACH ROW
+    EXECUTE FUNCTION public.prevent_super_admin_delete();
 
 
 -- Enable RLS for entities
@@ -164,6 +251,51 @@ CREATE POLICY "Enable update access for users in the same company" ON public.ent
     FOR UPDATE USING (auth.uid() IN (
         SELECT user_id FROM company_users WHERE company_id = entities.company_id
     ));
+
+-- Create Master HSN Codes table (Global List) - MUST be before products/SKUs that reference it
+CREATE TABLE public.master_hsn_codes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    hsn_code TEXT NOT NULL UNIQUE,
+    description TEXT,
+    gst_rate NUMERIC DEFAULT 0,
+    chapter TEXT, -- First 2 digits usually
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for Master HSN
+ALTER TABLE public.master_hsn_codes ENABLE ROW LEVEL SECURITY;
+
+-- Allow read access to all authenticated users
+CREATE POLICY "master_hsn_read_all" ON public.master_hsn_codes FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Allow Write Access ONLY to Super Admins
+CREATE POLICY "master_hsn_write_super_admin" ON public.master_hsn_codes 
+    FOR INSERT WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.company_users 
+            WHERE user_id = auth.uid() AND is_super_admin = true
+        )
+    );
+
+CREATE POLICY "master_hsn_update_super_admin" ON public.master_hsn_codes 
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM public.company_users 
+            WHERE user_id = auth.uid() AND is_super_admin = true
+        )
+    );
+
+CREATE POLICY "master_hsn_delete_super_admin" ON public.master_hsn_codes 
+    FOR DELETE USING (
+        EXISTS (
+            SELECT 1 FROM public.company_users 
+            WHERE user_id = auth.uid() AND is_super_admin = true
+        )
+    );
+
+-- Indexes
+CREATE INDEX idx_master_hsn_code ON public.master_hsn_codes(hsn_code);
+CREATE INDEX idx_master_hsn_description ON public.master_hsn_codes USING gin(to_tsvector('english', description));
 
 -- Create products table
 CREATE TABLE public.products (
@@ -212,7 +344,7 @@ CREATE TABLE public.skus (
     dimensions_cm TEXT,
     base_price NUMERIC DEFAULT 0,
     -- Document generation fields
-    hs_code TEXT, -- Harmonized System code for customs
+    hs_code TEXT REFERENCES public.master_hsn_codes(hsn_code), -- Harmonized System code for customs
     country_of_origin TEXT DEFAULT 'India',
     unit_of_measure TEXT DEFAULT 'PCS', -- PCS, KG, MTR, etc.
     gross_weight_kg NUMERIC, -- Gross weight per unit
@@ -251,37 +383,8 @@ ALTER TABLE public.currencies ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "currencies_read_all" ON public.currencies FOR SELECT USING (true);
 
 
--- Create Company HSN Codes table
-CREATE TABLE public.company_hsn (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    company_id UUID NOT NULL,
-    hsn_code TEXT NOT NULL,
-    description TEXT,
-    gst_rate NUMERIC DEFAULT 0,
-    duty_rate NUMERIC DEFAULT 0,
-    is_active BOOLEAN DEFAULT true
-);
 
--- Enable RLS for Company HSN
-ALTER TABLE public.company_hsn ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "company_hsn_select_same_company" ON public.company_hsn FOR SELECT USING (
-    auth.uid() IN (SELECT user_id FROM company_users WHERE company_id = company_hsn.company_id)
-);
-CREATE POLICY "company_hsn_insert_same_company" ON public.company_hsn FOR INSERT WITH CHECK (
-    auth.uid() IN (SELECT user_id FROM company_users WHERE company_id = company_hsn.company_id)
-);
-CREATE POLICY "company_hsn_update_same_company" ON public.company_hsn FOR UPDATE USING (
-    auth.uid() IN (SELECT user_id FROM company_users WHERE company_id = company_hsn.company_id)
-);
-CREATE POLICY "company_hsn_delete_same_company" ON public.company_hsn FOR DELETE USING (
-    auth.uid() IN (SELECT user_id FROM company_users WHERE company_id = company_hsn.company_id)
-);
-
--- Index for Company HSN
-CREATE INDEX idx_company_hsn_company_id ON public.company_hsn(company_id);
-CREATE INDEX idx_company_hsn_code ON public.company_hsn(hsn_code);
+-- Company HSN Table REMOVED in favor of Global Master List
 
 
 
@@ -1052,6 +1155,76 @@ COMMENT ON COLUMN shipping_bills.sb_number IS 'Shipping Bill number from customs
 COMMENT ON COLUMN shipping_bills.let_export_order_number IS 'Let Export Order - customs clearance number';
 COMMENT ON COLUMN shipping_bill_items.assessable_value IS 'Value used for duty calculation (FOB - freight - insurance)';
 
+-- Enable Row Level Security
+ALTER TABLE shipping_bills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shipping_bill_items ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for shipping_bills
+CREATE POLICY "shipping_bills_select_same_company" ON shipping_bills
+    FOR SELECT USING (
+        company_id IN (
+            SELECT company_id FROM company_users WHERE user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "shipping_bills_insert_same_company" ON shipping_bills
+    FOR INSERT WITH CHECK (
+        company_id IN (
+            SELECT company_id FROM company_users WHERE user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "shipping_bills_update_same_company" ON shipping_bills
+    FOR UPDATE USING (
+        company_id IN (
+            SELECT company_id FROM company_users WHERE user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "shipping_bills_delete_same_company" ON shipping_bills
+    FOR DELETE USING (
+        company_id IN (
+            SELECT company_id FROM company_users WHERE user_id = auth.uid()
+        )
+    );
+
+-- RLS Policies for shipping_bill_items (via parent shipping_bill)
+CREATE POLICY "shipping_bill_items_select_same_company" ON shipping_bill_items
+    FOR SELECT USING (
+        shipping_bill_id IN (
+            SELECT id FROM shipping_bills WHERE company_id IN (
+                SELECT company_id FROM company_users WHERE user_id = auth.uid()
+            )
+        )
+    );
+
+CREATE POLICY "shipping_bill_items_insert_same_company" ON shipping_bill_items
+    FOR INSERT WITH CHECK (
+        shipping_bill_id IN (
+            SELECT id FROM shipping_bills WHERE company_id IN (
+                SELECT company_id FROM company_users WHERE user_id = auth.uid()
+            )
+        )
+    );
+
+CREATE POLICY "shipping_bill_items_update_same_company" ON shipping_bill_items
+    FOR UPDATE USING (
+        shipping_bill_id IN (
+            SELECT id FROM shipping_bills WHERE company_id IN (
+                SELECT company_id FROM company_users WHERE user_id = auth.uid()
+            )
+        )
+    );
+
+CREATE POLICY "shipping_bill_items_delete_same_company" ON shipping_bill_items
+    FOR DELETE USING (
+        shipping_bill_id IN (
+            SELECT id FROM shipping_bills WHERE company_id IN (
+                SELECT company_id FROM company_users WHERE user_id = auth.uid()
+            )
+        )
+    );
+
 -- =============================================================
 -- Source: supabase/migrations/add_brcs.sql
 -- =============================================================
@@ -1689,3 +1862,315 @@ CREATE POLICY luts_delete ON luts
 
 COMMENT ON TABLE luts IS 'Letters of Undertaking for zero-rated exports under GST';
 COMMENT ON COLUMN luts.financial_year IS 'Financial Year for which LUT is valid (e.g. 2024-25)';
+-- Seeding Master HSN Codes
+INSERT INTO public.master_hsn_codes (hsn_code, description, gst_rate, chapter) VALUES
+('33019031', 'Attars of all kinds in fixed oil base,3301,"Essential oils (terpeneless or not), including concretes and absolutes; resinoids; extracted oleoresins; concentrates of essential oils in fats, in fixed oils, in waxes or the like, obtained by enfleurage or maceration; terpenic by-products of the deterpenation of essential oils; aqueous distillates and aqueous solutions of essential oils such as essential oils of citrus fruit, essential oils other than those of citrus fruit such as eucalyptus oil, etc., flavouring essences all types (including those for liquors), attars of all kinds in fixed oil bases', 18, '33'),
+('33074100', 'Agarbatti and other odoriferous preparations which', 0, '33'),
+('33074900', 'Other,3307,"Pre-shave, shaving or after-shave preparations, personal deodorants, bath preparations, depilatories and other perfumery, cosmetic or toilet preparations, not elsewhere specified or included; prepared room deodorisers, whether or not perfumed or having disinfectant properties [other than shaving cream, shaving lotion and aftershave', 0, '33'),
+('34060010', 'Candles,3406,"Candles, tapers and the like', 5, '34'),
+('39231020', 'Watch-box, jewellery box and similar containers of', 0, '39'),
+('3923', 'Articles for the conveyance or packing of goods, of plastics; stoppers', 0, '39'),
+('42022910', 'Hand bags of other materials excluding wicker-work or basket work,"4202 22, 4202', 0, '42'),
+('42023110', 'With outer surface of leather or of composition of Leather -Jewellery box,"4202 22, 4202', 0, '42'),
+('42023910', 'Other -Jewellery box,"4202 22, 4202', 0, '42'),
+('44141000', 'WOODEN FRAMES FOR PAINTINGS, PHOTOGRAPHS', 0, '44'),
+('4414', 'Wooden frames for painting, photographs, mirrors, etc.', 5, '44'),
+('44149000', 'WOODEN FRAMES FOR PAINTINGS, PHOTOGRAPHS, MIRRORS OR SIMILAR OBJECTS -Other",4414,"Wooden frames for painting, photographs, mirrors, etc.', 5, '44'),
+('44191900', 'Other,4419,Tableware and Kitchenware of wood', 5, '44'),
+('44199090', 'Other,4419,Tableware and Kitchenware of wood', 5, '44'),
+('44201100', 'Statuettes and other ornaments, of wood: Of tropical wood",4420,"Statuettes & other ornaments of wood, wood marquetry & inlaid, jewellery box, wood lathe and lacquer work (including lathe and lacquer work, ambadi sisal craft)', 5, '44'),
+('44201900', 'Statuettes and other ornaments, of wood: -Other",4420,"Statuettes & other ornaments of wood, wood marquetry & inlaid', 0, '44'),
+('44209010', 'Wood marquetry and inlaid wood,4420,"Wood marquetry and inlaid wood; caskets and cases for jewellery or cutlery, and similar articles, of wood; statuettes and other ornaments, of wood; wooden articles of furniture not falling in Chapter 94', 5, '44'),
+('44209090', 'Other,4420,"Wood marquetry and inlaid wood; caskets and cases for jewellery or cutlery, and similar articles, of wood; statuettes and other ornaments, of wood; wooden articles of furniture not falling in Chapter 94', 5, '44'),
+('44219160', 'Parts of domestic decorative articles used as tableware and kitchenware,4421,"Other articles of wood; such as clothes hangers, Spools, cops, bobbins, sewing thread reels and the like of turned wood for various textile machinery, Match splints, Pencil slats, Parts of wood, namely oars, paddles and rudders for ships, boats and other similar floating structures, Parts of domestic decorative articles used as tableware and kitchenware [other than Wood paving blocks, articles of densified wood not elsewhere included or specified, Parts of domestic decorative articles used as tableware and kitchenware]', 5, '44'),
+('46012900', 'Mats, matting and screens of vegetable materials -Other","4601 and', 0, '46'),
+('46019900', 'Other,"4601 and', 0, '46'),
+('46021100', 'Of bamboo,"4601, 4602","Manufactures of straw, of esparto or of other plaiting materials;', 0, '46'),
+('46021200', 'Of rattan,"4601, 4602","Manufactures of straw, of esparto or of other plaiting materials;', 0, '46'),
+('46021911', 'Baskets,"4601, 4602","Manufactures of straw, of esparto or of other plaiting materials;', 0, '46'),
+('46021919', 'Other,"4601, 4602","Manufactures of straw, of esparto or of other plaiting materials;', 0, '46'),
+('46021990', 'Other,"4601, 4602","Manufactures of straw, of esparto or of other plaiting materials;', 0, '46'),
+('48021010', 'Hand-made paper -Paper,4802,Hand-made paper and paperboard', 5, '48'),
+('48021020', 'Hand-made paperboard,4802,Hand-made paper and paperboard', 5, '48'),
+('48237030', 'Articles made of paper mache other than artware and', 0, '48'),
+('4823', 'Articles made of paper mache', 5, '48'),
+('48239018', 'Products consisting of sheets of paper or paperboard, impregnated, coated or covered with plastics (including thermoset resins or mixtures thereof or chemical ormulations containing melamine, phenol or urea formaldehyde with or without curing agents",4823,"Paper pulp moulded trays; Kites, Paper mache articles', 5, '48'),
+('56050020', 'Imitation zari thread,5605,"Metallised yarn, whether or not gimped, being textile yarn, or strip or the like of heading 5404 or 5405, combined with metal in the form of thread, strip or powder or covered with metal, including real zari thread (gold) and silver thread combined with textile thread, imitation zari thread or yarn known by any name in trade parlance', 5, '56'),
+('56050090', 'Metallised yarn, whether or not gimped, being textile yarn, or strip or the like of heading 5404 or 5405, combined with metal in the form of thread, strip or powder or covered with metal :- Other",5605,"Metallised yarn, whether or not gimped, being textile yarn, or strip or the like of heading 5404 or 5405, combined with metal in the form of thread, strip or powder or covered with metal, including real zari thread (gold) and silver thread combined with textile thread, imitation zari thread or yarn known by any name in trade parlance', 5, '56'),
+('58041090', 'Tulles and other net fabrics :- Other,5804,"Tulles and other net fabrics, not including woven, knitted or crocheted fabrics; lace in the piece, in strips or in motifs, other than fabrics of', 0, '58'),
+('58043000', 'Hand-made lace,5804 30 00,Handmade lace', 5, '58'),
+('58050010', 'Tapestries hand made or needle worked by hand, of cotton",5805,"Hand-woven tapestries of the type Gobelins, Flanders, Aubusson, Beauvais and the like, and needle-worked tapestries (for example, petit point, cross stitch), whether or not made up', 5, '58'),
+('5805', 'Hand-woven tapestries', 5, '58'),
+('58081090', 'Braids, in the piece :- Other",5808 10,Hand-made braids and ornamental trimming in the piece', 5, '58'),
+('58090010', 'Zari border,5809,"Woven fabrics of metal thread and woven fabrics of metallised yarn of heading 5605, of a kind used in apparel, as furnishing fabrics or for similar purposes, not elsewhere specified or included; such as Zari', 0, '58'),
+('58090090', 'Woven fabrics of metal thread and woven fabrics of metallised yarn of heading 5605, of a kind used in apparel, as furnishing fabrics or for similar purposes, not elsewhere specified or included :- Other","5809, 5810","Embroidery or zari articles, that is to say,- imi, zari, kasab, salma, dabka, chumki, gota, sitara, naqsi, kora, glass beads, badla, gizai', 5, '58'),
+('58101000', 'Embroidery without visible ground,5810,Hand embroidered articles', 5, '58'),
+('58109210', 'Embroidered badges, motifs and the like",5810,"Embroidery in the piece, in strips or in motifs, Embroidered badges', 0, '58'),
+('58110010', 'Kantha (multilayer stitched textile fabrics in piece used for bedding, mattress pads or clothing)",5811,"Quilted textile products in the piece, composed of one or more layers of textile materials assembled with padding by stitching or otherwise, other than embroidery of heading 5810', 5, '58'),
+('58110020', 'Quilted wadding,5811,"Quilted textile products in the piece, composed of one or more layers of textile materials assembled with padding by stitching or otherwise, other than embroidery of heading 5810', 5, '58'),
+('61043100', 'Jackets and blazers :- Of wool or fine animal hair,61,"Article of apparel and clothing accessories, knitted or crocheted, of sale', 0, '61'),
+('61171020', 'Shawls, scarves, mufflers, mantillas, veils and the like :-', 0, '61'),
+('6117', '6214",Handmade/hand embroidered shawls', 5, '61'),
+('63041100', 'Bedspreads :- Knitted or crocheted,"63 [other than', 0, '63'),
+('63049190', 'Knitted or crocheted :- Other,"63 [other than', 0, '63'),
+('63079011', 'Dress materials hand printed :- Of cotton,"63 [other than', 0, '63'),
+('63079012', 'Dress materials hand printed :- Of silk,"63 [other than', 0, '63'),
+('63079013', 'Dress materials hand printed :- Of man-made fibres,"63 [other than', 0, '63'),
+('63079019', 'Dress materials hand printed :- Other,"63 [other than', 0, '63'),
+('63079020', 'Dress materials hand printed :- Made up articles of cotton,"63 [other than', 0, '63'),
+('63079090', 'Dress materials hand printed :-  Other,"63 [other than', 0, '63'),
+('64032040', 'Kolapuri chappals and similar footwear,64,Footwear of sale value not exceeding Rs.2500 per pair', 5, '64'),
+('64061010', 'Embroidered uppers of textile materials,64,Footwear of sale value not exceeding Rs.2500 per pair', 5, '64'),
+('65040000', 'HATS AND OTHER HEADGEAR, PLAITED OR MADE BY', 0, '65'),
+('65050090', 'Hats and other headgear, knitted or crocheted, or made up from lace, felt or other textile fabric, in the piece (but not in strips), whether or not lined or trimmed; hair-nets of any material, whether or not lined or trimmed - Other",6505,Hats (knitted/crocheted) or made up from lace or other textile fabrics', 5, '65'),
+('66020000', 'WALKING-STICKS, SEAT-STICKS, WHIPS, RIDING CROPS', 0, '66'),
+('67010010', 'Feather dusters,6701,"Skins and other parts of birds with their feathers or down, feathers, parts of feathers, down and articles thereof (other than goods of', 0, '67'),
+('67029090', 'ARTIFICIAL FLOWERS, FOLIAGE AND FRUIT AND PARTS THEREOF; ARTICLES MADE OF ARTIFICIAL FLOWERS', 0, '67'),
+('6702', 'Artificial  flowers,  foliage  and  fruit  and parts  thereof;  articles  made of  artificial flowers, foliage or fruit', 18, '67'),
+('68022190', 'Others - Marble, travertine and alabaster",6802,"Carved stone products (e.g., statues, statuettes, figures of animals, writing sets, ashtray, candle stand)', 5, '68'),
+('68159990', 'Other,6815 99 90,"Stone art ware, stone inlay work', 5, '68'),
+('69111011', 'Tableware :- Of bone china and soft porcelain,6911,"Tableware, kitchenware, other household articles and toilet articles, of', 0, '69'),
+('69111019', 'Tableware :-Other,6911,"Tableware, kitchenware, other household articles and toilet articles, of', 0, '69'),
+('69111021', 'Kitchenware:- Of Bone china and soft porcelain,6911,"Tableware, kitchenware, other household articles and toilet articles, of', 0, '69'),
+('69111029', 'Kitchenware:- Other,6911,"Tableware, kitchenware, other household articles and toilet articles, of', 0, '69'),
+('69119010', 'Toilet articles,6911,"Tableware, kitchenware, other household articles and toilet articles, of', 0, '69'),
+('69119090', 'Other,6911,"Tableware, kitchenware, other household articles and toilet articles, of', 0, '69'),
+('69120010', 'Tableware,"6912 00 10,","Tableware and kitchenware of clay and terracotta, other clay articles', 5, '69'),
+('69120020', 'Kitchenware,6912 00 20,"Tableware and kitchenware of clay and terracotta, other clay articles', 5, '69'),
+('69120030', 'Toilet articles,6912,"Tableware, kitchenware, other household articles and toilet articles', 0, '69'),
+('69120040', 'Clay articles,69120040,Earthen pot and clay lamps,NIL', 0, '69'),
+('69120090', 'Ceramic tableware, kitchenware, other household articles and toilet articles, other than of porcelain or', 0, '69'),
+('6912', 'Tableware, kitchenware, other household articles and toilet articles, other than of porcelain or china', 5, '69'),
+('69131000', 'Of porcelain or china,6913,Statues and other ornamental articles', 5, '69'),
+('69139000', 'STATUETTES AND OTHER ORNAMENTAL CERAMIC ARTICLES:- Other,6913 90 00,Statuettes & other ornamental ceramic articles (incl. blue potteries)', 5, '69'),
+('69141000', 'Of porcelain or china,6914,Other ceramic articles', 18, '69'),
+('69149000', 'OTHER CERAMIC ARTICLES:- Other,6914,Other ceramic articles', 18, '69'),
+('70099200', 'Rear-view mirrors for vehicles :- Other:- Framed,7009 92 00,Ornamental framed mirrors', 5, '70'),
+('70132800', 'Stemware drinking glasses, other than of glass-ceramics :-Other",7013,"Glassware of a kind used for table, kitchen, toilet, office, indoor decoration or similar purposes (other than that of heading 7010 or', 0, '70'),
+('70133300', 'Other drinking glasses, other than of glassceramics :-Of lead crystal",7013,"Glassware of a kind used for table, kitchen, toilet, office, indoor decoration or similar purposes (other than that of heading 7010 or', 0, '70'),
+('70133700', 'Other drinking glasses, other than of glassceramics :-Other",7013,"Glassware of a kind used for table, kitchen, toilet, office, indoor decoration or similar purposes (other than that of heading 7010 or', 0, '70'),
+('70134100', 'Of lead crystal,7013,"Glassware of a kind used for table, kitchen, toilet, office, indoor', 0, '70'),
+('70134900', 'Other glassware,7013,"Glassware of a kind used for table, kitchen, toilet, office, indoor', 0, '70'),
+('70139100', 'Of lead crystal,7013,"Glassware of a kind used for table, kitchen, toilet, office, indoor', 0, '70'),
+('70181010', 'Bangles,7018 10,"Bangles, beads and small ware', 5, '70'),
+('70181020', 'Beads,7018,Glass beads', 5, '70'),
+('70181090', 'Glass beads, imitation pearls, imitation precious or semi-precious stones and similar glass smallwares :- Other",7018,"Imitation pearls, imitation precious or semi-precious stones and similar glass smallwares, and articles thereof other than imitation jewellery; glass eyes other than prosthetic articles; statuettes and other ornaments of lamp-worked glass, other than imitation jewellery; glass microspheres not exceeding 1 mm in diameter', 18, '70'),
+('70189010', 'Glass statues,7018 90 10,Glass statues [other than those of crystal]', 5, '70'),
+('70200011', 'Globes for lamps and lanterns,7020,"Globes for lamps and lanterns, Founts for kerosene wick lamps, Glass', 0, '70'),
+('70200029', 'Glass chimneys :- Other,7020,"Other articles of glass [other than Globes for lamps and lanterns, Founts for kerosene wick lamps, Glass chimneys for lamps and', 0, '70'),
+('70200090', 'Glass chimneys :- Other,7020 00 90,"Glass art ware [ incl. pots, jars, votive, cask, cake cover, tulip bottle, vase]', 5, '70'),
+('71131110', 'Jewellery with filigree work,7113 11 10,Silver filigree work', 3, '71'),
+('71171100', 'Cuff-links and studs,7117,"Handmade imitation jewellery (including natural seeds, beads jewellery, cardamom garland)', 3, '71'),
+('71171910', 'Bangles,7117,Bangles of lac/shellac,NIL', 0, '71'),
+('71171920', 'German silver jewellery,7117,Imitation jewellery [other than bangles of lac/shellac]', 3, '71'),
+('71171990', 'Other,7117,Imitation jewellery [other than bangles of lac/shellac]', 3, '71'),
+('71179010', 'Jewellery studded with imitation pearls or imitation or', 0, '71'),
+('7117', 'Imitation jewellery [other than bangles of lac/shellac]', 3, '71'),
+('71179090', 'Other,7117,"Handmade imitation jewellery (including natural seeds, beads', 0, '71'),
+('73239200', 'Of cast iron, enamelled",7323,"Table, kitchen or other household articles of iron & steel; Utensils', 5, '73'),
+('73239420', 'Utensils,7323,"Table, kitchen or other household articles of iron & steel; Utensils', 5, '73'),
+('73239490', 'Of iron (other than cast iron) or steel, enamelled :- Other",7323,"Table, kitchen or other household articles of iron & steel; Utensils', 5, '73'),
+('74181021', 'Of Brass,7418,"Table, kitchen or other household articles of copper; Utensils', 5, '74'),
+('74181022', 'Of Copper,7418,"Table, kitchen or other household articles of copper; Utensils', 5, '74'),
+('74181023', 'Of other copper alloys,7418,"Table, kitchen or other household articles of copper; Utensils', 5, '74'),
+('74181024', 'E.P.N.S. Ware,7418,"Table, kitchen or other household articles of copper; Utensils', 5, '74'),
+('74181031', 'Of E.P.N.S,7418,"Table, kitchen or other household articles of copper; Utensils', 5, '74'),
+('74181039', 'Other,7418,"All goods (other than table, kitchen or other household articles of', 18, '74'),
+('74198020', 'Articles of copper alloys electro-plated with nickel silver,7419 80,"Artware of brass, copper/copper alloys, electro plated with nickel/silver', 5, '74'),
+('74198030', 'Articles of brass,7419 80 30,Brass Kerosene Pressure Stove', 5, '74'),
+('74198040', 'Copper worked articles,7419 80,"Artware of brass, copper/copper alloys, electro plated with', 0, '74'),
+('76151030', 'Other table, kitchen or household articles",7615,"Table, kitchen or other household articles of aluminium; Utensils', 5, '76'),
+('76151090', 'Pressure cookers, solar collectors:- Parts",7616 99 90,Aluminium art ware', 5, '76'),
+('83061000', 'Bells, gongs and the like",8306,"Bells, gongs and the like, non-electric, of base metal; statuettes and other ornaments, of base metal; photograph, picture or similar frames, of base metal; mirrors of base metal; metal bidriware', 5, '83'),
+('83062190', 'Plated with precious metal:- Other,8306,"Bells, gongs and the like, non-electric, of base metal; statuettes and other ornaments, of base metal; photograph, picture or similar frames, of base metal; mirrors of base metal; metal bidriware', 5, '83'),
+('83062910', 'Statuettes,8306,"Bells, gongs and the like, non-electric, of base metal; statuettes and other ornaments, of base metal; photograph, picture or similar frames, of base metal; mirrors of base metal; metal bidriware', 5, '83'),
+('83062990', 'Other,8306,"Bells, gongs and the like, non-electric, of base metal; statuettes and other ornaments, of base metal; photograph, picture or similar frames, of base metal; mirrors of base metal; metal bidriware', 5, '83'),
+('83063000', 'Photograph, picture or similar frames; mirrors",8306,"Bells, gongs and the like, non-electric, of base metal; statuettes and other ornaments, of base metal; photograph, picture or similar frames, of base metal; mirrors of base metal; metal bidriware', 5, '83'),
+('83089020', 'Imitation zari spangles,8308,"Clasps, frames with clasps, buckles, buckle-clasps, hooks, eyes, eyelets and the like, of base metal, of a kind used for clothing or clothing accessories, footwear, jewellery, wrist watches, books, awnings, leather goods, travel goods or saddlery or for other made up articles; tubular or bifurcated rivets, of base metal; beads and pangles, of base', 0, '83'),
+('83089031', 'For garments, made ups, knitwear, plastic and leather goods",8308,"Clasps, frames with clasps, buckles, buckle-clasps, hooks, eyes, eyelets and the like, of base metal, of a kind used for clothing or clothing accessories, footwear, jewellery, wrist watches, books, awnings, leather goods, travel goods or saddlery or for other made up articles; tubular or bifurcated rivets, of base metal; beads and pangles, of base', 0, '83'),
+('83089039', 'Beads and spangles of base metal:- Other,8308,"Clasps, frames with clasps, buckles, buckle-clasps, hooks, eyes, eyelets and the like, of base metal, of a kind used for clothing or clothing accessories, footwear, jewellery, wrist watches, books, awnings, leather goods, travel goods or saddlery or for other made up articles; tubular or bifurcated rivets, of base metal; beads and pangles, of base', 0, '83'),
+('92029000', 'OTHER STRING MUSICAL INSTRUMENTS (FOR EXAMPLE', 0, '92'),
+('92059010', 'Flutes,9205,"Wind musical instruments (for example, keyboard pipe organs, accordions, clarinets, trumpets, bagpipes), other than fairground organs and mechanical street organs', 18, '92'),
+('92059090', 'Other,9205,"Wind musical instruments (for example, keyboard pipe organs, accordions, clarinets, trumpets, bagpipes), other than fairground organs and mechanical street organs', 18, '92'),
+('92060000', 'PERCUSSION MUSICAL INSTRUMENTS (FOR EXAMPLE, DRUMS, XYLOPHONES, CYMBOLS, CASTANETS', 0, '92'),
+('94033010', 'Cabinetware,9403,"Other furniture [other than furniture wholly made of bamboo, cane or', 0, '94'),
+('94033090', 'Wooden furniture of a kind used in offices:- Other,9403,"Other furniture [other than furniture wholly made of bamboo, cane or', 0, '94'),
+('94035010', 'Bed stead,9403,"Other furniture [other than furniture wholly made of bamboo, cane or', 0, '94'),
+('94035090', 'Wooden furniture of a kind used in the bed room:- Other,9403,"Other furniture [other than furniture wholly made of bamboo, cane or', 0, '94'),
+('94036000', 'Other wooden furniture,9403,"Other furniture [other than furniture wholly made of bamboo, cane or', 0, '94'),
+('94038200', 'Of bamboo,9403,"Furniture wholly made of bamboo, cane or rattan', 5, '94'),
+('94038900', 'Furniture of other materials, including cane, osier', 0, '94'),
+('9403', 'Furniture wholly made of bamboo, cane or rattan', 5, '94'),
+('94039100', 'Furniture of other materials, including cane, osier, bamboo or similar materials - Parts - of wood",9403,"Furniture wholly made of bamboo, cane or rattan', 5, '94'),
+('94039900', 'Furniture of other materials, including cane, osier', 0, '94'),
+('94049000', 'Quilts, bedspreads, eiderdowns and duvets', 0, '94'),
+('9404', 'Cotton quilts of sale value not exceeding Rs. 2500 per piece', 5, '94'),
+('94051100', 'Chandeliers and other electric ceiling or wall lighting fittings, excluding those of a kind used for lighting public open spaces or thoroughfares - Designed for use solely with light-emitting diode  (LED) light sources",9405,"Hurricane lanterns, Kerosene lamp / pressure lantern, petromax, glass chimney, and parts thereof', 5, '94'),
+('94051900', 'Other,9405 10,Handcrafted lamps (including Panchloga lamp)', 5, '94'),
+('94053100', 'Lighting strings of a kind used for Christmas trees: Designed for use solely with light-emitting diode (LED)', 0, '94'),
+('94053900', 'Other,9405 10,Handcrafted lamps (including Panchloga lamp)', 5, '94'),
+('94055000', 'Non-electrical luminaires and lighting fittings,9405,"Luminaires and lighting fittings including searchlights and spotlights and parts thereof, not elsewhere specified or included; illuminated signs, illuminated nameplates and the like, having a permanently fixed light source, and parts thereof not elsewhere specified or included [other than kerosene pressure lantern and parts thereof including gas mantles; hurricane lanterns, kerosene lamp, petromax, glass chimney, and parts thereof', 18, '94'),
+('95030010', 'Of wood,9503,"Toy balloons made of natural rubber latex and Toys like tricycles, scooters, pedal cars etc. (including parts and', 0, '95'),
+('95030090', 'Tricycles, scooters, pedal cars and similar wheeled toys; dolls'' carriages; dolls; other toys; reduced-size (�scale�) models and similar recreational models, working or not; puzzles of all kinds:- Other",9503,"Dolls or other toys made of wood or metal or textile material (including wooden toys of Sawantwadi, Channapatna toys, Thanjavur doll)', 5, '95'),
+('95051000', 'Articles for Christmas festivities,9505,"Festive, carnival or other entertainment articles, including conjuring tricks and novelty jokes', 18, '95'),
+('95059010', 'Magical equipments,9505,"Festive, carnival or other entertainment articles, including conjuring tricks and novelty jokes', 18, '95'),
+('96011000', 'Worked ivory and articles of ivory,9601,"Worked ivory, bone, tortoise shell, horn, antlers, corals, mother of pearl, and other animal carving material and articles of these materials, articles of coral (including articles obtained by moulding)', 5, '96'),
+('96019010', 'Worked tortoise-shell and articles thereof,9601,"Worked ivory, bone, tortoise shell, horn, antlers, corals, mother of pearl, and other animal carving material and articles of these materials, articles of coral (including articles obtained by moulding)', 5, '96'),
+('96019020', 'Worked mother-of-pearl and articles thereof,9601,"Worked ivory, bone, tortoise shell, horn, antlers, corals, mother of pearl, and other animal carving material and articles of these materials, articles of coral (including articles obtained by moulding)', 5, '96'),
+('96019030', 'Worked bone (excluding whale bone) and  articles thereof,9601,"Worked ivory, bone, tortoise shell, horn, antlers, corals, mother of pearl, and other animal carving material and articles of these materials, articles of coral (including articles obtained by moulding)', 5, '96'),
+('96019040', 'Worked horn, coral and other animal carving  material and articles thereof",9601,"Worked ivory, bone, tortoise shell, horn, antlers, corals, mother of pearl, and other animal carving material and articles of these materials, articles of coral (including articles obtained by moulding)', 5, '96'),
+('96019090', 'Other,9601,"Worked ivory, bone, tortoise shell, horn, antlers, corals, mother of pearl, and other animal carving material and articles of these materials, articles of coral (including articles obtained by moulding)', 5, '96'),
+('96020010', 'Worked vegetable carving material and articles thereof,9602,"Worked vegetable or mineral carving materials and articles thereof; articles of wax, Stearin, natural gums or natural resins, or of modelling pastes, etc. (including articles of lac, shellac)', 5, '96'),
+('96020020', 'Moulded or carved articles of wax, stearin, natural gums and resins and other moulded or carved articles",9602,"Worked vegetable or mineral carving materials and articles thereof; articles of wax, Stearin, natural gums or natural resins, or of modelling pastes, etc. (including articles of lac, shellac)', 5, '96'),
+('96020040', 'Other articles of unhardened gelatin,9602,"Worked vegetable or mineral carving materials and articles thereof; articles of wax, Stearin, natural gums or natural resins, or of modelling pastes, etc. (including articles of lac, shellac)', 5, '96'),
+('96020090', 'Worked vegetable or mineral carving material and articles of these materials moulded or carved articles of wax, of stearin, of natural gums or natural resins or of modelling pastes, and other moulded or carved articles, not elsewhere specified or included",9602,"Worked vegetable or mineral carving materials and articles thereof; articles of wax, Stearin, natural gums or natural resins, or of modelling pastes, etc. (including articles of lac, shellac)', 5, '96'),
+('96031000', 'Brooms and brushes, consisting of twigs or other', 0, '96'),
+('96062200', 'Of base metals, not covered with textile material","9606 21 00', 0, '96'),
+('96089910', 'Pen holders, pencil holders and similar holders",9608,"Ball point pens; felt tipped and other porous-tipped pens and markers; fountain pens; stylograph pens and other pens; duplicating stylos; pen holders, pencil holders and similar holders; parts (including caps and clips) of the foregoing articles, other than those of heading 9609', 18, '96'),
+('96140000', 'SMOKING PIPES (INCLUDING PIPE BOWLS) AND CIGAR OR CIGARETTE HOLDERS AND PARTS THEREOF,9614,"Smoking pipes (including pipe bowls) and cigar or cigarette holders, and parts thereof', 40, '96'),
+('97012100', 'PAINTINGS, DRAWINGS AND PASTELS, EXECUTED ENTIRELY BY HAND, OTHER THAN DRAWINGS OF HEADING 4906 AND OTHER THAN HAND-PAINTED OR HAND-DECORATED MANUFACTURED ARTICLES; COLLAGES, MOSAICS AND SIMILAR DECORATIVE', 0, '97'),
+('97012200', 'PAINTINGS, DRAWINGS AND PASTELS, EXECUTED ENTIRELY BY HAND, OTHER THAN DRAWINGS OF HEADING 4906 AND OTHER THAN HAND-PAINTED OR HAND-DECORATED MANUFACTURED ARTICLES; COLLAGES, MOSAICS AND SIMILAR DECORATIVE', 0, '97'),
+('9701', 'Hand paintings, drawings, and pastels (including Mysore painting, Rajasthan painting, Tanjore painting, Palm leaf painting, Basoli, etc.)', 5, '97'),
+('97012900', 'PAINTINGS, DRAWINGS AND PASTELS, EXECUTED ENTIRELY BY HAND, OTHER THAN DRAWINGS OF HEADING 4906 AND OTHER THAN HAND-PAINTED OR HAND-DECORATED MANUFACTURED ARTICLES; COLLAGES, MOSAICS AND SIMILAR DECORATIVE', 0, '97'),
+('97019100', 'PAINTINGS, DRAWINGS AND PASTELS, EXECUTED ENTIRELY BY HAND, OTHER THAN DRAWINGS OF HEADING 4906 AND OTHER THAN HAND-PAINTED OR HAND-DECORATED MANUFACTURED ARTICLES; COLLAGES, MOSAICS AND SIMILAR DECORATIVE', 0, '97'),
+('97019200', 'PAINTINGS, DRAWINGS AND PASTELS, EXECUTED ENTIRELY BY HAND, OTHER THAN DRAWINGS OF HEADING 4906 AND OTHER THAN HAND-PAINTED OR HAND-DECORATED MANUFACTURED ARTICLES; COLLAGES, MOSAICS AND SIMILAR DECORATIVE', 0, '97'),
+('97019900', 'PAINTINGS, DRAWINGS AND PASTELS, EXECUTED ENTIRELY BY HAND, OTHER THAN DRAWINGS OF HEADING 4906 AND OTHER THAN HAND-PAINTED OR HAND-DECORATED MANUFACTURED ARTICLES; COLLAGES, MOSAICS AND SIMILAR DECORATIVE', 0, '97'),
+('97021000', 'ORIGINAL ENGRAVINGS, PRINTS AND LITHOGRAPHS - Of', 0, '97'),
+('9702', 'Original engravings, prints and lithographs', 5, '97'),
+('97029000', 'ORIGINAL ENGRAVINGS, PRINTS AND LITHOGRAPHS :-', 0, '97'),
+('97031010', 'ORIGINAL SCULPTURES AND STATUARY, IN ANY', 0, '97'),
+('9703', 'Original sculptures and statuary, in metal, stone, or any other material', 5, '97'),
+('97031020', 'ORIGINAL SCULPTURES AND STATUARY, IN ANY', 0, '97'),
+('97031090', 'ORIGINAL SCULPTURES AND STATUARY, IN ANY', 0, '97'),
+('97039010', 'ORIGINAL SCULPTURES AND STATUARY, IN ANY', 0, '97'),
+('97039020', 'ORIGINAL SCULPTURES AND STATUARY, IN ANY', 0, '97'),
+('97039090', 'ORIGINAL SCULPTURES AND STATUARY, IN ANY', 0, '97'),
+('97040010', 'Used postal stamp,9704,"Postage or revenue stamps, stamp-postmarks, first-day covers, postal stationery (stamped paper), and the like, used or unused, other than', 0, '97'),
+('97040020', 'Used or unused first-day covers for philatelists,9704,"Postage or revenue stamps, stamp-postmarks, first-day covers, postal stationery (stamped paper), and the like, used or unused, other than', 0, '97'),
+('97040090', 'Postage or revenue stamps, stamp-post marks, first-day covers, postal stationery (stamped paper), and the like, used or unused, other than those of heading 490 :- Other",9704,"Postage or revenue stamps, stamp-postmarks, first-day covers, postal stationery (stamped paper), and the like, used or unused, other than those of heading 4907', 5, '97'),
+('97051000', 'Collections and collectors'' pieces of archaeological, ethnographic or historical interest Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical or paleontological interest Collections and collectors'' pieces of archaeologic",9705,"Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical, historical, archaeological, 29 paleontological, ethnographic or numismatic interest [other than numismatic coins]', 5, '97'),
+('97052100', 'Collections and collectors'' pieces of archaeological, ethnographic or historical interest Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical or paleontological interest - Collections and collectors'' pieces of zoological",9705,"Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical, historical, archaeological, 29 paleontological, ethnographic or numismatic interest [other than numismatic coins]', 5, '97'),
+('97052200', 'Collections and collectors'' pieces of archaeological, ethnographic or historical interest Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical or paleontological interest - Collections and collectors'' pieces of zoological",9705,"Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical, historical, archaeological, 29 paleontological, ethnographic or numismatic interest [other than numismatic coins]', 5, '97'),
+('97052900', 'Collections and collectors'' pieces of archaeological, ethnographic or historical interest Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical or paleontological interest - Collections and collectors'' pieces of zoological",9705,"Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical, historical, archaeological, 29 paleontological, ethnographic or numismatic interest [other than numismatic coins]', 5, '97'),
+('97053100', 'Collections and collectors'' pieces of archaeological, ethnographic or historical interest Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical or paleontological interest - Collections and collectors'' pieces of numismatic",9705,"Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical, historical, archaeological, 29 paleontological, ethnographic or numismatic interest [other than numismatic coins]', 5, '97'),
+('97053900', 'Collections and collectors'' pieces of archaeological, ethnographic or historical interest Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical or paleontological interest - Collections and collectors'' pieces of numismatic",9705,"Collections and collectors'' pieces of zoological, botanical, mineralogical, anatomical, historical, archaeological, 29 paleontological, ethnographic or numismatic interest [other than numismatic coins]', 5, '97'),
+('97061000', 'ANTIQUES OF AN AGE EXCEEDING 100 YEARS - Of an age', 0, '97'),
+('9706', 'Antiques of an age exceeding one hundred years', 5, '97')
+ON CONFLICT (hsn_code) DO NOTHING;
+
+-- =============================================================
+-- SEED: Super Admin User & Company
+-- =============================================================
+
+DO $$
+DECLARE
+    new_user_id UUID;
+    new_company_id UUID;
+    existing_user_id UUID;
+BEGIN
+    -- Check if user already exists
+    SELECT id INTO existing_user_id FROM auth.users WHERE email = 'admin@eximley.com';
+    
+    IF existing_user_id IS NULL THEN
+        -- Create Auth User for Super Admin
+        INSERT INTO auth.users (
+            instance_id,
+            id,
+            aud,
+            role,
+            email,
+            encrypted_password,
+            email_confirmed_at,
+            created_at,
+            updated_at,
+            confirmation_token,
+            recovery_token,
+            email_change_token_new,
+            email_change
+        )
+        VALUES (
+            '00000000-0000-0000-0000-000000000000',
+            gen_random_uuid(),
+            'authenticated',
+            'authenticated',
+            'admin@eximley.com',
+            crypt('Admin123!', gen_salt('bf')), -- Default password: Admin123!
+            NOW(),
+            NOW(),
+            NOW(),
+            '',
+            '',
+            '',
+            ''
+        )
+        RETURNING id INTO new_user_id;
+        
+        -- Create user profile for the Super Admin (if not exists)
+        INSERT INTO public.user_profiles (id, full_name)
+        VALUES (new_user_id, 'Super Admin')
+        ON CONFLICT (id) DO NOTHING;
+        
+        RAISE NOTICE 'Created new Super Admin user with ID: %', new_user_id;
+    ELSE
+        new_user_id := existing_user_id;
+        RAISE NOTICE 'Super Admin user already exists with ID: %', new_user_id;
+    END IF;
+
+    -- Create the Eximley Global Super Admin Company (if not exists)
+    SELECT id INTO new_company_id FROM public.companies WHERE legal_name = 'Eximley Global';
+    
+    IF new_company_id IS NULL THEN
+        INSERT INTO public.companies (
+            legal_name,
+            trade_name,
+            email,
+            is_super_admin_company,
+            status,
+            country
+        )
+        VALUES (
+            'Eximley Global',
+            'Eximley Admin',
+            'admin@eximley.com',
+            true,
+            'active',
+            'India'
+        )
+        RETURNING id INTO new_company_id;
+        
+        RAISE NOTICE 'Created Eximley Global company with ID: %', new_company_id;
+    ELSE
+        RAISE NOTICE 'Eximley Global company already exists with ID: %', new_company_id;
+    END IF;
+
+    -- Link the user to the company as Super Admin (if not already linked)
+    IF NOT EXISTS (
+        SELECT 1 FROM public.company_users 
+        WHERE company_id = new_company_id AND user_id = new_user_id
+    ) THEN
+        INSERT INTO public.company_users (
+            company_id,
+            user_id,
+            role,
+            is_super_admin,
+            force_password_change
+        )
+        VALUES (
+            new_company_id,
+            new_user_id,
+            'owner',
+            true,
+            true
+        );
+        
+        RAISE NOTICE 'Linked user to company as Super Admin';
+    ELSE
+        RAISE NOTICE 'User already linked to company';
+    END IF;
+
+    RAISE NOTICE '===========================================';
+    RAISE NOTICE 'Super Admin Setup Complete!';
+    RAISE NOTICE 'Email: admin@eximley.com';
+    RAISE NOTICE 'Password: Admin123!';
+    RAISE NOTICE '===========================================';
+END $$;

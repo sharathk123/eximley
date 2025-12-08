@@ -60,8 +60,8 @@ export default function SignupPage() {
                 throw new Error(data.error || "Signup failed");
             }
 
-            // Redirect to login or dashboard
-            router.push("/dashboard?welcome=true");
+            // Redirect to login with pending approval message
+            router.push("/login?signup=success");
         } catch (err: any) {
             setError(err.message);
         } finally {
