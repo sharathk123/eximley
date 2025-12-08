@@ -54,7 +54,7 @@ export default async function AdminLayout({
                 <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
                     <NavItem href="/admin" icon={<LayoutDashboard className="w-5 h-5" />} label="Overview" />
                     <NavItem href="/admin/companies" icon={<Building2 className="w-5 h-5" />} label="Companies" />
-                    <NavItem href="/admin/hsn" icon={<FileText className="w-5 h-5" />} label="HSN Master List" />
+                    <NavItem href="/admin/hsn" icon={<FileText className="w-5 h-5" />} label="ITC-HSN Master List" />
                 </nav>
 
                 <div className="p-4 border-t border-slate-700 bg-slate-950/50">

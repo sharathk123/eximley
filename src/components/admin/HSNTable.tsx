@@ -6,28 +6,37 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2, Pencil, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Loader2, Pencil, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Textarea } from "@/components/ui/textarea";
 
 const hsnSchema = z.object({
-    hsn_code: z.string().min(1, "Required"),
+    itc_hs_code: z.string().min(1, "ITC HS Code is required"),
+    commodity: z.string().optional(),
+    gst_hsn_code: z.string().min(1, "GST HSN Code is required"),
     description: z.string().optional(),
     gst_rate: z.preprocess((val) => Number(val), z.number().min(0)),
-    chapter: z.string().optional(),
+    govt_notification_no: z.string().optional(),
+    govt_published_date: z.string().optional(),
 });
 
 type HSN = {
     id: string;
-    hsn_code: string;
+    itc_hs_code: string;
+    commodity: string;
+    gst_hsn_code: string;
     description: string;
     gst_rate: number;
-    chapter: string;
+    govt_notification_no?: string;
+    govt_published_date?: string;
+    updated_at: string;
 };
 
 export default function HSNTable() {
     const [hsnCodes, setHsnCodes] = useState<HSN[]>([]);
+    const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [editingHsn, setEditingHsn] = useState<HSN | null>(null);
@@ -38,39 +47,55 @@ export default function HSNTable() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    // Derived State
-    const filteredCodes = hsnCodes.filter(hsn =>
-        hsn.hsn_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        hsn.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    const totalPages = Math.ceil(filteredCodes.length / itemsPerPage);
-    const paginatedCodes = filteredCodes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-    // Reset page on search
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery]);
-
     const form = useForm<z.infer<typeof hsnSchema>>({
         resolver: zodResolver(hsnSchema) as any,
-        defaultValues: { hsn_code: "", description: "", gst_rate: 0 as any, chapter: "" }
+        defaultValues: {
+            itc_hs_code: "",
+            commodity: "",
+            gst_hsn_code: "",
+            description: "",
+            gst_rate: 0 as any,
+            govt_notification_no: "",
+            govt_published_date: ""
+        }
     });
 
     // --- FETCH ---
-    const fetchHsn = () => {
+    const fetchHsn = (page = currentPage, search = searchQuery) => {
         setLoading(true);
-        fetch("/api/hsn")
+        const params = new URLSearchParams({
+            page: page.toString(),
+            limit: itemsPerPage.toString(),
+        });
+        if (search) params.append("search", search);
+
+        fetch(`/api/hsn?${params}`)
             .then(res => res.json())
             .then(data => {
-                if (data.hsnCodes) setHsnCodes(data.hsnCodes);
+                if (data.hsnCodes) {
+                    setHsnCodes(data.hsnCodes);
+                    setMeta(data.meta || { total: 0, totalPages: 0 });
+                }
             })
             .finally(() => setLoading(false));
     }
 
+    // Initial Load & Page Change
     useEffect(() => {
-        fetchHsn();
-    }, []);
+        fetchHsn(currentPage, searchQuery);
+    }, [currentPage]);
+
+    // Debounced Search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (currentPage === 1) {
+                fetchHsn(1, searchQuery);
+            } else {
+                setCurrentPage(1); // This will trigger the page change effect
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const onSubmit = async (values: z.infer<typeof hsnSchema>) => {
         try {
@@ -93,10 +118,13 @@ export default function HSNTable() {
     const startEdit = (hsn: HSN) => {
         setEditingHsn(hsn);
         form.reset({
-            hsn_code: hsn.hsn_code,
+            itc_hs_code: hsn.itc_hs_code,
+            commodity: hsn.commodity,
+            gst_hsn_code: hsn.gst_hsn_code,
             description: hsn.description,
             gst_rate: hsn.gst_rate,
-            chapter: hsn.chapter
+            govt_notification_no: hsn.govt_notification_no || "",
+            govt_published_date: hsn.govt_published_date || "",
         });
         setOpenEdit(true);
     };
@@ -121,7 +149,7 @@ export default function HSNTable() {
 
     // --- DELETE ---
     const onDelete = async (hsn: HSN) => {
-        if (!confirm(`Delete HSN ${hsn.hsn_code}?`)) return;
+        if (!confirm(`Delete HSN ${hsn.itc_hs_code}?`)) return;
         try {
             const res = await fetch(`/api/hsn/${hsn.id}`, { method: "DELETE" });
             if (!res.ok) throw new Error("Failed");
@@ -133,6 +161,19 @@ export default function HSNTable() {
 
     return (
         <div className="space-y-6">
+            {/* Global Metadata Header */}
+            <div className="bg-card border rounded-md p-4 flex flex-wrap gap-6 items-center text-sm shadow-sm">
+                <div className="flex items-center gap-2">
+                    <span className="font-semibold text-muted-foreground">Notification No:</span>
+                    <span className="font-medium">9/2025-CTR, 13/2025-CTR</span>
+                </div>
+                <div className="h-4 w-px bg-border hidden sm:block"></div>
+                <div className="flex items-center gap-2">
+                    <span className="font-semibold text-muted-foreground">Date:</span>
+                    <span className="font-medium">2025-09-17</span>
+                </div>
+            </div>
+
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2 max-w-sm flex-1">
                     <div className="relative flex-1">
@@ -151,7 +192,7 @@ export default function HSNTable() {
                             <Plus className="w-4 h-4 mr-2" /> Add HSN
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-2xl">
                         <DialogHeader><DialogTitle>Add New HSN Code</DialogTitle></DialogHeader>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                             <HSNFormFields form={form} />
@@ -164,32 +205,33 @@ export default function HSNTable() {
                 </Dialog>
             </div>
 
-            <div className="border rounded-md bg-card">
+            <div className="border rounded-md bg-card overflow-x-auto">
                 <Table>
                     <TableHeader className="bg-muted/50">
                         <TableRow>
-                            <TableHead className="font-bold text-foreground w-[120px]">HSN Code</TableHead>
+                            <TableHead className="font-bold text-foreground w-[120px]">ITC HS</TableHead>
+                            <TableHead className="font-bold text-foreground w-[100px]">GST HSN</TableHead>
+                            <TableHead className="font-bold text-foreground w-[25%]">Commodity</TableHead>
                             <TableHead className="font-bold text-foreground">Description</TableHead>
-                            <TableHead className="font-bold text-foreground text-right">GST Rate</TableHead>
-                            <TableHead className="font-bold text-foreground">Chapter</TableHead>
+                            <TableHead className="font-bold text-foreground text-center w-[100px]">GST %</TableHead>
                             <TableHead className="font-bold text-foreground w-[100px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow><TableCell colSpan={5} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
-                        ) : paginatedCodes.length === 0 ? (
-                            <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">No HSN codes found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={6} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                        ) : hsnCodes.length === 0 ? (
+                            <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">No HSN codes found.</TableCell></TableRow>
                         ) : (
-                            paginatedCodes.map(hsn => (
+                            hsnCodes.map(hsn => (
                                 <TableRow key={hsn.id}>
-                                    <TableCell className="font-medium whitespace-normal break-words w-[120px]">{hsn.hsn_code}</TableCell>
-                                    <TableCell className="text-xs whitespace-normal break-words max-w-[300px]">{hsn.description}</TableCell>
-                                    <TableCell className="text-right">{(() => {
-                                        const rate = hsn.gst_rate || 0;
-                                        return rate < 1 && rate > 0 ? (rate * 100).toFixed(2) : rate;
-                                    })()}%</TableCell>
-                                    <TableCell>{hsn.chapter || '-'}</TableCell>
+                                    <TableCell className="font-medium whitespace-nowrap">{hsn.itc_hs_code}</TableCell>
+                                    <TableCell className="font-mono text-xs">{hsn.gst_hsn_code}</TableCell>
+                                    <TableCell className="text-xs whitespace-normal break-words align-top">{hsn.commodity}</TableCell>
+                                    <TableCell className="text-xs whitespace-normal break-words align-top">
+                                        {hsn.description}
+                                    </TableCell>
+                                    <TableCell className="text-center">{hsn.gst_rate}%</TableCell>
                                     <TableCell>
                                         <div className="flex gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => startEdit(hsn)}>
@@ -209,26 +251,46 @@ export default function HSNTable() {
 
             {/* PAGINATION CONTROLS */}
             {
-                !loading && filteredCodes.length > 0 && (
+                !loading && meta.total > 0 && (
                     <div className="flex items-center justify-end gap-2 text-sm">
                         <div className="text-muted-foreground mr-4">
-                            Page {currentPage} of {totalPages} ({filteredCodes.length} total)
+                            Page {currentPage} of {meta.totalPages} ({meta.total} total)
                         </div>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage(1)}
+                            disabled={currentPage === 1}
+                            title="First Page"
+                        >
+                            <ChevronsLeft className="h-4 w-4" />
+                        </Button>
                         <Button
                             variant="outline"
                             size="icon"
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
+                            title="Previous Page"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
                         <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(p => Math.min(meta.totalPages, p + 1))}
+                            disabled={currentPage === meta.totalPages}
+                            title="Next Page"
                         >
                             <ChevronRight className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage(meta.totalPages)}
+                            disabled={currentPage === meta.totalPages}
+                            title="Last Page"
+                        >
+                            <ChevronsRight className="h-4 w-4" />
                         </Button>
                     </div>
                 )
@@ -236,7 +298,7 @@ export default function HSNTable() {
 
             {/* EDIT DIALOG */}
             <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                     <DialogHeader><DialogTitle>Edit HSN Code</DialogTitle></DialogHeader>
                     <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4 pt-4">
                         <HSNFormFields form={form} />
@@ -252,25 +314,44 @@ export default function HSNTable() {
 
 function HSNFormFields({ form }: { form: any }) {
     return (
-        <>
-            <div className="grid gap-2">
-                <Label>HSN Code</Label>
-                <Input {...form.register("hsn_code")} placeholder="8471" />
-            </div>
-            <div className="grid gap-2">
-                <Label>Description</Label>
-                <Input {...form.register("description")} placeholder="Item description" />
-            </div>
+        <div className="grid gap-4">
             <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                    <Label>GST Rate (%)</Label>
-                    <Input type="number" {...form.register("gst_rate")} placeholder="18" />
+                    <Label>ITC HS Code</Label>
+                    <Input {...form.register("itc_hs_code")} placeholder="e.g. 10063010" />
+                    {form.formState.errors.itc_hs_code && <span className="text-red-500 text-xs">{form.formState.errors.itc_hs_code.message}</span>}
                 </div>
                 <div className="grid gap-2">
-                    <Label>Chapter</Label>
-                    <Input {...form.register("chapter")} placeholder="84" />
+                    <Label>GST HSN Code</Label>
+                    <Input {...form.register("gst_hsn_code")} placeholder="e.g. 1006" />
+                    {form.formState.errors.gst_hsn_code && <span className="text-red-500 text-xs">{form.formState.errors.gst_hsn_code.message}</span>}
                 </div>
             </div>
-        </>
+
+            <div className="grid gap-2">
+                <Label>Commodity</Label>
+                <Input {...form.register("commodity")} placeholder="Short name or category" />
+            </div>
+
+            <div className="grid gap-2">
+                <Label>Description</Label>
+                <Textarea {...form.register("description")} placeholder="Detailed description of goods" className="h-24" />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+                <div className="grid gap-2">
+                    <Label>GST Rate (%)</Label>
+                    <Input type="number" step="0.01" {...form.register("gst_rate")} placeholder="18" />
+                </div>
+                <div className="grid gap-2">
+                    <Label>Notification No.</Label>
+                    <Input {...form.register("govt_notification_no")} placeholder="e.g. 1/2017-CTR" />
+                </div>
+                <div className="grid gap-2">
+                    <Label>Published Date</Label>
+                    <Input type="date" {...form.register("govt_published_date")} />
+                </div>
+            </div>
+        </div>
     );
 }

@@ -12,11 +12,13 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 interface HSNCode {
     id: string;
-    hsn_code: string;
+    hsn_code?: string; // KEEP optional for backward compat if needed, but we rely on itc_hs_code now
+    itc_hs_code: string;
+    commodity: string;
+    gst_hsn_code: string;
     description: string;
     gst_rate: number;
-    duty_rate?: number;
-    chapter: string;
+    chapter?: string; // Derived
 }
 
 interface ChapterGroup {
@@ -65,7 +67,7 @@ export default function HSNCodesPage() {
     const searchHSN = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/hsn?search=${encodeURIComponent(searchTerm)}`);
+            const res = await fetch(`/api/hsn?limit=500&search=${encodeURIComponent(searchTerm)}`);
             const data = await res.json();
             setSearchResults(data.hsnCodes || []);
         } catch (err) {
@@ -79,7 +81,7 @@ export default function HSNCodesPage() {
         setSelectedChapter(chapter);
         setLoading(true);
         try {
-            const res = await fetch(`/api/hsn?chapter=${chapter}`);
+            const res = await fetch(`/api/hsn?limit=500&chapter=${chapter}`);
             const data = await res.json();
             setSearchResults(data.hsnCodes || []);
         } catch (err) {
@@ -89,13 +91,14 @@ export default function HSNCodesPage() {
         }
     };
 
-    const selectHSNCode = (hsnCode: string) => {
-        setSelectedHSN(hsnCode);
+    const selectHSNCode = (hsn: HSNCode) => {
+        const codeToUse = hsn.gst_hsn_code || hsn.itc_hs_code;
+        setSelectedHSN(codeToUse);
 
         // If called from product form, return the HSN code
         if (returnTo && productId) {
             // Store in session storage for the product form to pick up
-            sessionStorage.setItem(`hsn_${productId}`, hsnCode);
+            sessionStorage.setItem(`hsn_${productId}`, codeToUse);
             router.push(`/${returnTo}`);
         }
     };
@@ -115,7 +118,7 @@ export default function HSNCodesPage() {
                 </div>
                 <h1 className="text-3xl font-bold mb-2">HSN Code Lookup</h1>
                 <p className="text-muted-foreground">
-                    Browse by chapter or search for HSN codes
+                    Browse by chapter or search for HSN codes (ITC, GST, or Description)
                 </p>
             </div>
 
@@ -124,7 +127,7 @@ export default function HSNCodesPage() {
                 <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search by HSN code or product description..."
+                        placeholder="Search by HSN code, commodity, or description..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
@@ -193,35 +196,37 @@ export default function HSNCodesPage() {
                                 searchResults.map((hsn) => (
                                     <Card
                                         key={hsn.id}
-                                        className={`cursor-pointer hover:border-primary transition-colors ${selectedHSN === hsn.hsn_code ? 'border-primary bg-accent' : ''
+                                        className={`cursor-pointer hover:border-primary transition-colors ${selectedHSN === (hsn.gst_hsn_code || hsn.itc_hs_code) ? 'border-primary bg-accent' : ''
                                             }`}
-                                        onClick={() => selectHSNCode(hsn.hsn_code)}
+                                        onClick={() => selectHSNCode(hsn)}
                                     >
                                         <CardContent className="p-4">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="font-bold text-xl">{hsn.hsn_code}</p>
-                                                        {selectedHSN === hsn.hsn_code && (
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <Badge variant="outline" className="font-mono text-base">
+                                                            GST: {hsn.gst_hsn_code}
+                                                        </Badge>
+                                                        {hsn.itc_hs_code && (
+                                                            <Badge variant="secondary" className="font-mono text-sm">
+                                                                ITC: {hsn.itc_hs_code}
+                                                            </Badge>
+                                                        )}
+                                                        {selectedHSN === (hsn.gst_hsn_code || hsn.itc_hs_code) && (
                                                             <Check className="h-5 w-5 text-primary" />
                                                         )}
                                                     </div>
-                                                    {hsn.chapter && (
-                                                        <p className="text-xs text-muted-foreground">
-                                                            Chapter {hsn.chapter}
-                                                        </p>
-                                                    )}
+                                                    <p className="font-semibold mt-1 text-sm">{hsn.commodity}</p>
                                                 </div>
                                                 <div className="flex gap-2">
                                                     {hsn.gst_rate !== null && (
-                                                        <Badge variant="secondary">GST: {hsn.gst_rate}%</Badge>
-                                                    )}
-                                                    {hsn.duty_rate !== null && (
-                                                        <Badge variant="outline">Duty: {hsn.duty_rate}%</Badge>
+                                                        <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                                                            GST: {hsn.gst_rate}%
+                                                        </Badge>
                                                     )}
                                                 </div>
                                             </div>
-                                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                            <p className="text-xs text-muted-foreground leading-relaxed mt-2 line-clamp-3">
                                                 {hsn.description}
                                             </p>
                                         </CardContent>
@@ -236,7 +241,15 @@ export default function HSNCodesPage() {
             {/* Action Buttons */}
             {returnTo && selectedHSN && (
                 <div className="fixed bottom-6 right-6">
-                    <Button size="lg" onClick={() => selectHSNCode(selectedHSN)}>
+                    <Button size="lg" onClick={() => {
+                        // Find the full HSN object again if needed, or just persist the code
+                        // In selectHSNCode we set selectedHSN state.
+                        // We can just rely on state here.
+                        if (returnTo && productId) {
+                            sessionStorage.setItem(`hsn_${productId}`, selectedHSN);
+                            router.push(`/${returnTo}`);
+                        }
+                    }}>
                         Use HSN Code {selectedHSN}
                     </Button>
                 </div>

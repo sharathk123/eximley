@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2, Upload, Pencil, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Loader2, Upload, Pencil, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,8 +42,8 @@ export default function HSNPage() {
 
     // Derived State
     const filteredCodes = hsnCodes.filter(hsn =>
-        hsn.hsn_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        hsn.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        (hsn.itc_hs_code || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (hsn.description || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const totalPages = Math.ceil(filteredCodes.length / itemsPerPage);
@@ -63,7 +63,8 @@ export default function HSNPage() {
 
     const fetchHsn = () => {
         setLoading(true);
-        fetch("/api/hsn")
+        // Fetching with high limit for client-side search on lookup page
+        fetch("/api/hsn?limit=1000")
             .then(res => res.json())
             .then(data => {
                 if (data.hsnCodes) setHsnCodes(data.hsnCodes);
@@ -95,10 +96,10 @@ export default function HSNPage() {
     const startEdit = (hsn: any) => {
         setEditingHsn(hsn);
         form.reset({
-            hsn_code: hsn.hsn_code,
+            hsn_code: hsn.itc_hs_code,
             description: hsn.description,
             gst_rate: hsn.gst_rate,
-            duty_rate: hsn.duty_rate
+            duty_rate: hsn.duty_rate || 0
         });
         setOpenEdit(true);
     };
@@ -122,7 +123,7 @@ export default function HSNPage() {
 
     // --- DELETE ---
     const onDelete = async (hsn: any) => {
-        if (!confirm(`Delete HSN ${hsn.hsn_code}?`)) return;
+        if (!confirm(`Delete HSN ${hsn.itc_hs_code}?`)) return;
         try {
             const res = await fetch(`/api/hsn/${hsn.id}`, { method: "DELETE" });
             if (!res.ok) throw new Error("Failed");
@@ -277,50 +278,82 @@ export default function HSNPage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">HSN Codes</h1>
+            <h1 className="text-2xl font-bold text-slate-800">ITC-HSN Lookup</h1>
+
+            {/* Global Metadata Header */}
+            <div className="bg-card border rounded-md p-4 flex flex-wrap gap-6 items-center text-sm shadow-sm">
+                <div className="flex items-center gap-2">
+                    <span className="font-semibold text-muted-foreground">Notification No:</span>
+                    <span className="font-medium">9/2025-CTR, 13/2025-CTR</span>
+                </div>
+                <div className="h-4 w-px bg-border hidden sm:block"></div>
+                <div className="flex items-center gap-2">
+                    <span className="font-semibold text-muted-foreground">Date:</span>
+                    <span className="font-medium">2025-09-17</span>
+                </div>
             </div>
 
-            {/* SEARCH & FILTERS */}
-            <div className="flex items-center gap-2 max-w-sm">
-                <div className="relative flex-1">
+            {/* Informative Note */}
+            <div className="bg-blue-50/50 border border-blue-100 rounded-md p-4 text-sm text-slate-700">
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 className="font-semibold text-blue-900 mb-2">ITC HS Code (India)</h3>
+                        <ul className="space-y-1 list-disc list-inside text-slate-600">
+                            <li>India’s 8-digit customs classification for all export/import goods.</li>
+                            <li>Used in Shipping Bills, DGFT rules, and Customs clearance.</li>
+                            <li>Wrong ITC HS can lead to customs queries, shipment holds, fines, or re-assessment.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-blue-900 mb-2">HSN Code (Global)</h3>
+                        <ul className="space-y-1 list-disc list-inside text-slate-600">
+                            <li>International 6-digit Harmonised System used in GST and global trade.</li>
+                            <li>Forms the base structure for India’s ITC HS and GST rates.</li>
+                            <li>Incorrect HSN can cause GST mismatch, invoice rejection, and compliance penalties.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {/* SEARCH */}
+            <div className="flex items-center gap-2">
+                <div className="relative w-full max-w-md">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Search by code or description..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-8"
+                        className="pl-8 w-full"
                     />
                 </div>
             </div>
-            <div className="border rounded-md bg-card">
+
+            <div className="border rounded-md bg-card overflow-x-auto">
                 <Table>
                     <TableHeader className="bg-muted/50">
                         <TableRow>
-                            <TableHead className="font-bold text-foreground w-[120px]">HSN Code</TableHead>
+                            <TableHead className="font-bold text-foreground w-[120px]">ITC HS</TableHead>
+                            <TableHead className="font-bold text-foreground w-[100px]">GST HSN</TableHead>
+                            <TableHead className="font-bold text-foreground w-[25%]">Commodity</TableHead>
                             <TableHead className="font-bold text-foreground">Description</TableHead>
-                            <TableHead className="font-bold text-foreground text-right">GST Rate</TableHead>
-                            <TableHead className="font-bold text-foreground text-right">Duty Rate</TableHead>
+                            <TableHead className="font-bold text-foreground text-center w-[100px]">GST %</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow><TableCell colSpan={4} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                            <TableRow><TableCell colSpan={5} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
                         ) : paginatedCodes.length === 0 ? (
-                            <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">No HSN codes found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">No HSN codes found.</TableCell></TableRow>
                         ) : (
                             paginatedCodes.map(hsn => (
                                 <TableRow key={hsn.id}>
-                                    <TableCell className="font-medium whitespace-normal break-words w-[120px]">{hsn.hsn_code}</TableCell>
-                                    <TableCell className="text-xs whitespace-normal break-words max-w-[300px]">{hsn.description}</TableCell>
-                                    <TableCell className="text-right">{(() => {
-                                        const rate = hsn.gst_rate || 0;
-                                        return rate < 1 && rate > 0 ? (rate * 100).toFixed(2) : rate;
-                                    })()}%</TableCell>
-                                    <TableCell className="text-right">{(() => {
-                                        const rate = hsn.duty_rate || 0;
-                                        return rate < 1 && rate > 0 ? (rate * 100).toFixed(2) : rate;
-                                    })()}%</TableCell>
+                                    <TableCell className="font-medium whitespace-nowrap">{hsn.itc_hs_code}</TableCell>
+                                    <TableCell className="font-mono text-xs">{hsn.gst_hsn_code}</TableCell>
+                                    <TableCell className="text-xs whitespace-normal break-words align-top">{hsn.commodity}</TableCell>
+                                    <TableCell className="text-xs whitespace-normal break-words align-top">
+                                        {hsn.description}
+                                    </TableCell>
+                                    <TableCell className="text-center">{hsn.gst_rate}%</TableCell>
                                 </TableRow>
                             ))
                         )}
@@ -338,8 +371,18 @@ export default function HSNPage() {
                         <Button
                             variant="outline"
                             size="icon"
+                            onClick={() => setCurrentPage(1)}
+                            disabled={currentPage === 1}
+                            title="First Page"
+                        >
+                            <ChevronsLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
+                            title="Previous Page"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -348,8 +391,18 @@ export default function HSNPage() {
                             size="icon"
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
+                            title="Next Page"
                         >
                             <ChevronRight className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage(totalPages)}
+                            disabled={currentPage === totalPages}
+                            title="Last Page"
+                        >
+                            <ChevronsRight className="h-4 w-4" />
                         </Button>
                     </div>
                 )

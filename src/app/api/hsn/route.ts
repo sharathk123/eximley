@@ -5,56 +5,52 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search');
-        const category = searchParams.get('category');
         const chapter = searchParams.get('chapter');
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = parseInt(searchParams.get('limit') || '10');
+
+        // Calculate Supabase range
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
 
         const supabase = await createSessionClient();
-        // RLS policy "master_hsn_read_all" handles auth check, but good to be explicit
+        // RLS policy handles auth check, but good to be explicit
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         let query = supabase
-            .from("master_hsn_codes")
-            .select("*")
-            .order("hsn_code", { ascending: true });
+            .from("itc_gst_hsn_mapping")
+            .select("*", { count: 'exact' })
+            .order("itc_hs_code", { ascending: true });
 
-        // Filter by category/chapter if provided
-        // TEMPORARILY DISABLED FOR DEBUGGING
-        /*
-        if (category) {
-            // Map common categories to HSN chapters
-            const categoryChapterMap: Record<string, string[]> = {
-                'Agriculture': ['10', '07', '08', '09'], // Cereals, vegetables, fruits, spices
-                'Textiles': ['52', '54', '55', '60'], // Cotton, man-made, knitted fabrics
-                'Apparel': ['61', '62'], // Clothing
-                'Electronics': ['85'], // Electrical machinery
-                'Furniture': ['94'], // Furniture
-                'Ayush Products': ['30', '33'], // Pharmaceutical, cosmetics
-                'Certified Organics': ['07', '08', '09', '10'], // Organic produce
-            };
-
-            const chapters = categoryChapterMap[category];
-            if (chapters && chapters.length > 0) {
-                query = query.in('chapter', chapters);
-            }
-        }
-        */
-
-        // Filter by specific chapter if provided
+        // Filter by specific chapter if provided (prefix of itc_hs_code)
         if (chapter) {
-            query = query.eq('chapter', chapter);
+            // itc_hs_code is text, so we can use like/ilike
+            // Chapter is first 2 digits
+            query = query.ilike('itc_hs_code', `${chapter}%`);
         }
 
         if (search) {
-            // Search by HSN code OR description
-            query = query.or(`hsn_code.ilike.%${search}%,description.ilike.%${search}%`);
+            // Search by ITC code, GST code, Commodity, or Description
+            // Using ilike for case-insensitive search
+            const searchPattern = `%${search}%`;
+            query = query.or(`itc_hs_code.ilike.${searchPattern},gst_hsn_code.ilike.${searchPattern},commodity.ilike.${searchPattern},description.ilike.${searchPattern}`);
         }
 
-        const { data: hsnCodes, error } = await query.limit(50); // Limit results for performance
+        // Apply pagination
+        const { data: hsnCodes, count, error } = await query.range(from, to);
 
         if (error) throw error;
 
-        return NextResponse.json({ hsnCodes });
+        return NextResponse.json({
+            hsnCodes,
+            meta: {
+                total: count || 0,
+                page,
+                limit,
+                totalPages: count ? Math.ceil(count / limit) : 0
+            }
+        });
     } catch (error) {
         console.error("Fetch HSN Error:", error);
         return NextResponse.json({ error: "Internal Error" }, { status: 500 });
@@ -64,7 +60,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { hsn_code, description, gst_rate, chapter } = body;
+        const {
+            itc_hs_code,
+            commodity,
+            gst_hsn_code,
+            description,
+            gst_rate,
+            govt_notification_no,
+            govt_published_date
+        } = body;
 
         const supabase = await createSessionClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -82,12 +86,15 @@ export async function POST(request: Request) {
         }
 
         const { data: hsn, error } = await supabase
-            .from("master_hsn_codes")
+            .from("itc_gst_hsn_mapping")
             .insert({
-                hsn_code,
+                itc_hs_code,
+                commodity,
+                gst_hsn_code,
                 description,
                 gst_rate: gst_rate || 0,
-                chapter
+                govt_notification_no: govt_notification_no || null,
+                govt_published_date: govt_published_date || null
             })
             .select()
             .single();
