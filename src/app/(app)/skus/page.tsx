@@ -99,9 +99,15 @@ export default function SKUPage() {
     // --- CREATE ---
     const onAddSubmit = async (values: z.infer<typeof skuSchema>) => {
         try {
+            // Convert "none" to null
+            const payload = {
+                ...values,
+                product_id: values.product_id === "none" ? null : values.product_id
+            };
+
             const res = await fetch("/api/skus", {
                 method: "POST",
-                body: JSON.stringify(values)
+                body: JSON.stringify(payload)
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed");
@@ -121,7 +127,8 @@ export default function SKUPage() {
             sku_code: sku.sku_code,
             name: sku.name,
             unit: sku.unit || "pcs",
-            base_price: sku.base_price
+            base_price: sku.base_price,
+            product_id: sku.product_id || "none"
         });
         setOpenEdit(true);
     };
@@ -129,9 +136,15 @@ export default function SKUPage() {
     const onEditSubmit = async (values: z.infer<typeof skuSchema>) => {
         if (!editingSku) return;
         try {
+            // Convert "none" to null
+            const payload = {
+                ...values,
+                product_id: values.product_id === "none" ? null : values.product_id
+            };
+
             const res = await fetch(`/api/skus/${editingSku.id}`, {
                 method: "PUT",
-                body: JSON.stringify(values)
+                body: JSON.stringify(payload)
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed");
@@ -465,7 +478,7 @@ function SKUFormFields({ form, products }: { form: any, products: any[] }) {
                 <div className="flex gap-2">
                     <Select
                         onValueChange={(value) => form.setValue("product_id", value)}
-                        defaultValue={form.getValues("product_id")}
+                        value={form.watch("product_id")}
                     >
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select Product (Optional)" />

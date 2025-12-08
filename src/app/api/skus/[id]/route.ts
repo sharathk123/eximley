@@ -8,7 +8,7 @@ export async function PUT(
     try {
         const { id } = await params;
         const body = await request.json();
-        const { sku_code, name, unit, base_price, hsn_code, description } = body;
+        const { sku_code, name, unit, base_price, hsn_code, description, product_id } = body;
 
         const sessionClient = await createSessionClient();
         const { data: { user } } = await sessionClient.auth.getUser();
@@ -36,7 +36,8 @@ export async function PUT(
                 unit,
                 base_price,
                 hsn_code,
-                description
+                description,
+                product_id: product_id || null // Handle explict null/none
             })
             .eq("id", id)
             .eq("company_id", userData.company_id) // Safety check
