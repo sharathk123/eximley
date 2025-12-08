@@ -41,6 +41,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { ViewToggle } from "@/components/ui/view-toggle";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/use-toast";
 import {
     Loader2,
@@ -230,8 +232,9 @@ function ShipmentsPage() {
             const res = await fetch("/api/orders");
             if (res.ok) {
                 const data = await res.json();
-                // Allow confirmed, in_production, pending (manual), and drafts for flexibility
-                setOrders(data.filter((o: any) => ['confirmed', 'in_production', 'pending', 'draft'].includes(o.status)));
+                if (data.orders) {
+                    setOrders(data.orders.filter((o: any) => ['confirmed', 'in_production', 'pending', 'draft'].includes(o.status)));
+                }
             }
         } catch (error) {
             console.error(error);
@@ -496,58 +499,40 @@ function ShipmentsPage() {
                 </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }} className="w-full md:w-auto">
-                    <TabsList>
-                        <TabsTrigger value="all">All</TabsTrigger>
-                        <TabsTrigger value="drafted">Drafted</TabsTrigger>
-                        <TabsTrigger value="shipped">Shipped</TabsTrigger>
-                        <TabsTrigger value="delivered">Delivered</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-
-                <div className="flex gap-2 w-full md:w-auto">
-                    <div className="relative flex-1 md:w-64">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search shipments..."
-                            className="pl-8"
-                            value={searchQuery}
-                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                        />
-                    </div>
-                    <div className="flex items-center border rounded-md bg-background">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-9 w-9 rounded-none ${viewMode === 'list' ? 'bg-muted' : ''}`}
-                            onClick={() => setViewMode('list')}
-                        >
-                            <List className="h-4 w-4" />
-                        </Button>
-                        <Separator orientation="vertical" className="h-6" />
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-9 w-9 rounded-none ${viewMode === 'card' ? 'bg-muted' : ''}`}
-                            onClick={() => setViewMode('card')}
-                        >
-                            <LayoutGrid className="h-4 w-4" />
-                        </Button>
-                    </div>
+            <div className="flex items-center justify-between gap-4">
+                <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search shipments..."
+                        className="pl-8"
+                        value={searchQuery}
+                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                    />
                 </div>
+                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
+
+            <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }}>
+                <TabsList>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="drafted">Drafted</TabsTrigger>
+                    <TabsTrigger value="shipped">Shipped</TabsTrigger>
+                    <TabsTrigger value="delivered">Delivered</TabsTrigger>
+                </TabsList>
+            </Tabs>
 
             {isLoading ? (
                 <div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
             ) : filteredShipments.length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                    <Ship className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                    <h3 className="text-lg font-medium">No shipments found</h3>
-                    <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1">
-                        Get started by creating a shipment from your confirmed orders.
-                    </p>
-                </div>
+                <EmptyState
+                    icon={Ship}
+                    title="No shipments found"
+                    description="Get started by creating a shipment from your confirmed orders."
+                    actionLabel="New Shipment"
+                    onAction={() => setIsCreateOpen(true)}
+                    iconColor="text-blue-600 dark:text-blue-200"
+                    iconBgColor="bg-blue-100 dark:bg-blue-900"
+                />
             ) : viewMode === 'list' ? (
                 <div className="rounded-md border bg-card">
                     <Table className="table-fixed">

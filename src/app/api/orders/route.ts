@@ -27,7 +27,7 @@ export async function GET(request: Request) {
                     skus (
                         sku_code,
                         name,
-                        hsn_code,
+                        hs_code,
                         products (
                             hsn_code
                         )

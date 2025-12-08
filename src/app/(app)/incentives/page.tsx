@@ -461,6 +461,39 @@ export default function IncentivesPage() {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            <div className="grid md:grid-cols-3 gap-6 pt-4">
+                <Card className="bg-blue-50 border-blue-200">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base text-blue-800 flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4" /> RoDTEP Scheme
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-blue-700">
+                        Remission of Duties and Taxes on Exported Products (RoDTEP) refunds embedded central, state, and local duties that were not rebated under other schemes.
+                    </CardContent>
+                </Card>
+                <Card className="bg-green-50 border-green-200">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base text-green-800 flex items-center gap-2">
+                            <DollarSign className="h-4 w-4" /> Duty Drawback
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-green-700">
+                        Duty Drawback (DBK) rebates customs and central excise duties chargeable on imported and indigenous materials used in the manufacture of export goods.
+                    </CardContent>
+                </Card>
+                <Card className="bg-purple-50 border-purple-200">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base text-purple-800 flex items-center gap-2">
+                            <FileText className="h-4 w-4" /> Claim Process
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-purple-700">
+                        You must link your incentive claims to specific Shipping Bills. Ensure your scroll is generated in ICEGATE before realizing the actual payment.
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }

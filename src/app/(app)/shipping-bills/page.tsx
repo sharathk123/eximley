@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ViewToggle } from "@/components/ui/view-toggle";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -251,7 +253,7 @@ export default function ShippingBillsPage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold">Shipping Bills</h1>
                     <p className="text-sm text-muted-foreground mt-1">Manage customs export declarations and compliance documents.</p>
@@ -376,66 +378,43 @@ export default function ShippingBillsPage() {
                 </Dialog>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }} className="w-full md:w-auto">
-                    <TabsList>
-                        <TabsTrigger value="all">All</TabsTrigger>
-                        <TabsTrigger value="drafted">Drafted</TabsTrigger>
-                        <TabsTrigger value="filed">Filed</TabsTrigger>
-                        <TabsTrigger value="cleared">Cleared</TabsTrigger>
-                        <TabsTrigger value="shipped">Shipped</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-
-                <div className="flex gap-2 w-full md:w-auto">
-                    <div className="relative flex-1 md:w-64">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search shipments..."
-                            className="pl-8"
-                            value={searchQuery}
-                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                        />
-                    </div>
-                    <div className="flex items-center border rounded-md bg-background">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-9 w-9 rounded-none ${viewMode === 'list' ? 'bg-muted' : ''}`}
-                            onClick={() => setViewMode('list')}
-                        >
-                            <List className="h-4 w-4" />
-                        </Button>
-                        <Separator orientation="vertical" className="h-6" />
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-9 w-9 rounded-none ${viewMode === 'card' ? 'bg-muted' : ''}`}
-                            onClick={() => setViewMode('card')}
-                        >
-                            <LayoutGrid className="h-4 w-4" />
-                        </Button>
-                    </div>
+            <div className="flex items-center justify-between gap-4">
+                <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search shipping bills..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8"
+                    />
                 </div>
+                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
+
+            <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }}>
+                <TabsList>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="drafted">Drafted</TabsTrigger>
+                    <TabsTrigger value="filed">Filed</TabsTrigger>
+                    <TabsTrigger value="cleared">Cleared</TabsTrigger>
+                    <TabsTrigger value="shipped">Shipped</TabsTrigger>
+                </TabsList>
+            </Tabs>
 
             {loading ? (
                 <div className="flex justify-center p-8">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             ) : filteredBills.length === 0 ? (
-                <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-                        <Ship className="h-6 w-6 text-blue-600 dark:text-blue-200" />
-                    </div>
-                    <h3 className="mt-4 text-lg font-semibold">No shipping bills found</h3>
-                    <p className="mb-4 mt-2 text-sm text-muted-foreground max-w-sm">
-                        Create your first shipping bill to track customs export declarations.
-                    </p>
-                    <Button onClick={() => setOpenAdd(true)}>
-                        <Plus className="mr-2 h-4 w-4" /> Add Shipping Bill
-                    </Button>
-                </div>
+                <EmptyState
+                    icon={Ship}
+                    title="No shipping bills found"
+                    description="Create your first shipping bill to track customs export declarations."
+                    actionLabel="Add Shipping Bill"
+                    onAction={() => setOpenAdd(true)}
+                    iconColor="text-blue-600 dark:text-blue-200"
+                    iconBgColor="bg-blue-100 dark:bg-blue-900"
+                />
             ) : (
                 <>
                     {viewMode === 'card' ? (

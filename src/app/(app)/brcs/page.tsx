@@ -462,6 +462,39 @@ export default function BRCsPage() {
                 </TabsContent>
             </Tabs>
 
+            <div className="grid md:grid-cols-3 gap-6 pt-4">
+                <Card className="bg-blue-50 border-blue-200">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base text-blue-800 flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4" /> What is e-BRC?
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-blue-700">
+                        Electronic Bank Realization Certificate (e-BRC) is issued by banks as proof that the exporter has received payment for exported goods. It is mandatory for claiming benefits.
+                    </CardContent>
+                </Card>
+                <Card className="bg-orange-50 border-orange-200">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base text-orange-800 flex items-center gap-2">
+                            <Clock className="h-4 w-4" /> Realization Period
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-orange-700">
+                        As per FEMA guidelines, full export value must be realized and repatriated to India within 9 months from the date of export. Extensions require AD Bank approval.
+                    </CardContent>
+                </Card>
+                <Card className="bg-red-50 border-red-200">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base text-red-800 flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4" /> EDPMS Tracking
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-red-700">
+                        Failed realization monitoring is done via the Export Data Processing and Monitoring System (EDPMS). Unreconciled entries can lead to being caution-listed.
+                    </CardContent>
+                </Card>
+            </div>
+
             {/* Realize Payment Dialog */}
             <Dialog open={isRealizeDialogOpen} onOpenChange={setIsRealizeDialogOpen}>
                 <DialogContent>

@@ -8,6 +8,8 @@ import { Plus, Trash2, FileText, Download, TrendingUp, DollarSign, CreditCard, L
 import Link from "next/link"; // Standard Next.js Link
 
 import { Button } from "@/components/ui/button";
+import { ViewToggle } from "@/components/ui/view-toggle";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
     Dialog,
@@ -404,22 +406,7 @@ export default function PurchaseOrdersPage() {
                         }}
                     />
                 </div>
-                <div className="flex gap-1 border rounded-md p-1">
-                    <Button
-                        variant={viewMode === 'list' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('list')}
-                    >
-                        <List className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant={viewMode === 'card' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('card')}
-                    >
-                        <LayoutGrid className="h-4 w-4" />
-                    </Button>
-                </div>
+                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
             <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
@@ -436,9 +423,15 @@ export default function PurchaseOrdersPage() {
 
                 <TabsContent value={activeTab} className="mt-4">
                     {paginatedPOs.length === 0 ? (
-                        <div className="text-center py-10 text-muted-foreground border rounded-md bg-card">
-                            No Purchase Orders found.
-                        </div>
+                        <EmptyState
+                            icon={ShoppingCart}
+                            title="No Purchase Orders found"
+                            description="Manage procurement from suppliers."
+                            actionLabel="New PO"
+                            onAction={handleCreate}
+                            iconColor="text-blue-600 dark:text-blue-200"
+                            iconBgColor="bg-blue-100 dark:bg-blue-900"
+                        />
                     ) : (
                         <>
                             {viewMode === 'card' ? (

@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ViewToggle } from "@/components/ui/view-toggle";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -31,7 +33,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Plus, Search, Building2, User, Upload, Loader2, Edit, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, CheckCircle2, MapPin, Mail, Phone } from "lucide-react";
+import { Plus, Search, Building2, User, Users, Upload, Loader2, Edit, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, CheckCircle2, MapPin, Mail, Phone } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import * as XLSX from 'xlsx';
 
@@ -254,7 +256,7 @@ export default function EntitiesPage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">Contacts Directory</h2>
                     <p className="text-muted-foreground">Manage Buyers, Suppliers, and Partners.</p>
@@ -490,22 +492,7 @@ export default function EntitiesPage() {
                         }}
                     />
                 </div>
-                <div className="flex gap-1 border rounded-md p-1">
-                    <Button
-                        variant={viewMode === 'card' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('card')}
-                    >
-                        <LayoutGrid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant={viewMode === 'list' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('list')}
-                    >
-                        <List className="h-4 w-4" />
-                    </Button>
-                </div>
+                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
             <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
@@ -523,9 +510,15 @@ export default function EntitiesPage() {
                     {loading ? (
                         <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8" /></div>
                     ) : filteredEntities.length === 0 ? (
-                        <div className="text-center py-10 text-muted-foreground border rounded-md bg-card">
-                            No contacts found. Click "Add Contact" to create one.
-                        </div>
+                        <EmptyState
+                            icon={Users}
+                            title="No contacts found"
+                            description="Add buyers, suppliers, or partners to manage your network."
+                            actionLabel="Add Contact"
+                            onAction={() => setOpenAdd(true)}
+                            iconColor="text-blue-600 dark:text-blue-200"
+                            iconBgColor="bg-blue-100 dark:bg-blue-900"
+                        />
                     ) : (
                         <>
                             {viewMode === 'card' ? (

@@ -5,6 +5,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { ViewToggle } from "@/components/ui/view-toggle";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -31,28 +32,31 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, Plus, Loader2, Upload, Edit, Trash2, LayoutGrid, List, FileText, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, Loader2, Upload, Edit, Trash2, LayoutGrid, List, FileText, CheckCircle2, XCircle, ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Textarea } from "../../../components/ui/textarea";
+import { EmptyState } from "@/components/ui/empty-state";
 import * as XLSX from 'xlsx';
+
+const itemSchema = z.object({
+    sku_id: z.string().min(1, "Product is required"),
+    quantity: z.number().min(1, "Quantity must be at least 1"), // Changed from z.coerce.number() to allow explicit check
+    target_price: z.number().optional(), // Changed from z.coerce.number()
+    notes: z.string().optional(),
+});
 
 const enquirySchema = z.object({
     customer_name: z.string().min(1, "Customer name is required"),
-    customer_email: z.string().email("Invalid email").optional().or(z.literal("")),
+    customer_email: z.string().email("Invalid email address").optional().or(z.literal("")),
     customer_phone: z.string().optional(),
     customer_company: z.string().optional(),
     customer_country: z.string().optional(),
-    source: z.string().optional(),
+    source: z.enum(["website", "referral", "tradeshow", "social_media", "other"]),
     subject: z.string().optional(),
     description: z.string().optional(),
     priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
     next_follow_up_date: z.string().optional(),
-    items: z.array(z.object({
-        sku_id: z.string().min(1, "Product is required"),
-        quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
-        target_price: z.coerce.number().optional(),
-        notes: z.string().optional(),
-    })).default([]),
+    items: z.array(itemSchema),
 });
 
 type EnquiryFormValues = z.infer<typeof enquirySchema>;
@@ -340,7 +344,7 @@ export default function EnquiriesPage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">Enquiries</h2>
                     <p className="text-muted-foreground">Manage customer enquiries and convert to orders.</p>
@@ -605,7 +609,7 @@ export default function EnquiriesPage() {
                                                     <Input
                                                         type="number"
                                                         className="h-8 text-xs"
-                                                        {...form.register(`items.${index}.quantity`)}
+                                                        {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
                                                     />
                                                 </div>
                                                 <div className="col-span-3">
@@ -613,7 +617,7 @@ export default function EnquiriesPage() {
                                                     <Input
                                                         type="number"
                                                         className="h-8 text-xs"
-                                                        {...form.register(`items.${index}.target_price`)}
+                                                        {...form.register(`items.${index}.target_price`, { valueAsNumber: true })}
                                                     />
                                                 </div>
                                                 <div className="col-span-5">
@@ -664,22 +668,7 @@ export default function EnquiriesPage() {
                         }}
                     />
                 </div>
-                <div className="flex gap-1 border rounded-md p-1">
-                    <Button
-                        variant={viewMode === 'card' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('card')}
-                    >
-                        <LayoutGrid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant={viewMode === 'list' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('list')}
-                    >
-                        <List className="h-4 w-4" />
-                    </Button>
-                </div>
+                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
             <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
@@ -700,9 +689,15 @@ export default function EnquiriesPage() {
                     {loading ? (
                         <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8" /></div>
                     ) : filteredEnquiries.length === 0 ? (
-                        <div className="text-center py-10 text-muted-foreground border rounded-md bg-card">
-                            No enquiries found. Click "Add Enquiry" to create one.
-                        </div>
+                        <EmptyState
+                            icon={MessageSquare}
+                            title="No enquiries found"
+                            description="Record new customer enquiries to track potential sales."
+                            actionLabel="Add Enquiry"
+                            onAction={() => setOpenAdd(true)}
+                            iconColor="text-blue-600 dark:text-blue-200"
+                            iconBgColor="bg-blue-100 dark:bg-blue-900"
+                        />
                     ) : (
                         <>
                             {viewMode === 'card' ? (

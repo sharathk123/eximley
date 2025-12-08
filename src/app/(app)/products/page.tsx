@@ -8,6 +8,8 @@ import { Plus, Search, Package, Box, Upload, Loader2, Edit, Trash2, LayoutGrid, 
 import * as XLSX from 'xlsx';
 
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ViewToggle } from "@/components/ui/view-toggle";
 import { Input } from "@/components/ui/input";
 import {
     Dialog,
@@ -260,7 +262,7 @@ export default function ProductsPage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Products</h1>
                     <p className="text-muted-foreground">
@@ -463,22 +465,7 @@ export default function ProductsPage() {
                         }}
                     />
                 </div>
-                <div className="flex gap-1 border rounded-md p-1">
-                    <Button
-                        variant={viewMode === 'card' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('card')}
-                    >
-                        <LayoutGrid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant={viewMode === 'list' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('list')}
-                    >
-                        <List className="h-4 w-4" />
-                    </Button>
-                </div>
+                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
             {loading ? (
@@ -486,18 +473,15 @@ export default function ProductsPage() {
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             ) : filteredProducts.length === 0 ? (
-                <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900">
-                        <Package className="h-6 w-6 text-orange-600 dark:text-orange-200" />
-                    </div>
-                    <h3 className="mt-4 text-lg font-semibold">No products found</h3>
-                    <p className="mb-4 mt-2 text-sm text-muted-foreground max-w-sm">
-                        Create your first product (e.g., "Men's T-Shirt") then you can add specific SKUs (e.g., "Size L, Red") to it.
-                    </p>
-                    <Button onClick={() => setIsOpen(true)}>
-                        <Plus className="mr-2 h-4 w-4" /> Add Product
-                    </Button>
-                </div>
+                <EmptyState
+                    icon={Package}
+                    title="No products found"
+                    description="Create your first product (e.g., 'Men's T-Shirt') then you can add specific SKUs (e.g., 'Size L, Red') to it."
+                    actionLabel="Add Product"
+                    onAction={() => setIsOpen(true)}
+                    iconColor="text-orange-600 dark:text-orange-200"
+                    iconBgColor="bg-orange-100 dark:bg-orange-900"
+                />
             ) : (
                 <>
                     {viewMode === 'card' ? (
