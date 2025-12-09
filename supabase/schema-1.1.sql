@@ -652,7 +652,8 @@ CREATE TABLE public.skus (
     country_of_origin TEXT DEFAULT 'India',
     unit_of_measure TEXT DEFAULT 'PCS',
     gross_weight_kg NUMERIC,
-    net_weight_kg NUMERIC
+    net_weight_kg NUMERIC,
+    UNIQUE(company_id, sku_code)
 );
 
 ALTER TABLE public.skus ENABLE ROW LEVEL SECURITY;

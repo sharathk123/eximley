@@ -76,6 +76,7 @@ export default function ProductsPage() {
     const [isDragging, setIsDragging] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [deletingProduct, setDeletingProduct] = useState<any>(null);
+    const [deletingSKU, setDeletingSKU] = useState<any>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
     const [hsnDialogOpen, setHsnDialogOpen] = useState(false);
@@ -83,6 +84,7 @@ export default function ProductsPage() {
     const [hsnCodeInput, setHsnCodeInput] = useState("");
     const [hsnSuggestions, setHsnSuggestions] = useState<any[]>([]);
     const [loadingHSN, setLoadingHSN] = useState(false);
+    const [generatingSKU, setGeneratingSKU] = useState<string | null>(null);
     const itemsPerPage = 12;
     const { toast } = useToast();
 
@@ -226,6 +228,9 @@ export default function ProductsPage() {
     };
 
     const handleGenerateSKU = async (product: any) => {
+        if (generatingSKU) return;
+        setGeneratingSKU(product.id);
+
         try {
             // Generate SKU code automatically
             const categoryPrefix = product.category.substring(0, 4).toUpperCase();
@@ -255,9 +260,11 @@ export default function ProductsPage() {
             } else {
                 throw new Error("Failed to generate SKU");
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            toast({ title: "Error", description: "Failed to generate SKU", variant: "destructive" });
+            toast({ title: "Error", description: err.message || "Failed to generate SKU", variant: "destructive" });
+        } finally {
+            setGeneratingSKU(null);
         }
     };
 
@@ -413,6 +420,20 @@ export default function ProductsPage() {
             toast({ title: "Error", description: e.message, variant: "destructive" });
         } finally {
             setUploading(false);
+        }
+    };
+
+    const confirmDeleteSKU = async () => {
+        if (!deletingSKU) return;
+        try {
+            const res = await fetch(`/api/skus?id=${deletingSKU.id}`, { method: "DELETE" });
+            if (!res.ok) throw new Error("Failed");
+            toast({ title: "Deleted", description: "SKU removed successfully" });
+            fetchProducts();
+        } catch (e) {
+            toast({ title: "Error", description: "Failed to delete SKU", variant: "destructive" });
+        } finally {
+            setDeletingSKU(null);
         }
     };
 
@@ -750,9 +771,21 @@ export default function ProductsPage() {
                                                 {product.skus && product.skus.length > 0 ? (
                                                     <div className="flex flex-wrap gap-1 max-w-[250px]">
                                                         {product.skus.slice(0, 3).map((sku: any, idx: number) => (
-                                                            <Badge key={idx} variant="secondary" className="px-1 py-0 text-[10px] font-normal h-5">
-                                                                {sku.sku_code}
-                                                            </Badge>
+                                                            <div key={idx} className="group relative">
+                                                                <Badge variant="secondary" className="px-1 py-0 text-[10px] font-normal h-5 pr-4 cursor-default">
+                                                                    {sku.sku_code}
+                                                                </Badge>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setDeletingSKU(sku);
+                                                                    }}
+                                                                    className="absolute right-0 top-0 bottom-0 px-1 opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive flex items-center"
+                                                                    title="Delete SKU"
+                                                                >
+                                                                    <span className="text-[10px] font-bold">×</span>
+                                                                </button>
+                                                            </div>
                                                         ))}
                                                         {product.skus.length > 3 && (
                                                             <Badge variant="outline" className="px-1 py-0 text-[10px] h-5">
@@ -784,9 +817,14 @@ export default function ProductsPage() {
                                                             size="sm"
                                                             className="h-7 text-xs"
                                                             onClick={() => handleGenerateSKU(product)}
+                                                            disabled={generatingSKU === product.id}
                                                             title="Generate SKU"
                                                         >
-                                                            <Sparkles className="h-3 w-3 mr-1" />
+                                                            {generatingSKU === product.id ? (
+                                                                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                                            ) : (
+                                                                <Sparkles className="h-3 w-3 mr-1" />
+                                                            )}
                                                             SKU
                                                         </Button>
                                                     )}
@@ -859,13 +897,31 @@ export default function ProductsPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete the product "{deletingProduct?.name}". This action cannot be undone.
+                            This action cannot be undone. This will permanently delete the product
+                            "{deletingProduct?.name}".
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel onClick={() => setDeletingProduct(null)}>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                             Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={!!deletingSKU} onOpenChange={(open) => !open && setDeletingSKU(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete SKU?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to remove SKU "{deletingSKU?.sku_code}"? This cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setDeletingSKU(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteSKU} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Delete SKU
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

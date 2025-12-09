@@ -25,7 +25,8 @@ export async function POST(request: Request) {
 
         if (user) {
             // Check Company Status & User Flags
-            const { data: userData, error: userError } = await supabase
+            // Remove .single() to handle users in multiple companies
+            const { data: userRows, error: userError } = await supabase
                 .from("company_users")
                 .select(`
                     role,
@@ -36,16 +37,21 @@ export async function POST(request: Request) {
                         legal_name
                     )
                 `)
-                .eq("user_id", user.id)
-                .single();
+                .eq("user_id", user.id);
 
-            if (userError || !userData) {
+            if (userError || !userRows || userRows.length === 0) {
                 await supabase.auth.signOut();
                 return NextResponse.json({ error: "User profile not found" }, { status: 403 });
             }
 
-            // Type assertion for nested join
-            const company = userData.companies as any;
+            // Determine best role (Super Admin takes precedence)
+            const superAdminProfile = userRows.find(r => r.is_super_admin);
+            const activeProfile = userRows.find(r => (r.companies as any)?.status === 'active');
+
+            // Primary profile to check status against
+            // If we have a super admin profile, we use that. Else the first active one. Else the first one.
+            const primaryProfile = superAdminProfile || activeProfile || userRows[0];
+            const company = primaryProfile.companies as any;
 
             if (company?.status !== 'active') {
                 await supabase.auth.signOut();
@@ -55,8 +61,8 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: msg }, { status: 403 });
             }
 
-            // Check for forced password change
-            if (userData.force_password_change) {
+            // Check for forced password change (on any profile?) -> Usually specific to the primary one
+            if (primaryProfile.force_password_change) {
                 return NextResponse.json({
                     success: true,
                     requirePasswordChange: true
@@ -64,10 +70,13 @@ export async function POST(request: Request) {
             }
 
             // Return Super Admin status for proper redirect
+            // If they are super admin in ANY profile, treat them as Super Admin
+            const isSuperAdmin = !!superAdminProfile;
+
             return NextResponse.json({
                 success: true,
                 requirePasswordChange: false,
-                isSuperAdmin: userData.is_super_admin || false
+                isSuperAdmin: isSuperAdmin
             });
         }
 

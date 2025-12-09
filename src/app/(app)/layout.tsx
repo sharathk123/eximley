@@ -58,7 +58,7 @@ export default async function AppLayout({
                     <NavItem href="/brcs" icon={<Banknote className="w-5 h-5" />} label="e-BRC" />
                     <NavItem href="/compliance/lut" icon={<Scale className="w-5 h-5" />} label="LUT Management" />
                     <NavItem href="/skus" icon={<Tags className="w-5 h-5" />} label="SKU Management" />
-                    <NavItem href="/skus" icon={<Tags className="w-5 h-5" />} label="SKU Management" />
+
                     <NavItem href="/hsn" icon={<FileText className="w-5 h-5" />} label="ITC-HSN Lookup" />
                     {/* <NavItem href="/calculator" icon={<Calculator className="w-5 h-5"/>} label="Landed Cost" /> */}
                     <NavItem href="/settings/company" icon={<Settings className="w-5 h-5" />} label="Settings" />

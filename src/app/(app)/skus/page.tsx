@@ -41,6 +41,7 @@ export default function SKUPage() {
 
     // Selection
     const [editingSku, setEditingSku] = useState<any>(null);
+    const [deletingSku, setDeletingSku] = useState<any>(null);
 
     // Pagination & Search State
     const [searchQuery, setSearchQuery] = useState("");
@@ -158,17 +159,25 @@ export default function SKUPage() {
     };
 
     // --- DELETE ---
-    const onDelete = async (sku: any) => {
-        if (!confirm(`Are you sure you want to delete ${sku.sku_code}?`)) return;
+    // --- DELETE ---
+    const onDelete = (sku: any) => {
+        setDeletingSku(sku);
+    };
+
+    const confirmDelete = async () => {
+        if (!deletingSku) return;
 
         try {
-            const res = await fetch(`/api/skus/${sku.id}`, { method: "DELETE" });
+            const res = await fetch(`/api/skus/${deletingSku.id}`, { method: "DELETE" });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed");
 
             fetchSkus();
+            toast({ title: "Deleted", description: "SKU deleted successfully" });
         } catch (e: any) {
             toast({ title: "Error", description: e.message || "Failed to delete SKU", variant: "destructive" });
+        } finally {
+            setDeletingSku(null);
         }
     };
 
@@ -395,6 +404,21 @@ export default function SKUPage() {
                             Update SKU
                         </Button>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!deletingSku} onOpenChange={(open) => !open && setDeletingSku(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete SKU</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 text-sm text-muted-foreground">
+                        Are you sure you want to delete SKU "{deletingSku?.sku_code}"? This action cannot be undone.
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setDeletingSku(null)}>Cancel</Button>
+                        <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
+                    </div>
                 </DialogContent>
             </Dialog>
 

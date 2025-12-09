@@ -26,14 +26,15 @@ export default async function AdminLayout({
     }
 
     // Strict Check for Super Admin
-    const { data: superUser, error } = await supabase
+    // Use limit(1) to avoid error if user has multiple super-admin entries (e.g. multi-company)
+    const { data: superUsers, error } = await supabase
         .from("company_users")
         .select("is_super_admin")
         .eq("user_id", user.id)
         .eq("is_super_admin", true)
-        .single();
+        .limit(1);
 
-    if (error || !superUser) {
+    if (error || !superUsers || superUsers.length === 0) {
         // Not a super admin -> Redirect to normal dashboard or 403 page
         // For now, redirect to dashboard (if they are a normal user) or login
         redirect("/dashboard");
