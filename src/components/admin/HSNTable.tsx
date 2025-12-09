@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2, Pencil, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Plus, Loader2, Pencil, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Zap } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 
 const hsnSchema = z.object({
     itc_hs_code: z.string().min(1, "ITC HS Code is required"),
@@ -35,12 +36,16 @@ type HSN = {
 };
 
 export default function HSNTable() {
+    const { toast } = useToast();
     const [hsnCodes, setHsnCodes] = useState<HSN[]>([]);
     const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [editingHsn, setEditingHsn] = useState<HSN | null>(null);
     const [openEdit, setOpenEdit] = useState(false);
+
+    // Embedding generation state
+    const [generating, setGenerating] = useState(false);
 
     // Filter & Pagination State
     const [searchQuery, setSearchQuery] = useState("");
@@ -108,9 +113,10 @@ export default function HSNTable() {
             setOpen(false);
             form.reset();
             fetchHsn();
+            toast({ title: "HSN Created", description: "Successfully added new HSN code." });
         } catch (e) {
             console.error(e);
-            alert("Failed to create HSN");
+            toast({ variant: "destructive", title: "Error", description: "Failed to create HSN" });
         }
     }
 
@@ -142,8 +148,9 @@ export default function HSNTable() {
             setOpenEdit(false);
             setEditingHsn(null);
             fetchHsn();
+            toast({ title: "HSN Updated", description: "Successfully updated HSN code." });
         } catch (e: any) {
-            alert(e.message || "Failed to update");
+            toast({ variant: "destructive", title: "Error", description: e.message || "Failed to update" });
         }
     };
 
@@ -154,8 +161,47 @@ export default function HSNTable() {
             const res = await fetch(`/api/hsn/${hsn.id}`, { method: "DELETE" });
             if (!res.ok) throw new Error("Failed");
             fetchHsn();
+            toast({ title: "HSN Deleted", description: "Successfully deleted HSN code." });
         } catch (e: any) {
-            alert(e.message || "Failed to delete");
+            toast({ variant: "destructive", title: "Error", description: e.message || "Failed to delete" });
+        }
+    };
+
+    // --- GENERATE EMBEDDINGS ---
+    const handleGenerateEmbeddings = async () => {
+        // No confirmation alert as requested
+        setGenerating(true);
+        let completed = false;
+        let processedTotal = 0;
+
+        try {
+            // Loop until server says complete
+            while (!completed) {
+                const res = await fetch("/api/hsn/generate-embeddings", { method: "POST" });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || "Failed");
+
+                processedTotal += data.processed;
+
+                // If no more items remaining or 0 processed (safety condition), stop
+                if (data.remaining === 0 || data.processed === 0) {
+                    completed = true;
+                }
+            }
+            toast({
+                title: "Embedding Generation Complete",
+                description: `Successfully generated embeddings for ${processedTotal} items.`
+            });
+        } catch (e: any) {
+            console.error(e);
+            toast({
+                variant: "destructive",
+                title: "Embedding Generation Failed",
+                description: e.message
+            });
+        } finally {
+            setGenerating(false);
         }
     };
 
@@ -186,12 +232,24 @@ export default function HSNTable() {
                         />
                     </div>
                 </div>
+
                 <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-green-600 hover:bg-green-700">
-                            <Plus className="w-4 h-4 mr-2" /> Add HSN
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
+                            onClick={handleGenerateEmbeddings}
+                            disabled={generating}
+                        >
+                            {generating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
+                            {generating ? "Generating..." : "Generate Embeddings"}
                         </Button>
-                    </DialogTrigger>
+                        <DialogTrigger asChild>
+                            <Button className="bg-green-600 hover:bg-green-700">
+                                <Plus className="w-4 h-4 mr-2" /> Add HSN
+                            </Button>
+                        </DialogTrigger>
+                    </div>
                     <DialogContent className="max-w-2xl">
                         <DialogHeader><DialogTitle>Add New HSN Code</DialogTitle></DialogHeader>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">

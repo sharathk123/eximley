@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Search, Package, Box, Upload, Loader2, Edit, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, Sparkles, Link as LinkIcon } from "lucide-react";
+import { Plus, Search, Package, Box, Upload, Loader2, Edit, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, Sparkles, Link as LinkIcon, Wand2 } from "lucide-react";
 import * as XLSX from 'xlsx';
 
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,38 @@ export default function ProductsPage() {
     const [loadingHSN, setLoadingHSN] = useState(false);
     const itemsPerPage = 12;
     const { toast } = useToast();
+
+    const handleAiSuggest = async (product: any) => {
+        toast({ title: "Thinking...", description: "Analyzing product for HSN match..." });
+        try {
+            const res = await fetch("/api/hsn/suggest", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ productId: product.id })
+            });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || "Failed to get suggestions");
+
+            if (data.candidates && data.candidates.length > 0) {
+                const best = data.candidates[0];
+                toast({
+                    title: "Suggestion Found!",
+                    description: `Best Match: ${best.gst_hsn_code} (${(best.similarity * 100).toFixed(0)}%) - ${best.description.substring(0, 40)}...`,
+                    className: "bg-green-50 dark:bg-green-900 border-green-200"
+                });
+                fetchProducts(); // Refresh to show updated hsn_status/code if auto-applied
+            } else {
+                toast({ title: "No Match", description: "No confident HSN matches found." });
+                // If it was a 'not found' status update
+                fetchProducts();
+            }
+        } catch (e: any) {
+            console.error(e);
+            toast({ title: "Error", description: e.message, variant: "destructive" });
+        }
+    };
+
 
     const form = useForm<z.infer<typeof productSchema>>({
         resolver: zodResolver(productSchema),
@@ -655,6 +687,12 @@ export default function ProductsPage() {
                                                 <span className="text-xs font-mono">{product.hsn_code}</span>
                                             </div>
                                         )}
+                                        {product.itc_hs_code && (
+                                            <div className="mt-1">
+                                                <span className="text-xs text-muted-foreground">ITC HS: </span>
+                                                <span className="text-xs font-mono text-blue-600">{product.itc_hs_code}</span>
+                                            </div>
+                                        )}
                                         <div className="mt-3">
                                             <span className="text-xs text-muted-foreground mb-1 block">SKUs:</span>
                                             {product.skus && product.skus.length > 0 ? (
@@ -686,6 +724,7 @@ export default function ProductsPage() {
                                         <TableHead className="w-[180px]">Name</TableHead>
                                         <TableHead className="w-[120px]">Category</TableHead>
                                         <TableHead className="w-[100px]">HSN Code</TableHead>
+                                        <TableHead className="w-[100px]">ITC HS Code</TableHead>
                                         <TableHead className="w-[200px]">Description</TableHead>
                                         <TableHead className="w-[280px]">SKUs</TableHead>
                                         <TableHead className="w-[100px] text-right">Actions</TableHead>
@@ -700,6 +739,9 @@ export default function ProductsPage() {
                                             </TableCell>
                                             <TableCell className="font-mono text-xs">
                                                 {product.hsn_code || "—"}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs text-blue-600">
+                                                {product.itc_hs_code || "—"}
                                             </TableCell>
                                             <TableCell className="text-muted-foreground text-xs whitespace-normal break-words max-w-[250px]">
                                                 {product.description || "—"}
@@ -724,6 +766,17 @@ export default function ProductsPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1">
+                                                    {/* AI Suggest Button */}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="h-7 text-xs text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                                        onClick={() => handleAiSuggest(product)}
+                                                        title="AI Suggest HSN"
+                                                    >
+                                                        <Wand2 className="h-3 w-3 mr-1" />
+                                                        AI
+                                                    </Button>
                                                     {/* Generate SKU Button */}
                                                     {(!product.skus || product.skus.length === 0) && (
                                                         <Button
@@ -884,8 +937,8 @@ export default function ProductsPage() {
                         <div>
                             <Label>Or Enter HSN Code Manually</Label>
                             <div className="flex gap-2">
-                                <Input 
-                                    value={hsnCodeInput} 
+                                <Input
+                                    value={hsnCodeInput}
                                     onChange={(e) => setHsnCodeInput(e.target.value)}
                                     placeholder="Enter HSN code (e.g., 1006)"
                                     className="flex-1"
