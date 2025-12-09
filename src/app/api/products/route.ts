@@ -62,6 +62,7 @@ export async function POST(request: Request) {
                 description,
                 category,
                 image_url,
+                attributes: body.attributes || {},
                 is_active: true
             })
             .select()
@@ -85,20 +86,29 @@ export async function PUT(request: Request) {
         }
 
         const body = await request.json();
-        const { id, name, description, category, image_url } = body;
+        const { id, name, description, category, image_url, hsn_code, itc_hs_code, hsn_status, hsn_confidence, attributes } = body;
 
         if (!id) {
             return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
         }
 
+        // Construct payload dynamically to allow partial updates
+        const updatePayload: any = {};
+        if (name !== undefined) updatePayload.name = name;
+        if (description !== undefined) updatePayload.description = description;
+        if (category !== undefined) updatePayload.category = category;
+        if (image_url !== undefined) updatePayload.image_url = image_url;
+        if (attributes !== undefined) updatePayload.attributes = attributes;
+
+        // Add HSN fields
+        if (hsn_code !== undefined) updatePayload.hsn_code = hsn_code;
+        if (itc_hs_code !== undefined) updatePayload.itc_hs_code = itc_hs_code;
+        if (hsn_status !== undefined) updatePayload.hsn_status = hsn_status;
+        if (hsn_confidence !== undefined) updatePayload.hsn_confidence = hsn_confidence;
+
         const { data, error } = await supabase
             .from("products")
-            .update({
-                name,
-                description,
-                category,
-                image_url,
-            })
+            .update(updatePayload)
             .eq("id", id)
             .select()
             .single();

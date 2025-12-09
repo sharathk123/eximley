@@ -22,7 +22,7 @@ export async function POST(request: Request) {
         // 2. Fetch Product
         const { data: product, error: fetchError } = await supabase
             .from('products')
-            .select('id, name, description, category, company_id')
+            .select('id, name, description, category, company_id, attributes')
             .eq('id', productId)
             .single();
 
@@ -33,15 +33,31 @@ export async function POST(request: Request) {
         // Validate user belongs to company (RLS does this, but double check usually good if bypassing RLS, but here we use session client so RLS is active)
 
         // 3. Build Query Text
-        // Align with target format: "Commodity: ..., Description: ..."
+        // Align with target format: "Chapter: Context > Commodity > Description"
         const clean = (s: string | null) => s ? s.trim() : "";
 
-        // We construct a "Hypothetical HSN Entry" from the product data
-        const queryText = `
-Commodity: ${clean(product.name)}
-Category: ${clean(product.category)}
-Description: ${clean(product.description)}
-`.trim().slice(0, 1000);
+        // Format Attributes: "Material: Cotton, GSM: 200, ..."
+        let attributesText = "";
+        let materialContext = "";
+        let useContext = "";
+
+        if (product.attributes && typeof product.attributes === 'object') {
+            const attrs = product.attributes;
+
+            // Prioritize specific context keys
+            if (attrs.material_primary) materialContext = `Material: ${attrs.material_primary} > `;
+            if (attrs.intended_use) useContext = `Use: ${attrs.intended_use} > `;
+
+            // Generic attributes string
+            const entries = Object.entries(attrs).filter(([k]) => k !== 'material_primary' && k !== 'intended_use');
+            if (entries.length > 0) {
+                attributesText = " > Specs: " + entries.map(([k, v]) => `${k}: ${v}`).join(", ");
+            }
+        }
+
+        // We construct a hierarchical query string.
+        // Format: Category > Material > Use > Name > Description > Specs
+        const queryText = `Category: ${clean(product.category)} > ${materialContext}${useContext}${clean(product.name)} > ${clean(product.description)}${attributesText}`.trim().slice(0, 2000);
 
         if (!queryText) {
             return NextResponse.json({ error: "Insufficient product data to generate embedding" }, { status: 400 });
@@ -97,14 +113,9 @@ Description: ${clean(product.description)}
 
         // 6. Record Suggestions & Update Product
         if (topMatch) {
-            const bestConfidence = topMatch.similarity; // already normalized 0-1 (cosine similarity)
+            const bestConfidence = topMatch.similarity;
 
-            // Insert audit log
-            // Inserts 'one or more'. For simplicity, we record the TOP suggestion as the primary suggestion record.
-            // Or we could insert all? The schema links product_id to suggestion.
-            // Let's insert the best one for now or loop. The schema implies 'suggested_hsn_code'.
-
-            // We'll insert the best match as the suggestion
+            // Log the suggestion for audit
             const { error: logError } = await supabase
                 .from('ai_hsn_suggestions')
                 .insert({
@@ -120,29 +131,8 @@ Description: ${clean(product.description)}
 
             if (logError) console.error("Log error:", logError);
 
-            // Update Product if confidence is good (e.g. > 50%) or just 'update with best'
-            // User requirement: "updates products ... with the best suggestion (or leaves none)"
-
-            // Heuristic: If similarity > 0.5, we consider it a decent suggestion.
-            // Note: Cosine similarity on sentence-transformers often clusters 0.4-0.8.
-
-            const updatePayload: any = {
-                last_hsn_checked_at: new Date().toISOString()
-            };
-
-            if (bestConfidence > 0.25) {
-                updatePayload.itc_hs_code = topMatch.itc_hs_code; // Pre-fill 8 digit
-                updatePayload.hsn_code = topMatch.gst_hsn_code; // Pre-fill 4/6 digit GST HSN
-                updatePayload.hsn_confidence = bestConfidence;
-                updatePayload.hsn_status = 'suggested';
-            }
-
-            const { error: updateError } = await supabase
-                .from('products')
-                .update(updatePayload)
-                .eq('id', productId);
-
-            if (updateError) console.error("Product update error:", updateError);
+            // AUTO-TAGGING REMOVED. 
+            // We now rely on the frontend to let the user pick from the candidates.
         }
 
         return NextResponse.json({

@@ -56,12 +56,25 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useToast } from "@/components/ui/use-toast";
+import { HSNSelectionDialog } from "@/components/admin/HSNSelectionDialog";
 
 const productSchema = z.object({
     name: z.string().min(1, "Product name is required"),
     category: z.string().min(1, "Category is required"),
     description: z.string().optional(),
     image_url: z.string().url().optional().or(z.literal("")),
+    // Explicit Attributes
+    material_primary: z.string().optional(),
+    specifications: z.string().optional(), // For GSM, Thread Count, Size
+    manufacturing_method: z.string().optional(),
+    intended_use: z.string().optional(),
+    features: z.string().optional(),
+    tags: z.string().optional(),
+    // Additional Attributes
+    attributes: z.array(z.object({
+        key: z.string().min(1, "Key is required"),
+        value: z.string().min(1, "Value is required")
+    })).optional().default([]),
 });
 
 export default function ProductsPage() {
@@ -83,6 +96,7 @@ export default function ProductsPage() {
     const [selectedProductForHSN, setSelectedProductForHSN] = useState<any>(null);
     const [hsnCodeInput, setHsnCodeInput] = useState("");
     const [hsnSuggestions, setHsnSuggestions] = useState<any[]>([]);
+    const [selectionDialogOpen, setSelectionDialogOpen] = useState(false);
     const [loadingHSN, setLoadingHSN] = useState(false);
     const [generatingSKU, setGeneratingSKU] = useState<string | null>(null);
     const itemsPerPage = 12;
@@ -100,18 +114,20 @@ export default function ProductsPage() {
 
             if (!res.ok) throw new Error(data.error || "Failed to get suggestions");
 
+            if (!res.ok) throw new Error(data.error || "Failed to get suggestions");
+
             if (data.candidates && data.candidates.length > 0) {
-                const best = data.candidates[0];
-                toast({
-                    title: "Suggestion Found!",
-                    description: `Best Match: ${best.gst_hsn_code} (${(best.similarity * 100).toFixed(0)}%) - ${best.description.substring(0, 40)}...`,
-                    className: "bg-green-50 dark:bg-green-900 border-green-200"
-                });
-                fetchProducts(); // Refresh to show updated hsn_status/code if auto-applied
+                setHsnSuggestions(data.candidates);
+                setSelectedProductForHSN(product);
+                // The dialog is controlled by checking if selectedProductForHSN is not null, or we can use a separate boolean
+                // Actually let's use the explicit boolean state hsnDialogOpen if needed, 
+                // OR better, create a new state specifically for the "Results Dialog" distinct from "Manual Input" dialog.
+                // Let's reuse hsnSuggestions state as the trigger or a new boolean.
+
+                // We'll add a new state: showSelectionDialog
+                setSelectionDialogOpen(true);
             } else {
                 toast({ title: "No Match", description: "No confident HSN matches found." });
-                // If it was a 'not found' status update
-                fetchProducts();
             }
         } catch (e: any) {
             console.error(e);
@@ -127,6 +143,13 @@ export default function ProductsPage() {
             category: "",
             description: "",
             image_url: "",
+            material_primary: "",
+            specifications: "",
+            manufacturing_method: "",
+            intended_use: "",
+            features: "",
+            tags: "",
+            attributes: [],
         },
     });
 
@@ -168,7 +191,31 @@ export default function ProductsPage() {
         try {
             const url = editingProduct ? "/api/products" : "/api/products";
             const method = editingProduct ? "PUT" : "POST";
-            const body = editingProduct ? { ...values, id: editingProduct.id } : values;
+
+            // Convert generic attributes array back to key-value object
+            const attributesObj = values.attributes?.reduce((acc: any, curr) => {
+                if (curr.key && curr.value) acc[curr.key] = curr.value;
+                return acc;
+            }, {}) || {};
+
+            // Merge explicit attributes
+            if (values.material_primary) attributesObj.material_primary = values.material_primary;
+            if (values.specifications) attributesObj.specifications = values.specifications;
+            if (values.manufacturing_method) attributesObj.manufacturing_method = values.manufacturing_method;
+            if (values.intended_use) attributesObj.intended_use = values.intended_use;
+            if (values.features) attributesObj.features = values.features;
+            if (values.tags) attributesObj.tags = values.tags;
+
+            // Prepare body, excluding the explicit attribute fields from root
+            // (We send them inside 'attributes' object)
+            const {
+                material_primary, specifications, manufacturing_method, intended_use, features, tags,
+                attributes, ...rest
+            } = values;
+
+            const body = editingProduct
+                ? { ...rest, id: editingProduct.id, attributes: attributesObj }
+                : { ...rest, attributes: attributesObj };
 
             const res = await fetch(url, {
                 method,
@@ -195,12 +242,28 @@ export default function ProductsPage() {
     };
 
     const handleEdit = (product: any) => {
+        const attrs = product.attributes || {};
+        const specificKeys = ['material_primary', 'specifications', 'thread_count', 'manufacturing_method', 'intended_use', 'features', 'tags'];
+
+        // Convert generic attributes object to array for form, excluding specific ones
+        const attrsArray = Object.entries(attrs)
+            .filter(([key]) => !specificKeys.includes(key))
+            .map(([key, value]) => ({ key, value: String(value) }));
+
         setEditingProduct(product);
         form.reset({
             name: product.name,
             category: product.category,
             description: product.description || "",
             image_url: product.image_url || "",
+            // Populate explicit attributes
+            material_primary: attrs.material_primary || "",
+            specifications: attrs.specifications || attrs.thread_count || "",
+            manufacturing_method: attrs.manufacturing_method || "",
+            intended_use: attrs.intended_use || "",
+            features: attrs.features || "",
+            tags: attrs.tags || "",
+            attributes: attrsArray,
         });
         setIsOpen(true);
     };
@@ -621,6 +684,139 @@ export default function ProductsPage() {
                                             </FormItem>
                                         )}
                                     />
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="material_primary"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Primary Material</FormLabel>
+                                                    <FormControl><Input placeholder="Cotton, Silk..." {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specifications"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Specs</FormLabel>
+                                                    <FormControl><Input placeholder="GSM, Thread Count, Size..." {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="manufacturing_method"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Mfg Method</FormLabel>
+                                                    <FormControl><Input placeholder="Woven, Knitted..." {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="intended_use"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Intended Use</FormLabel>
+                                                    <FormControl><Input placeholder="Home, Apparel..." {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                    <FormField
+                                        control={form.control}
+                                        name="features"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Features</FormLabel>
+                                                <FormControl><Input placeholder="Comma separated (e.g. Breathable, Soft)" {...field} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="tags"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Tags</FormLabel>
+                                                <FormControl><Input placeholder="Comma separated (e.g. Summer, Luxury)" {...field} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <div className="space-y-4 border rounded-md p-4 bg-muted/20">
+                                        <div className="flex items-center justify-between">
+                                            <FormLabel className="text-base font-semibold">Specifications / Attributes</FormLabel>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    const current = form.getValues("attributes") || [];
+                                                    form.setValue("attributes", [...current, { key: "", value: "" }]);
+                                                }}
+                                            >
+                                                <Plus className="h-4 w-4 mr-1" /> Add
+                                            </Button>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {form.watch("attributes")?.map((_, index) => (
+                                                <div key={index} className="flex gap-2 items-start">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name={`attributes.${index}.key`}
+                                                        render={({ field }) => (
+                                                            <FormItem className="flex-1">
+                                                                <FormControl>
+                                                                    <Input placeholder="Color, Material, etc." {...field} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                    <FormField
+                                                        control={form.control}
+                                                        name={`attributes.${index}.value`}
+                                                        render={({ field }) => (
+                                                            <FormItem className="flex-1">
+                                                                <FormControl>
+                                                                    <Input placeholder="Red, Cotton, etc." {...field} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                            const current = form.getValues("attributes");
+                                                            form.setValue("attributes", current?.filter((_, i) => i !== index));
+                                                        }}
+                                                    >
+                                                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                            {(!form.watch("attributes") || form.watch("attributes")?.length === 0) && (
+                                                <div className="text-sm text-muted-foreground text-center py-2 italic">
+                                                    No attributes added. Add details like Color, Size, Material.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                     <div className="flex justify-end space-x-2 pt-4">
                                         <Button variant="outline" type="button" onClick={() => {
                                             setIsOpen(false);
@@ -742,37 +938,64 @@ export default function ProductsPage() {
                             <Table className="table-fixed">
                                 <TableHeader className="bg-muted/50">
                                     <TableRow>
-                                        <TableHead className="w-[180px]">Name</TableHead>
-                                        <TableHead className="w-[120px]">Category</TableHead>
-                                        <TableHead className="w-[100px]">HSN Code</TableHead>
-                                        <TableHead className="w-[100px]">ITC HS Code</TableHead>
-                                        <TableHead className="w-[200px]">Description</TableHead>
-                                        <TableHead className="w-[280px]">SKUs</TableHead>
-                                        <TableHead className="w-[100px] text-right">Actions</TableHead>
+                                        <TableHead className="w-[220px]">Product</TableHead>
+                                        <TableHead className="w-[140px]">HSN / Tax</TableHead>
+                                        <TableHead className="w-[200px]">Attributes</TableHead>
+                                        <TableHead className="w-[250px]">SKUs</TableHead>
+                                        <TableHead className="w-[80px] text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {paginatedProducts.map((product) => (
                                         <TableRow key={product.id}>
-                                            <TableCell className="font-medium">{product.name}</TableCell>
                                             <TableCell>
-                                                <Badge variant="outline">{product.category}</Badge>
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium">{product.name}</span>
+                                                    <Badge variant="outline" className="w-fit mt-1 text-[10px] font-normal text-muted-foreground">{product.category}</Badge>
+                                                    {product.description && (
+                                                        <span className="text-[10px] text-muted-foreground mt-1 line-clamp-2" title={product.description}>{product.description}</span>
+                                                    )}
+                                                </div>
                                             </TableCell>
-                                            <TableCell className="font-mono text-xs">
-                                                {product.hsn_code || "—"}
+                                            <TableCell>
+                                                <div className="flex flex-col gap-1">
+                                                    {product.hsn_code ? (
+                                                        <div className="flex items-center gap-1 text-xs font-mono">
+                                                            <span className="text-muted-foreground">GST:</span>
+                                                            <span>{product.hsn_code}</span>
+                                                        </div>
+                                                    ) : <span className="text-xs text-muted-foreground italic">No GST Code</span>}
+
+                                                    {product.itc_hs_code ? (
+                                                        <div className="flex items-center gap-1 text-xs font-mono text-blue-600">
+                                                            <span>ITC:</span>
+                                                            <span>{product.itc_hs_code}</span>
+                                                        </div>
+                                                    ) : null}
+                                                </div>
                                             </TableCell>
-                                            <TableCell className="font-mono text-xs text-blue-600">
-                                                {product.itc_hs_code || "—"}
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground text-xs whitespace-normal break-words max-w-[250px]">
-                                                {product.description || "—"}
+                                            <TableCell>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {product.attributes && Object.keys(product.attributes).length > 0 ? (
+                                                        Object.entries(product.attributes).slice(0, 4).map(([k, v]: any, i) => (
+                                                            <Badge key={i} variant="secondary" className="text-[10px] px-1 py-0 h-5 font-normal bg-slate-100 dark:bg-slate-800 border-slate-200">
+                                                                {k}: {v}
+                                                            </Badge>
+                                                        ))
+                                                    ) : (
+                                                        <span className="text-xs text-muted-foreground italic">-</span>
+                                                    )}
+                                                    {product.attributes && Object.keys(product.attributes).length > 4 && (
+                                                        <span className="text-[10px] text-muted-foreground">+{Object.keys(product.attributes).length - 4} more</span>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 {product.skus && product.skus.length > 0 ? (
-                                                    <div className="flex flex-wrap gap-1 max-w-[250px]">
+                                                    <div className="flex flex-wrap gap-1">
                                                         {product.skus.slice(0, 3).map((sku: any, idx: number) => (
                                                             <div key={idx} className="group relative">
-                                                                <Badge variant="secondary" className="px-1 py-0 text-[10px] font-normal h-5 pr-4 cursor-default">
+                                                                <Badge variant="outline" className="px-1 py-0 text-[10px] h-5 pr-3 cursor-default bg-background">
                                                                     {sku.sku_code}
                                                                 </Badge>
                                                                 <button
@@ -780,81 +1003,40 @@ export default function ProductsPage() {
                                                                         e.stopPropagation();
                                                                         setDeletingSKU(sku);
                                                                     }}
-                                                                    className="absolute right-0 top-0 bottom-0 px-1 opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive flex items-center"
+                                                                    className="absolute right-0 top-0 bottom-0 px-1 opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive flex items-center justify-center bg-background/80"
                                                                     title="Delete SKU"
                                                                 >
-                                                                    <span className="text-[10px] font-bold">×</span>
+                                                                    <span className="text-[10px] font-bold leading-none mb-[1px]">×</span>
                                                                 </button>
                                                             </div>
                                                         ))}
                                                         {product.skus.length > 3 && (
-                                                            <Badge variant="outline" className="px-1 py-0 text-[10px] h-5">
-                                                                +{product.skus.length - 3} more
-                                                            </Badge>
+                                                            <span className="text-[10px] text-muted-foreground">+{product.skus.length - 3}</span>
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <span className="text-muted-foreground text-xs italic">No SKUs</span>
+                                                    <div className="flex items-center">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="h-6 text-[10px] text-blue-600 px-2"
+                                                            onClick={() => handleGenerateSKU(product)}
+                                                            disabled={generatingSKU === product.id}
+                                                        >
+                                                            {generatingSKU === product.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Auto-Gen SKU"}
+                                                        </Button>
+                                                    </div>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1">
-                                                    {/* AI Suggest Button */}
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="h-7 text-xs text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                                                        onClick={() => handleAiSuggest(product)}
-                                                        title="AI Suggest HSN"
-                                                    >
-                                                        <Wand2 className="h-3 w-3 mr-1" />
-                                                        AI
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => handleAiSuggest(product)} title="AI HSN Suggest">
+                                                        <Sparkles className="h-4 w-4" />
                                                     </Button>
-                                                    {/* Generate SKU Button */}
-                                                    {(!product.skus || product.skus.length === 0) && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-7 text-xs"
-                                                            onClick={() => handleGenerateSKU(product)}
-                                                            disabled={generatingSKU === product.id}
-                                                            title="Generate SKU"
-                                                        >
-                                                            {generatingSKU === product.id ? (
-                                                                <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                                                            ) : (
-                                                                <Sparkles className="h-3 w-3 mr-1" />
-                                                            )}
-                                                            SKU
-                                                        </Button>
-                                                    )}
-                                                    {/* Link HSN Button */}
-                                                    {!product.hsn_code && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-7 text-xs"
-                                                            onClick={() => handleLinkHSN(product)}
-                                                            title="Link HSN Code"
-                                                        >
-                                                            <LinkIcon className="h-3 w-3 mr-1" />
-                                                            HSN
-                                                        </Button>
-                                                    )}
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        onClick={() => handleEdit(product)}
-                                                    >
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(product)}>
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-destructive"
-                                                        onClick={() => setDeletingProduct(product)}
-                                                    >
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeletingProduct(product)}>
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </div>
@@ -890,7 +1072,8 @@ export default function ProductsPage() {
                         </div>
                     )}
                 </>
-            )}
+            )
+            }
 
             <AlertDialog open={!!deletingProduct} onOpenChange={(open) => !open && setDeletingProduct(null)}>
                 <AlertDialogContent>
@@ -952,9 +1135,9 @@ export default function ProductsPage() {
                                 <div className="space-y-2 mt-2">
                                     {hsnSuggestions.map((hsn) => (
                                         <Card
-                                            key={hsn.hsn_code}
-                                            className={`cursor-pointer hover:bg-accent transition-colors ${hsnCodeInput === hsn.hsn_code ? 'border-primary bg-accent' : ''}`}
-                                            onClick={() => setHsnCodeInput(hsn.hsn_code)}
+                                            key={hsn.id}
+                                            className={`cursor-pointer hover:bg-accent transition-colors ${hsnCodeInput === hsn.gst_hsn_code ? 'border-primary bg-accent' : ''}`}
+                                            onClick={() => setHsnCodeInput(hsn.gst_hsn_code)}
                                         >
                                             <CardContent className="p-4">
                                                 <div className="space-y-2">
@@ -1025,6 +1208,21 @@ export default function ProductsPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+            {/* HSN Selection Dialog */}
+            {
+                selectedProductForHSN && (
+                    <HSNSelectionDialog
+                        open={selectionDialogOpen}
+                        onOpenChange={setSelectionDialogOpen}
+                        candidates={hsnSuggestions}
+                        product={selectedProductForHSN}
+                        onSelect={() => {
+                            fetchProducts(); // Refresh list after selection
+                            setSelectionDialogOpen(false);
+                        }}
+                    />
+                )
+            }
+        </div >
     );
 }

@@ -577,9 +577,7 @@ CREATE TABLE public.products (
     itc_hs_code TEXT,
     hsn_confidence NUMERIC,
     hsn_status TEXT DEFAULT 'none',
-    last_hsn_checked_at TIMESTAMPTZ,
-    attributes JSONB DEFAULT '{}'::jsonb,
-    is_active BOOLEAN DEFAULT true
+    last_hsn_checked_at TIMESTAMPTZ
 );
 
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;

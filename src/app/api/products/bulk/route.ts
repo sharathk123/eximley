@@ -29,13 +29,37 @@ export async function POST(request: Request) {
         }
 
         // Format products for insert
-        const formattedProducts = products.map((item: any) => ({
-            company_id: companyUser.company_id,
-            name: item.name || item.Name || "",
-            category: item.category || item.Category || "general",
-            description: item.description || item.Description || "",
-            hsn_code: item.hsn_code || item['HSN Code'] || item.hsn || null
-        })).filter((p: any) => p.name); // Filter out empty names
+        const formattedProducts = products.map((item: any) => {
+            // Normalize keys to lowercase for standard fields check
+            const normalizedItem: any = {};
+            Object.keys(item).forEach(k => normalizedItem[k.toLowerCase()] = item[k]);
+
+            const name = normalizedItem.name || "";
+            const category = normalizedItem.category || "general";
+            const description = normalizedItem.description || "";
+            const hsn_code = normalizedItem['hsn code'] || normalizedItem['hsn_code'] || normalizedItem.hsn || null;
+
+            // Collect extra fields as attributes
+            const standardKeys = ['name', 'category', 'description', 'hsn', 'hsn code', 'hsn_code', 'company_id'];
+            const attributes: Record<string, any> = {};
+
+            Object.keys(item).forEach(key => {
+                const lowerKey = key.toLowerCase();
+                // Exclude standard keys and empty values
+                if (!standardKeys.includes(lowerKey) && item[key] !== null && item[key] !== "" && item[key] !== undefined) {
+                    attributes[key] = String(item[key]); // Ensure value is string for consistency
+                }
+            });
+
+            return {
+                company_id: companyUser.company_id,
+                name,
+                category,
+                description,
+                hsn_code,
+                attributes
+            };
+        }).filter((p: any) => p.name); // Filter out empty names
 
         if (formattedProducts.length === 0) {
             return NextResponse.json({ error: "No valid products to import" }, { status: 400 });
