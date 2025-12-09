@@ -61,23 +61,17 @@ DROP TABLE IF EXISTS public.product_categories CASCADE;
 -- =============================================================
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Entities table (Buyers, Suppliers, etc.)
-CREATE TABLE public.entities (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-    company_id UUID NOT NULL, -- Multi-tenant separation
-    name TEXT NOT NULL,
-    type TEXT NOT NULL CHECK (type IN ('buyer', 'supplier', 'partner', 'other')),
-    email TEXT,
-    phone TEXT,
-    address TEXT,
-    country TEXT,
-    tax_id TEXT,
-    verification_status TEXT DEFAULT 'unverified',
-    is_active BOOLEAN DEFAULT true
-);
+-- DANGER: Complete Reset of Auth Users (Development Mode)
+-- This wipes all users, superadmins, and associated profiles.
+DO $$
+BEGIN
+    RAISE NOTICE 'Wiping auth.users...';
+    TRUNCATE auth.users CASCADE;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Failed to truncate auth.users (check permissions): %', SQLERRM;
+END $$;
 
--- Companies table
+-- Companies table (Must be created BEFORE entities)
 CREATE TABLE public.companies (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
@@ -104,6 +98,22 @@ CREATE TABLE public.companies (
     signatory_designation TEXT,
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'inactive')),
     is_super_admin_company BOOLEAN DEFAULT false
+);
+
+-- Entities table (Buyers, Suppliers, etc.)
+CREATE TABLE public.entities (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE, -- Multi-tenant separation
+    name TEXT NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('buyer', 'supplier', 'partner', 'other')),
+    email TEXT,
+    phone TEXT,
+    address TEXT,
+    country TEXT,
+    tax_id TEXT,
+    verification_status TEXT DEFAULT 'unverified',
+    is_active BOOLEAN DEFAULT true
 );
 
 -- Enable RLS for companies
@@ -397,6 +407,43 @@ $$;
 -- Drop old master if any (safe)
 DROP TABLE IF EXISTS public.master_hsn_codes CASCADE;
 
+-- Create LUTs table (Letter of Undertaking)
+CREATE TABLE public.luts (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+    lut_number TEXT NOT NULL,
+    financial_year TEXT, -- e.g. "2024-25"
+    expiry_date DATE,
+    document_url TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.luts ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'luts' AND policyname = 'luts_select_same_company') THEN
+    CREATE POLICY "luts_select_same_company" ON public.luts FOR SELECT USING (auth.uid() IN (SELECT user_id FROM company_users WHERE company_id = luts.company_id));
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'luts' AND policyname = 'luts_insert_same_company') THEN
+    CREATE POLICY "luts_insert_same_company" ON public.luts FOR INSERT WITH CHECK (auth.uid() IN (SELECT user_id FROM company_users WHERE company_id = luts.company_id));
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'luts' AND policyname = 'luts_update_same_company') THEN
+    CREATE POLICY "luts_update_same_company" ON public.luts FOR UPDATE USING (auth.uid() IN (SELECT user_id FROM company_users WHERE company_id = luts.company_id));
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'luts' AND policyname = 'luts_delete_same_company') THEN
+    CREATE POLICY "luts_delete_same_company" ON public.luts FOR DELETE USING (auth.uid() IN (SELECT user_id FROM company_users WHERE company_id = luts.company_id));
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_luts_company ON public.luts(company_id);
+CREATE INDEX IF NOT EXISTS idx_luts_expiry ON public.luts(expiry_date);
+
+
 -- Create unified mapping table
 CREATE TABLE IF NOT EXISTS public.itc_gst_hsn_mapping (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -521,7 +568,7 @@ CREATE TABLE public.products (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-    company_id UUID NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,
     category TEXT,
@@ -592,7 +639,7 @@ CREATE TABLE public.skus (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-    company_id UUID NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
     sku_code TEXT NOT NULL,
     name TEXT NOT NULL,
@@ -822,114 +869,28 @@ ON CONFLICT (code) DO NOTHING;
 
 -- =============================================================
 
--- =============================================================
-CREATE TABLE IF NOT EXISTS public.luts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
-    lut_number VARCHAR(100) NOT NULL,
-    financial_year VARCHAR(20) NOT NULL,
-    valid_from DATE NOT NULL,
-    valid_to DATE NOT NULL,
-    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'expired', 'cancelled')),
-    filed_date DATE,
-    acknowledgment_number VARCHAR(100),
-    document_url TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_luts_unique_fy ON public.luts(company_id, financial_year);
-CREATE INDEX IF NOT EXISTS idx_luts_company ON public.luts(company_id);
-CREATE INDEX IF NOT EXISTS idx_luts_status ON public.luts(status);
-
-ALTER TABLE public.luts ENABLE ROW LEVEL SECURITY;
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'luts'
-      AND policyname = 'luts_select'
-  ) THEN
-    CREATE POLICY luts_select ON public.luts FOR SELECT USING (company_id IN (SELECT company_id FROM company_users WHERE user_id = auth.uid()));
-  END IF;
-END
-$$;
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'luts'
-      AND policyname = 'luts_insert'
-  ) THEN
-    CREATE POLICY luts_insert ON public.luts FOR INSERT WITH CHECK (company_id IN (SELECT company_id FROM company_users WHERE user_id = auth.uid()));
-  END IF;
-END
-$$;
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'luts'
-      AND policyname = 'luts_update'
-  ) THEN
-    CREATE POLICY luts_update ON public.luts FOR UPDATE USING (company_id IN (SELECT company_id FROM company_users WHERE user_id = auth.uid()));
-  END IF;
-END
-$$;
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'luts'
-      AND policyname = 'luts_delete'
-  ) THEN
-    CREATE POLICY luts_delete ON public.luts FOR DELETE USING (company_id IN (SELECT company_id FROM company_users WHERE user_id = auth.uid()));
-  END IF;
-END
-$$;
-
-COMMENT ON TABLE public.luts IS 'Letters of Undertaking for zero-rated exports under GST';
-
-
--- =============================================================
--- INCOTERMS
--- =============================================================
-CREATE TABLE IF NOT EXISTS public.incoterms (
+-- Create Incoterms table (Ref by Orders)
+CREATE TABLE public.incoterms (
     code TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT
 );
-
 ALTER TABLE public.incoterms ENABLE ROW LEVEL SECURITY;
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'incoterms'
-      AND policyname = 'incoterms_select_all'
-  ) THEN
-    CREATE POLICY "incoterms_select_all" ON public.incoterms FOR SELECT USING (true);
-  END IF;
-END
-$$;
+CREATE POLICY "incoterms_read_all" ON public.incoterms FOR SELECT USING (true);
 
+-- Seed Incoterms (2020)
 INSERT INTO public.incoterms (code, name, description) VALUES
 ('EXW', 'Ex Works', 'Seller makes goods available at their premises.'),
-('FCA', 'Free Carrier', 'Seller delivers goods to a carrier or another person nominated by the buyer.'),
-('CPT', 'Carriage Paid To', 'Seller delivers goods to the carrier and pays for carriage to the named place of destination.'),
-('CIP', 'Carriage and Insurance Paid To', 'Seller delivers goods to the carrier and pays for carriage and insurance to the named place of destination.'),
-('DAP', 'Delivered at Place', 'Seller delivers when the goods are placed at the disposal of the buyer at the named place of destination.'),
-('DPU', 'Delivered at Place Unloaded', 'Seller delivers when the goods, once unloaded, are placed at the disposal of the buyer at a named place of destination.'),
-('DDP', 'Delivered Duty Paid', 'Seller takes all responsibility for transporting the goods to the destination country, clearing customs, and paying duties.'),
-('FAS', 'Free Alongside Ship', 'Seller delivers when the goods are placed alongside the vessel at the named port of shipment.'),
-('FOB', 'Free on Board', 'Seller delivers when the goods are placed on board the vessel nominated by the buyer at the named port of shipment.'),
-('CFR', 'Cost and Freight', 'Seller delivers the goods on board the vessel and pays the costs and freight to bring the goods to the named port of destination.'),
-('CIF', 'Cost, Insurance and Freight', 'Seller delivers the goods on board the vessel and pays the costs, insurance, and freight to bring the goods to the named port of destination.')
+('FCA', 'Free Carrier', 'Seller delivers goods to a carrier or other person nominated by the buyer.'),
+('CPT', 'Carriage Paid To', 'Seller pays for carriage to the named place of destination.'),
+('CIP', 'Carriage and Insurance Paid To', 'Same as CPT, but seller also provides insurance.'),
+('DAP', 'Delivered at Place', 'Seller delivers when goods are placed at buyer disposal at named place.'),
+('DPU', 'Delivered at Place Unloaded', 'Seller delivers when goods are unloaded at named place.'),
+('DDP', 'Delivered Duty Paid', 'Seller delivers goods cleared for import with all duties paid.'),
+('FAS', 'Free Alongside Ship', 'Seller delivers when goods are placed alongside the vessel.'),
+('FOB', 'Free on Board', 'Seller delivers when goods are on board the vessel.'),
+('CFR', 'Cost and Freight', 'Seller pays cost and freight to named port of destination.'),
+('CIF', 'Cost, Insurance and Freight', 'Same as CFR, but seller also provides insurance.')
 ON CONFLICT (code) DO NOTHING;
 
 -- =============================================================
@@ -938,7 +899,7 @@ ON CONFLICT (code) DO NOTHING;
 CREATE TABLE public.cost_sheets (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-    company_id UUID NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
     sku_id UUID REFERENCES public.skus(id) ON DELETE SET NULL,
@@ -996,8 +957,9 @@ $$;
 
 CREATE TABLE public.proforma_invoices (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    company_id UUID NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     invoice_number TEXT NOT NULL,
+    quote_id UUID, -- Track origin (FK added at end of script)
     buyer_id UUID REFERENCES public.entities(id),
     date DATE DEFAULT CURRENT_DATE,
     valid_until DATE,
@@ -1076,7 +1038,7 @@ $$;
 
 CREATE TABLE public.export_orders (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    company_id UUID NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     order_number TEXT NOT NULL,
     pi_id UUID REFERENCES public.proforma_invoices(id) ON DELETE SET NULL,
     buyer_id UUID REFERENCES public.entities(id),
@@ -1159,7 +1121,7 @@ $$;
 
 CREATE TABLE public.shipments (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    company_id UUID NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     shipment_number TEXT NOT NULL,
     order_id UUID REFERENCES public.export_orders(id) ON DELETE CASCADE,
     shipment_date DATE DEFAULT CURRENT_DATE,
@@ -1246,7 +1208,7 @@ $$;
 CREATE TABLE public.order_payments (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     order_id UUID REFERENCES public.export_orders(id) ON DELETE CASCADE,
-    company_id UUID NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     payment_date DATE DEFAULT CURRENT_DATE,
     amount NUMERIC NOT NULL,
     currency_code TEXT REFERENCES public.currencies(code),
@@ -1306,6 +1268,7 @@ CREATE INDEX IF NOT EXISTS idx_entities_company ON public.entities(company_id);
 CREATE INDEX IF NOT EXISTS idx_cost_sheets_company ON public.cost_sheets(company_id);
 CREATE INDEX IF NOT EXISTS idx_pi_company ON public.proforma_invoices(company_id);
 CREATE INDEX IF NOT EXISTS idx_pi_items_invoice ON public.proforma_items(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_pi_quote ON public.proforma_invoices(quote_id);
 CREATE INDEX IF NOT EXISTS idx_orders_company ON public.export_orders(company_id);
 CREATE INDEX IF NOT EXISTS idx_orders_pi ON public.export_orders(pi_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON public.order_items(order_id);
@@ -1321,7 +1284,7 @@ CREATE INDEX IF NOT EXISTS idx_order_payments_date ON public.order_payments(paym
 -- =============================================================
 CREATE TABLE public.documents (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    company_id UUID NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     document_type TEXT NOT NULL,
     document_category TEXT NOT NULL,
     reference_type TEXT,
@@ -1410,7 +1373,7 @@ CREATE INDEX IF NOT EXISTS idx_documents_composite ON public.documents(company_i
 -- =============================================================
 CREATE TABLE public.enquiries (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    company_id UUID NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     enquiry_number TEXT NOT NULL,
     entity_id UUID REFERENCES public.entities(id) ON DELETE SET NULL,
     customer_name TEXT NOT NULL,
@@ -1531,7 +1494,7 @@ $$;
 
 CREATE TABLE public.quotes (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    company_id UUID NOT NULL,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     quote_number TEXT NOT NULL,
     enquiry_id UUID REFERENCES public.enquiries(id) ON DELETE SET NULL,
     buyer_id UUID REFERENCES public.entities(id),
@@ -1666,6 +1629,7 @@ CREATE INDEX IF NOT EXISTS idx_quote_items_sku ON public.quote_items(sku_id);
 -- =============================================================
 CREATE TABLE IF NOT EXISTS public.purchase_orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
     po_number TEXT NOT NULL UNIQUE,
     vendor_id UUID REFERENCES public.entities(id) ON DELETE SET NULL,
     export_order_id UUID REFERENCES public.export_orders(id) ON DELETE SET NULL,
@@ -1703,7 +1667,9 @@ BEGIN
       AND tablename = 'purchase_orders'
       AND policyname = 'purchase_orders_auth'
   ) THEN
-    CREATE POLICY "purchase_orders_auth" ON public.purchase_orders FOR ALL USING (auth.role() = 'authenticated');
+    CREATE POLICY "purchase_orders_auth" ON public.purchase_orders FOR ALL USING (
+        company_id IN (SELECT company_id FROM company_users WHERE user_id = auth.uid())
+    );
   END IF;
 END
 $$;
@@ -1716,7 +1682,9 @@ BEGIN
       AND tablename = 'purchase_order_items'
       AND policyname = 'purchase_order_items_auth'
   ) THEN
-    CREATE POLICY "purchase_order_items_auth" ON public.purchase_order_items FOR ALL USING (auth.role() = 'authenticated');
+    CREATE POLICY "purchase_order_items_auth" ON public.purchase_order_items FOR ALL USING (
+        po_id IN (SELECT id FROM purchase_orders WHERE company_id IN (SELECT company_id FROM company_users WHERE user_id = auth.uid()))
+    );
   END IF;
 END
 $$;
@@ -1724,7 +1692,7 @@ $$;
 CREATE TABLE IF NOT EXISTS public.purchase_order_payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     purchase_order_id UUID REFERENCES public.purchase_orders(id) ON DELETE CASCADE,
-    company_id UUID REFERENCES public.companies(id),
+    company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
     payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
     amount NUMERIC NOT NULL,
     currency_code TEXT NOT NULL DEFAULT 'INR',
@@ -1744,10 +1712,16 @@ BEGIN
       AND tablename = 'purchase_order_payments'
       AND policyname = 'purchase_order_payments_auth'
   ) THEN
-    CREATE POLICY "purchase_order_payments_auth" ON public.purchase_order_payments FOR ALL USING (auth.role() = 'authenticated');
+    CREATE POLICY "purchase_order_payments_auth" ON public.purchase_order_payments FOR ALL USING (
+        company_id IN (SELECT company_id FROM company_users WHERE user_id = auth.uid())
+    );
   END IF;
 END
 $$;
+
+CREATE INDEX IF NOT EXISTS idx_purchase_orders_company ON public.purchase_orders(company_id);
+CREATE INDEX IF NOT EXISTS idx_purchase_orders_vendor ON public.purchase_orders(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_purchase_orders_status ON public.purchase_orders(status);
 
 -- =============================================================
 -- SHIPPING BILLS & ITEMS (Customs)
@@ -2332,27 +2306,31 @@ BEGIN
 END
 $$;
 
+ALTER TABLE public.rodtep_rates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.duty_drawback_rates ENABLE ROW LEVEL SECURITY;
+
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'rodtep_rates'
-      AND policyname = 'rodtep_rates_select'
-  ) THEN
-    CREATE POLICY rodtep_rates_select ON public.rodtep_rates FOR SELECT USING (auth.uid() IS NOT NULL);
+  -- RoDTEP Policies
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'rodtep_rates' AND policyname = 'rodtep_rates_select') THEN
+      CREATE POLICY "rodtep_rates_select" ON public.rodtep_rates FOR SELECT USING (auth.uid() IS NOT NULL);
   END IF;
-END
-$$;
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'duty_drawback_rates'
-      AND policyname = 'duty_drawback_rates_select'
-  ) THEN
-    CREATE POLICY duty_drawback_rates_select ON public.duty_drawback_rates FOR SELECT USING (auth.uid() IS NOT NULL);
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'rodtep_rates' AND policyname = 'rodtep_rates_admin_all') THEN
+      CREATE POLICY "rodtep_rates_admin_all" ON public.rodtep_rates FOR ALL USING (
+          EXISTS (SELECT 1 FROM public.company_users WHERE user_id = auth.uid() AND is_super_admin = true)
+      );
+  END IF;
+
+  -- Duty Drawback Policies
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'duty_drawback_rates' AND policyname = 'duty_drawback_rates_select') THEN
+      CREATE POLICY "duty_drawback_rates_select" ON public.duty_drawback_rates FOR SELECT USING (auth.uid() IS NOT NULL);
+  END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'duty_drawback_rates' AND policyname = 'duty_drawback_rates_admin_all') THEN
+      CREATE POLICY "duty_drawback_rates_admin_all" ON public.duty_drawback_rates FOR ALL USING (
+          EXISTS (SELECT 1 FROM public.company_users WHERE user_id = auth.uid() AND is_super_admin = true)
+      );
   END IF;
 END
 $$;
@@ -2824,6 +2802,16 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Grant auth schema usage just in case (though usually restricted)
 -- GRANT USAGE ON SCHEMA auth TO service_role; 
 -- (Better not to mess with auth schema permissions unless necessary)
+
+-- Add cyclic foreign keys (PI -> Quote)
+-- This must be done after both tables exist.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_pi_quote') THEN
+        ALTER TABLE public.proforma_invoices
+          ADD CONSTRAINT fk_pi_quote FOREIGN KEY (quote_id) REFERENCES public.quotes(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- Force refresh of schema cache (if using PostgREST)
 NOTIFY pgrst, 'reload config';
