@@ -65,13 +65,52 @@ export async function POST(request: Request) {
 
 
 
-        // 4. Generate Embedding (Local Model)
-        // Use exact same model as ingestion: Xenova/all-MiniLM-L6-v2
-        const { pipeline } = await import('@xenova/transformers');
-        const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+        // 4. Generate Embedding (HF API Preferred)
+        const hfToken = process.env.HF_ACCESS_TOKEN;
+        let embedding: number[] = [];
 
-        const output = await extractor(queryText, { pooling: 'mean', normalize: true });
-        const embedding = Array.from(output.data);
+        if (hfToken) {
+            try {
+                console.log("Using Hugging Face Inference API for embeddings...");
+                const response = await fetch(
+                    "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2",
+                    {
+                        headers: { Authorization: `Bearer ${hfToken}` },
+                        method: "POST",
+                        body: JSON.stringify({ inputs: queryText, options: { wait_for_model: true } }),
+                    }
+                );
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`HF API Error: ${response.status} ${response.statusText} - ${errText}`);
+                }
+
+                // HF Feature Extraction returns: number[] (if single) or number[][] (if batch)
+                const result = await response.json();
+
+                // Handle potential different response shapes
+                if (Array.isArray(result) && typeof result[0] === 'number') {
+                    embedding = result as number[];
+                } else if (Array.isArray(result) && Array.isArray(result[0])) {
+                    embedding = result[0] as number[];
+                } else {
+                    throw new Error("Unexpected HF API response format");
+                }
+            } catch (hfError) {
+                console.error("HF API Failed, falling back to local:", hfError);
+                // Fallback logic below...
+            }
+        }
+
+        // Fallback: Local Xenova Model
+        if (embedding.length === 0) {
+            console.log("Using Local Xenova Model (Fallback)...");
+            const { pipeline } = await import('@xenova/transformers');
+            const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+            const output = await extractor(queryText, { pooling: 'mean', normalize: true });
+            embedding = Array.from(output.data);
+        }
 
         // 5. Hybrid Search (Vector + Keyword)
         // We try the hybrid RPC first to catch direct keyword matches.
