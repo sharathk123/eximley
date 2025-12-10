@@ -103,8 +103,8 @@ export async function POST(request: Request) {
                 });
 
             if (searchError) {
-                console.error(searchError);
-                throw new Error("Search failed");
+                console.error("RPC match_itc_hsn_cosine failed:", searchError);
+                throw new Error(`Search failed: ${searchError.message} (Hint: Run migration 20241210_fix_hsn_search_rpcs.sql)`);
             }
             matches = candidates || [];
         }

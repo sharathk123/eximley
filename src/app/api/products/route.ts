@@ -132,6 +132,28 @@ export async function DELETE(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
+        const deleteAll = searchParams.get("all") === "true";
+
+        if (deleteAll) {
+            // Bulk Delete Logic
+            const { data: companyUser } = await supabase
+                .from("company_users")
+                .select("company_id")
+                .eq("user_id", user.id)
+                .single();
+
+            if (!companyUser) return NextResponse.json({ error: "Company not found" }, { status: 400 });
+
+            // Delete ALL products for this company
+            const { error, count } = await supabase
+                .from("products")
+                .delete({ count: 'exact' })
+                .eq("company_id", companyUser.company_id);
+
+            if (error) throw error;
+
+            return NextResponse.json({ success: true, message: `Deleted ${count} products` });
+        }
 
         if (!id) {
             return NextResponse.json({ error: "Product ID is required" }, { status: 400 });

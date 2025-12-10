@@ -2,8 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const PDFParser = require("pdf2json");
 
+// PATHS
 const FILE1_PATH = path.join(__dirname, '../test-data/HS_Code_Mappin.pdf');
 const FILE2_PATH = path.join(__dirname, '../test-data/hscodewiselistwithgstrates.pdf');
+const ARTIFACT_DIR = path.join(__dirname, '../test-data');
 
 const noCleanText = (str) => str ? str.trim() : "";
 
@@ -45,7 +47,7 @@ async function parseFile1() {
                     });
                 }
             });
-            console.log(`   - Extracted Records: ${records.size}`);
+            console.log(`   - Extracted Records: ${records.size} `);
             resolve(records);
         });
         parser.loadPDF(FILE1_PATH);
@@ -64,6 +66,13 @@ async function parseFile2() {
             try { text = decodeURIComponent(rawText); } catch (e) { text = rawText; }
 
             const lines = text.split('\n');
+
+            // RAW DUMP (Simulation)
+            const rawCSVContent = lines.map((l, i) => `${i + 1},"${l.replace(/"/g, '""')}"`).join('\n');
+            const rawPath = path.join(ARTIFACT_DIR, `raw_file2_dump_script_${Date.now()}.csv`);
+            fs.writeFileSync(rawPath, "line_number,content\n" + rawCSVContent);
+            console.log(`   - Wrote Raw Dump to ${rawPath}`);
+
             const records = new Map();
 
             // State for Multi-line Header Rule
@@ -135,7 +144,7 @@ async function parseFile2() {
             });
             savePendingRule(); // End last
 
-            console.log(`   - Extracted Records (Specific + Rules): ${records.size}`);
+            console.log(`   - Extracted Records(Specific + Rules): ${records.size} `);
             resolve(records);
         });
         parser.loadPDF(FILE2_PATH);
@@ -158,9 +167,9 @@ async function diagnose() {
             if (code.length >= 6) gstSpecifics.set(code, rec);
             else if (code.length === 4) gstRules.set(code, rec);
         }
-        console.log(`   - GST Specifics: ${gstSpecifics.size}`);
-        console.log(`   - GST Rules (4-digit): ${gstRules.size}`);
-        console.log(`   - Keys: ${Array.from(gstRules.keys()).join(', ')}`);
+        console.log(`   - GST Specifics: ${gstSpecifics.size} `);
+        console.log(`   - GST Rules(4 - digit): ${gstRules.size} `);
+        console.log(`   - Keys: ${Array.from(gstRules.keys()).join(', ')} `);
 
         // MERGE LOGIC (Exact -> Prefix Fallback)
         const merged = new Map();
@@ -197,7 +206,7 @@ async function diagnose() {
 
         console.log("\n📊 TEST REPORT");
         console.log("-----------------------------------");
-        console.log(`Merge Stats: Direct: ${directMatches}, Rule-Based: ${ruleMatches}`);
+        console.log(`Merge Stats: Direct: ${directMatches}, Rule - Based: ${ruleMatches} `);
 
         // TEST 1: Parsing Volume
         const total = merged.size;
@@ -209,12 +218,12 @@ async function diagnose() {
         const rateCount = Array.from(merged.values()).filter(r => r.gst_rate > 0).length;
         const descCount = Array.from(merged.values()).filter(r => r.gst_hsn_code_description && r.gst_hsn_code_description.length > 5).length;
 
-        console.log(`[TEST 2] Enrichment Stats:`);
-        console.log(`   - Records with Rates: ${rateCount}`);
-        console.log(`   - Records with GST Desc: ${descCount}`);
+        console.log(`[TEST 2] Enrichment Stats: `);
+        console.log(`   - Records with Rates: ${rateCount} `);
+        console.log(`   - Records with GST Desc: ${descCount} `);
 
         if (rateCount > 1000) console.log("   ✅ PASS: Massive enrichment (>1000) via Rules");
-        else console.log(`   ❌ FAIL: Enrichment low (Rates: ${rateCount}) - Rules might not be applying`);
+        else console.log(`   ❌ FAIL: Enrichment low(Rates: ${rateCount}) - Rules might not be applying`);
 
         // TEST 3: Specific Item (42023110 - The "Prefix Fallback" Case)
         // This likely doesn't exist in File 2 directly, but 4202 does.
@@ -222,10 +231,10 @@ async function diagnose() {
         const t3Key = Array.from(merged.keys()).find(k => k.startsWith('4202') && k.length > 4);
         if (t3Key) {
             const t3 = merged.get(t3Key);
-            console.log(`[TEST 3] Prefix Fallback (${t3Key}):`);
+            console.log(`[TEST 3] Prefix Fallback(${t3Key}): `);
             console.log(`   - ITC Description: "${t3.description.substring(0, 30)}..."`);
             console.log(`   - GST Description: "${(t3.gst_hsn_code_description || "MISSING").substring(0, 30)}..."`);
-            console.log(`   - Rate: ${t3.gst_rate}%`);
+            console.log(`   - Rate: ${t3.gst_rate}% `);
 
             if (t3.gst_rate > 0 && t3.gst_hsn_code_description && !t3.gst_hsn_code_description.includes("22, 4202")) {
                 console.log("   ✅ PASS: Rate & Clean Desc present");
@@ -235,6 +244,36 @@ async function diagnose() {
         } else {
             console.log("   ℹ️  INFO: No 4202xxxx codes found in File 1 to test fallback.");
         }
+
+        // ... existing test reporting ...
+
+        // --- WRITE CSVs for User ---
+        console.log(`\n💾 writing CSVs to ${ARTIFACT_DIR}...`);
+
+        function writeCSV(name, headers, records) {
+            const headerLine = headers.join(',') + '\n';
+            const body = records.map(r => headers.map(h => {
+                let val = r[h] || "";
+                if (typeof val === 'string') val = val.replace(/"/g, '""');
+                return `"${val}"`;
+            }).join(',')).join('\n');
+            fs.writeFileSync(path.join(ARTIFACT_DIR, name), headerLine + body);
+            console.log(`   - Wrote ${name}`);
+        }
+
+        // 1. ITC Master
+        const itcRows = Array.from(file1Map.values()).map(r => ({ ...r, itc_hs_code: r.code, itc_hs_code_description: r.description }));
+        writeCSV('staging_itc_master.csv', ['itc_hs_code', 'chapter', 'itc_hs_code_description'], itcRows);
+
+        // 2. GST Specifics
+        const gstRows = Array.from(gstSpecifics.values()).map(r => ({ ...r, gst_hsn_code: r.code, gst_rate: r.rate, gst_hsn_code_description: r.description }));
+        writeCSV('staging_gst_rates.csv', ['gst_hsn_code', 'gst_rate', 'commodity', 'gst_hsn_code_description'], gstRows);
+
+        // 3. GST Rules
+        const ruleRows = Array.from(gstRules.values()).map(r => ({ ...r, desc: r.description }));
+        writeCSV('staging_gst_rules.csv', ['code', 'rate', 'desc'], ruleRows);
+
+        console.log("✅ Done. Files created in test-data.");
 
     } catch (e) {
         console.error("Simulation Error:", e);

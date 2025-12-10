@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Search, Package, Box, Upload, Loader2, Edit, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, Sparkles, Link as LinkIcon, Wand2 } from "lucide-react";
+import { Plus, Search, Package, Box, Upload, Loader2, Edit, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, Sparkles, Link as LinkIcon, Wand2, AlertCircle } from "lucide-react";
 import * as XLSX from 'xlsx';
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
     Form,
@@ -90,6 +91,8 @@ export default function ProductsPage() {
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [deletingProduct, setDeletingProduct] = useState<any>(null);
     const [deletingSKU, setDeletingSKU] = useState<any>(null);
+    const [deleteAllOpen, setDeleteAllOpen] = useState(false);
+    const [deletingAll, setDeletingAll] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
     const [hsnDialogOpen, setHsnDialogOpen] = useState(false);
@@ -500,6 +503,23 @@ export default function ProductsPage() {
         }
     };
 
+    const handleDeleteAll = async () => {
+        setDeletingAll(true);
+        try {
+            const res = await fetch("/api/products?all=true", { method: "DELETE" });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to delete all products");
+
+            toast({ title: "Products Deleted", description: data.message || "All products and SKUs deleted successfully." });
+            setDeleteAllOpen(false);
+            fetchProducts();
+        } catch (e: any) {
+            toast({ title: "Error", description: e.message, variant: "destructive" });
+        } finally {
+            setDeletingAll(false);
+        }
+    };
+
     const filteredProducts = products.filter((p) =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -615,6 +635,32 @@ export default function ProductsPage() {
                             )}
                         </DialogContent>
                     </Dialog>
+
+                    {/* Delete All Dialog */}
+                    <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon" title="Delete All Products">
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="border-destructive/30 border-2">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="text-destructive font-bold flex items-center gap-2">
+                                    <AlertCircle className="h-5 w-5" />
+                                    Delete All Products?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete <b>ALL</b> your products and their associated SKUs from the database.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel disabled={deletingAll}>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteAll} disabled={deletingAll} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                                    {deletingAll ? "Deleting..." : "Yes, Delete Everything"}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
 
                     <Dialog open={isOpen} onOpenChange={(open) => {
                         setIsOpen(open);

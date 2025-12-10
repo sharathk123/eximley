@@ -58,7 +58,7 @@ export function HSNSelectionDialog({ open, onOpenChange, candidates, product, on
                 <DialogHeader>
                     <DialogTitle>Select HSN Code</DialogTitle>
                     <DialogDescription>
-                        AI found {candidates.length} potential matches for <strong>{product?.name}</strong>.
+                        Found {candidates.length} potential matches for <span className="font-medium">{product?.name}</span>.
                         Please select the correct code for Export/GST compliance.
                     </DialogDescription>
                 </DialogHeader>
@@ -66,47 +66,68 @@ export function HSNSelectionDialog({ open, onOpenChange, candidates, product, on
                 <div className="space-y-4 mt-2">
                     {candidates.length === 0 && (
                         <div className="p-4 text-center text-muted-foreground bg-muted rounded">
-                            No strong AI matches found. Please try adding more description to your product.
+                            No strong matches found. Please try adding more description to your product.
                         </div>
                     )}
 
                     {candidates
                         .sort((a, b) => b.similarity - a.similarity)
                         .map((cand, idx) => {
-                            const confidence = (cand.similarity * 100).toFixed(0);
-                            const isHighConfidence = cand.similarity > 0.7;
+                            const score = cand.similarity * 100;
+                            const confidence = score.toFixed(0);
+
+                            // Professional Color Tiers
+                            let tierClass = "bg-slate-50 border-slate-200";
+                            let textClass = "text-slate-600";
+                            let badgeClass = "bg-slate-100 text-slate-700 hover:bg-slate-200";
+                            let label = "Low Match";
+
+                            if (score >= 80) {
+                                tierClass = "bg-emerald-50/50 border-emerald-100";
+                                textClass = "text-emerald-700";
+                                badgeClass = "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-emerald-200";
+                                label = "Excellent Match";
+                            } else if (score >= 60) {
+                                tierClass = "bg-blue-50/30 border-blue-100";
+                                textClass = "text-blue-700";
+                                badgeClass = "bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200";
+                                label = "Good Match";
+                            } else if (score >= 40) {
+                                tierClass = "bg-amber-50/30 border-amber-100";
+                                textClass = "text-amber-700";
+                                badgeClass = "bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200";
+                                label = "Fair Match";
+                            }
 
                             return (
                                 <div
                                     key={idx}
-                                    className={`p-4 border rounded-lg transition-colors hover:bg-muted/50 flex gap-4 items-start ${isHighConfidence ? 'bg-indigo-50/30 border-indigo-100' : ''}`}
+                                    className={`p-4 border rounded-lg transition-all hover:shadow-sm flex gap-4 items-start ${tierClass}`}
                                 >
                                     <div className="flex-1 space-y-2">
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className="font-mono text-blue-700 bg-blue-50">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <Badge variant="outline" className="font-mono text-xs font-normal">
                                                 ITC: {cand.itc_hs_code}
                                             </Badge>
-                                            <Badge variant="outline" className="font-mono text-slate-700 bg-slate-50">
+                                            <Badge variant="outline" className="font-mono text-xs font-normal">
                                                 GST: {cand.gst_hsn_code}
                                             </Badge>
-                                            {isHighConfidence && (
-                                                <Badge className="bg-green-600 hover:bg-green-700 text-[10px]">High Match</Badge>
-                                            )}
-                                            <span className={`text-xs ml-auto font-medium ${isHighConfidence ? 'text-green-600' : 'text-muted-foreground'}`}>
-                                                {confidence}% Match
-                                            </span>
+
+                                            <Badge variant="outline" className={`text-[10px] font-medium border ${badgeClass}`}>
+                                                {label} ({confidence}%)
+                                            </Badge>
                                         </div>
 
                                         <div>
-                                            <p className="text-sm font-semibold text-foreground">{cand.commodity}</p>
-                                            <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{cand.description}</p>
+                                            <p className="text-sm font-medium text-foreground">{cand.commodity}</p>
+                                            <p className="text-xs text-muted-foreground mt-1 line-clamp-3 leading-relaxed">{cand.description}</p>
                                         </div>
                                     </div>
 
                                     <Button
                                         size="sm"
                                         className="shrink-0"
-                                        variant={isHighConfidence ? "default" : "secondary"}
+                                        variant="outline"
                                         onClick={() => handleSelect(cand)}
                                         disabled={loading}
                                     >
@@ -115,6 +136,16 @@ export function HSNSelectionDialog({ open, onOpenChange, candidates, product, on
                                 </div>
                             )
                         })}
+                </div>
+                <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
+                    <p className="text-[10px] text-muted-foreground text-center italic">
+                        Note: This is a pilot feature. Results may not be fully accurate. Please verify before selection.
+                    </p>
+                    <div className="flex justify-end">
+                        <Button variant="outline" onClick={() => onOpenChange(false)}>
+                            Cancel
+                        </Button>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

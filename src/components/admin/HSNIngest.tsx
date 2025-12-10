@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { UploadCloud, FileType, CheckCircle2, AlertCircle, Trash2, BrainCircuit, RefreshCw, Layers, X } from "lucide-react";
+import { UploadCloud, FileType, AlertCircle, Trash2, BrainCircuit, X } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
     AlertDialog,
@@ -46,9 +46,12 @@ export default function HSNIngest() {
             if (res.ok) {
                 const data = await res.json();
                 setPendingCount(data.pending);
+                return data; // RETURN DATA
             }
+            return null;
         } catch (e) {
             console.error("Failed to fetch HSN stats", e);
+            return null;
         }
     };
 
@@ -127,8 +130,9 @@ export default function HSNIngest() {
 
                     // Wait for DB commits to be visible, then fetch stats and trigger embeddings
                     setTimeout(async () => {
-                        await fetchStats(); // Update pending count
-                        handleGenerateEmbeddings(); // AUTO TRIGGER EMBEDDINGS
+                        const stats = await fetchStats(); // Get fresh stats
+                        const pending = stats ? stats.pending : 0;
+                        handleGenerateEmbeddings(0, pending); // AUTO TRIGGER EMBEDDINGS with explicit total
                     }, 500); // 500ms delay for DB consistency
                 }
                 else if (msg.type === 'error') throw new Error(msg.message);
@@ -183,7 +187,7 @@ export default function HSNIngest() {
         }
     };
 
-    const handleGenerateEmbeddings = async (retryCount = 0) => {
+    const handleGenerateEmbeddings = async (retryCount = 0, totalOverride?: number) => {
         const MAX_RETRIES = 3;
         const controller = new AbortController();
         setEmbedController(controller);
@@ -204,8 +208,9 @@ export default function HSNIngest() {
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
 
-            // For embedding progress, we might rely on 'processed' count vs 'pendingCount'
-            const initialTotal = pendingCount || 100;
+            // For embedding progress, use override if provided (fresh from DB), else state (resume click)
+            const initialTotal = totalOverride || pendingCount || 100;
+            console.log("Starting Embed Production. Total to process:", initialTotal);
 
             await readStream(reader, decoder, (msg) => {
                 // Log suppressed for cleaner UI
@@ -223,13 +228,13 @@ export default function HSNIngest() {
                     setEmbedStatus(msg.message);
                     toast({ title: "Processing Complete", description: msg.message });
                     fetchStats();
+                    setProcessing(false); // Ensure processing stops
                 }
                 else if (msg.type === 'error') throw new Error(msg.message);
             });
 
         } catch (err: any) {
             if (err.name === 'AbortError') {
-                // User cancelled, don't retry
                 return;
             }
 
@@ -240,26 +245,26 @@ export default function HSNIngest() {
                 err.message.includes('Failed to fetch');
 
             if (isNetworkError && retryCount < MAX_RETRIES) {
-                // Exponential backoff: 2s, 4s, 8s
+                // Exponential backoff
                 const delay = Math.pow(2, retryCount + 1) * 1000;
                 setEmbedStatus(`Network error. Retrying in ${delay / 1000}s...`);
-
                 await new Promise(resolve => setTimeout(resolve, delay));
-
-                // Retry
-                return handleGenerateEmbeddings(retryCount + 1);
+                return handleGenerateEmbeddings(retryCount + 1, totalOverride);
             }
 
-            // Final failure
             toast({
                 variant: "destructive",
                 title: "Processing Failed",
-                description: isNetworkError
-                    ? "Network connection lost. You can resume processing later."
-                    : err.message
+                description: err.message
             });
             setEmbedStatus("Error: " + err.message);
         } finally {
+            if (!processing) { // Only clear if not already handled by done
+                // Keep processing true if loop is retrying? 
+                // No, retry calls recursively.
+            }
+            // Logic is a bit loose here, simplify:
+            // Finalizer runs on return.
             setProcessing(false);
             setEmbedController(null);
         }

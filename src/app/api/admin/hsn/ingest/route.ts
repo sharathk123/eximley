@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import fs from 'fs';
-import path from 'path';
+
 
 // --- Text Utilities ---
 const noCleanText = (str: string): string => {
@@ -29,14 +28,7 @@ interface HSNRecord {
     govt_published_date?: string | null;
 }
 
-interface MergeConflict {
-    key: string;
-    field: string;
-    value1: any;
-    value2: any;
-    source1: string;
-    source2: string;
-}
+
 
 // --- Main API Route ---
 export async function POST(req: NextRequest) {
@@ -64,7 +56,7 @@ export async function POST(req: NextRequest) {
 
                 const file1Data = new Map<string, HSNRecord>(); // ITC Mapping (File 1)
                 const file2Data = new Map<string, HSNRecord>(); // GST Rates (File 2)
-                const conflicts: MergeConflict[] = [];
+
 
                 // --- STEP 1: PARSING ---
                 for (let fIndex = 0; fIndex < uploadedFiles.length; fIndex++) {
@@ -253,33 +245,7 @@ export async function POST(req: NextRequest) {
                     }
                 }
 
-                // --- STEP 3: ARTIFACTS & DIAGNOSTICS ---
-                const artifactDir = '/Users/sharathbabukurva/.gemini/antigravity/brain/6ad662f6-e398-41d2-bbdf-17bb1ced9806'; // Fixed path for artifacts
-                const reportPath = path.join(artifactDir, 'merge_report.json');
-                const conflictsPath = path.join(artifactDir, 'merge_conflicts.csv');
 
-                // Generate Conflict CSV (Mocking real conflict logic for broad strokes)
-                // For this implementation, we report mismatched GST codes as conflicts example
-                let conflictCSV = "itc_hs_code,field,value_file1,value_file2\n";
-                // (populate real conflicts if needed, currently just empty to satisfy requirement)
-                // We'll auto-generate some example conflicts if we found mismatched GST prefixes just to show it works
-
-                // Write Report
-                const report = {
-                    total_itc_records: file1Data.size,
-                    total_gst_records: file2Data.size,
-                    merged_records: finalRecords.length,
-                    timestamp: new Date().toISOString()
-                };
-
-                // Write files (best effort, ignore errors if directory issues)
-                try {
-                    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-                    fs.writeFileSync(conflictsPath, conflictCSV);
-                    send({ type: 'log', message: `📄 Wrote diagnostics to ${reportPath}` });
-                } catch (e) {
-                    console.warn("Artifact write failed", e);
-                }
 
 
                 // --- STEP 4: DB UPSERT ---
@@ -311,6 +277,7 @@ export async function POST(req: NextRequest) {
 
 
                 send({ type: 'done', count: totalProcessed, message: "Pipeline Complete. Data Validated & Merged." });
+
                 clearInterval(keepAlive);
                 controller.close();
             } catch (e: any) {
