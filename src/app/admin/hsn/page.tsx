@@ -1,3 +1,5 @@
+"use client";
+
 import HSNTable from "@/components/admin/HSNTable";
 import HSNIngest from "@/components/admin/HSNIngest";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,23 +7,23 @@ import { Database, FileUp } from "lucide-react";
 
 export default function AdminHSNPage() {
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center pb-4 border-b">
+        <div className="space-y-8">
+            <div className="flex justify-between items-center pb-4 border-b border-border">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">ITC-HSN Master List</h1>
-                    <p className="text-slate-500 text-sm mt-1">Manage global HSN codes and generate semantic embeddings.</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">ITC-HS & GST Registry</h1>
+                    <p className="text-muted-foreground text-sm mt-1">Manage Indian Trade Classification (ITC-HS) for imports/exports and GST HSN codes for domestic taxation.</p>
                 </div>
             </div>
 
             <Tabs defaultValue="list" className="w-full">
-                <TabsList className="bg-slate-100 p-1 rounded-lg mb-6 border border-slate-200">
-                    <TabsTrigger value="list" className="flex items-center gap-2 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsList className="bg-muted p-1 rounded-lg mb-6 border border-border">
+                    <TabsTrigger value="list" className="flex items-center gap-2 px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
                         <Database className="w-4 h-4" />
                         Master List
                     </TabsTrigger>
-                    <TabsTrigger value="ingest" className="flex items-center gap-2 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                    <TabsTrigger value="ingest" className="flex items-center gap-2 px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
                         <FileUp className="w-4 h-4" />
-                        Generate Embeddings
+                        Manage Data
                     </TabsTrigger>
                 </TabsList>
 

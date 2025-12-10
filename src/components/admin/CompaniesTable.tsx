@@ -60,29 +60,29 @@ export default function CompaniesTable() {
     if (error) return <div className="p-8 text-center text-red-500">Error: {error}</div>;
 
     return (
-        <div className="bg-white shadow rounded-lg overflow-hidden border border-slate-200">
+        <div className="bg-card shadow-sm rounded-lg overflow-hidden border border-border">
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+                    <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                         <tr>
-                            <th className="px-6 py-3">Company</th>
-                            <th className="px-6 py-3">Contact</th>
-                            <th className="px-6 py-3">Status</th>
-                            <th className="px-6 py-3">Joined</th>
-                            <th className="px-6 py-3">Actions</th>
+                            <th className="px-6 py-3 font-semibold">Company</th>
+                            <th className="px-6 py-3 font-semibold">Contact</th>
+                            <th className="px-6 py-3 font-semibold">Status</th>
+                            <th className="px-6 py-3 font-semibold">Joined</th>
+                            <th className="px-6 py-3 font-semibold">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-border">
                         {companies.map((company) => (
-                            <tr key={company.id} className="bg-white border-b hover:bg-slate-50">
-                                <td className="px-6 py-4 font-medium text-slate-900">
+                            <tr key={company.id} className="bg-card hover:bg-muted/50 transition-colors">
+                                <td className="px-6 py-4 font-medium text-foreground">
                                     <div className="flex flex-col">
                                         <span className="text-base">{company.legal_name}</span>
-                                        <span className="text-xs text-slate-400 font-normal">{company.city}, {company.country}</span>
+                                        <span className="text-xs text-muted-foreground font-normal">{company.city}, {company.country}</span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <div className="flex flex-col text-slate-500">
+                                    <div className="flex flex-col text-muted-foreground">
                                         <span>{company.email}</span>
                                         <span className="text-xs">{company.phone}</span>
                                     </div>
@@ -90,7 +90,7 @@ export default function CompaniesTable() {
                                 <td className="px-6 py-4">
                                     <StatusBadge status={company.status} />
                                 </td>
-                                <td className="px-6 py-4 text-slate-500">
+                                <td className="px-6 py-4 text-muted-foreground">
                                     {new Date(company.created_at).toLocaleDateString()}
                                 </td>
                                 <td className="px-6 py-4 space-x-2">
@@ -99,14 +99,14 @@ export default function CompaniesTable() {
                                             <ActionBtn
                                                 onClick={() => updateStatus(company.id, "active")}
                                                 disabled={updating === company.id}
-                                                className="text-emerald-600 hover:bg-emerald-50 border-emerald-200"
+                                                className="text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
                                             >
                                                 Approve
                                             </ActionBtn>
                                             <ActionBtn
                                                 onClick={() => updateStatus(company.id, "inactive")}
                                                 disabled={updating === company.id}
-                                                className="text-red-600 hover:bg-red-50 border-red-200"
+                                                className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800"
                                             >
                                                 Reject
                                             </ActionBtn>
@@ -116,7 +116,7 @@ export default function CompaniesTable() {
                                         <ActionBtn
                                             onClick={() => updateStatus(company.id, "inactive")}
                                             disabled={updating === company.id}
-                                            className="text-amber-600 hover:bg-amber-50 border-amber-200"
+                                            className="text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20 border-amber-200 dark:border-amber-800"
                                         >
                                             Deactivate
                                         </ActionBtn>
@@ -125,7 +125,7 @@ export default function CompaniesTable() {
                                         <ActionBtn
                                             onClick={() => updateStatus(company.id, "active")}
                                             disabled={updating === company.id}
-                                            className="text-emerald-600 hover:bg-emerald-50 border-emerald-200"
+                                            className="text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
                                         >
                                             Activate
                                         </ActionBtn>
@@ -136,7 +136,7 @@ export default function CompaniesTable() {
 
                         {companies.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                                <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
                                     No companies found.
                                 </td>
                             </tr>
@@ -150,12 +150,12 @@ export default function CompaniesTable() {
 
 function StatusBadge({ status }: { status: string }) {
     if (status === 'active') {
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"><CheckCircle className="w-3 h-3" /> Active</span>
+        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"><CheckCircle className="w-3 h-3" /> Active</span>
     }
     if (status === 'pending') {
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"><Clock className="w-3 h-3" /> Pending</span>
+        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"><Clock className="w-3 h-3" /> Pending</span>
     }
-    return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><XCircle className="w-3 h-3" /> Inactive</span>
+    return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"><XCircle className="w-3 h-3" /> Inactive</span>
 }
 
 function ActionBtn({ children, onClick, disabled, className }: any) {

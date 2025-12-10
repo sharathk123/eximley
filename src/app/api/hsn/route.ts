@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSessionClient } from "@/lib/supabase/server";
+import { createSessionClient, createAdminClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
     try {
@@ -18,32 +18,48 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        let query = supabase
-            .from("itc_gst_hsn_mapping")
-            .select("*", { count: 'exact' })
-            .order("itc_hs_code", { ascending: true });
-
-        // Filter by specific chapter if provided (prefix of itc_hs_code)
-        if (chapter) {
-            // itc_hs_code is text, so we can use like/ilike
-            // Chapter is first 2 digits
-            query = query.ilike('itc_hs_code', `${chapter}%`);
-        }
+        let data: any[] | null = [];
+        let count: number | null = 0;
 
         if (search) {
-            // Search by ITC code, GST code, Commodity, or Description
-            // Using ilike for case-insensitive search
+            // Use "Smart Search" RPC for ranked results
+            const { data: rpcData, error: rpcError } = await supabase
+                .rpc('search_hsn_smart', {
+                    p_search_text: search,
+                    p_limit: limit,
+                    p_offset: from
+                });
+
+            if (rpcError) throw rpcError;
+            data = rpcData;
+
+            // separate count query (estimate using standard ILIKE to avoid slowing down RPC)
             const searchPattern = `%${search}%`;
-            query = query.or(`itc_hs_code.ilike.${searchPattern},gst_hsn_code.ilike.${searchPattern},commodity.ilike.${searchPattern},description.ilike.${searchPattern}`);
+            const { count: c } = await supabase
+                .from("itc_gst_hsn_mapping")
+                .select("*", { count: 'exact', head: true })
+                .or(`itc_hs_code.ilike.${searchPattern},gst_hsn_code.ilike.${searchPattern},commodity.ilike.${searchPattern},chapter.ilike.${searchPattern},itc_hs_code_description.ilike.${searchPattern},gst_hsn_code_description.ilike.${searchPattern},govt_notification_no.ilike.${searchPattern}`);
+            count = c;
+
+        } else {
+            // Standard List / Filter
+            let query = supabase
+                .from("itc_gst_hsn_mapping")
+                .select("*", { count: 'exact' })
+                .order("itc_hs_code", { ascending: true });
+
+            if (chapter) {
+                query = query.ilike('itc_hs_code', `${chapter}%`);
+            }
+
+            const { data: qData, count: qCount, error: qError } = await query.range(from, to);
+            if (qError) throw qError;
+            data = qData;
+            count = qCount;
         }
 
-        // Apply pagination
-        const { data: hsnCodes, count, error } = await query.range(from, to);
-
-        if (error) throw error;
-
         return NextResponse.json({
-            hsnCodes,
+            hsnCodes: data,
             meta: {
                 total: count || 0,
                 page,
@@ -51,9 +67,9 @@ export async function GET(request: Request) {
                 totalPages: count ? Math.ceil(count / limit) : 0
             }
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Fetch HSN Error:", error);
-        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+        return NextResponse.json({ error: error.message || "Internal Error" }, { status: 500 });
     }
 }
 
@@ -64,7 +80,9 @@ export async function POST(request: Request) {
             itc_hs_code,
             commodity,
             gst_hsn_code,
-            description,
+            itc_hs_code_description,
+            gst_hsn_code_description,
+            chapter,
             gst_rate,
             govt_notification_no,
             govt_published_date
@@ -85,13 +103,18 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Forbidden: Only Super Admin can add HSN codes" }, { status: 403 });
         }
 
-        const { data: hsn, error } = await supabase
+        // Use Admin Client for insertion to bypass RLS
+        const adminClient = createAdminClient();
+
+        const { data: hsn, error } = await adminClient
             .from("itc_gst_hsn_mapping")
             .insert({
                 itc_hs_code,
                 commodity,
                 gst_hsn_code,
-                description,
+                itc_hs_code_description,
+                gst_hsn_code_description,
+                chapter,
                 gst_rate: gst_rate || 0,
                 govt_notification_no: govt_notification_no || null,
                 govt_published_date: govt_published_date || null

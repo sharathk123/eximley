@@ -6,18 +6,30 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2, Pencil, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Zap } from "lucide-react";
+import { Plus, Loader2, Pencil, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const hsnSchema = z.object({
     itc_hs_code: z.string().min(1, "ITC HS Code is required"),
     commodity: z.string().optional(),
     gst_hsn_code: z.string().min(1, "GST HSN Code is required"),
-    description: z.string().optional(),
+    itc_hs_code_description: z.string().optional(),
+    gst_hsn_code_description: z.string().optional(),
+    chapter: z.string().optional(),
     gst_rate: z.preprocess((val) => Number(val), z.number().min(0)),
     govt_notification_no: z.string().optional(),
     govt_published_date: z.string().optional(),
@@ -28,7 +40,9 @@ type HSN = {
     itc_hs_code: string;
     commodity: string;
     gst_hsn_code: string;
-    description: string;
+    itc_hs_code_description?: string;
+    gst_hsn_code_description?: string;
+    chapter?: string;
     gst_rate: number;
     govt_notification_no?: string;
     govt_published_date?: string;
@@ -44,8 +58,8 @@ export default function HSNTable() {
     const [editingHsn, setEditingHsn] = useState<HSN | null>(null);
     const [openEdit, setOpenEdit] = useState(false);
 
-    // Embedding generation state
-    const [generating, setGenerating] = useState(false);
+    // Delete state
+    const [hsnToDelete, setHsnToDelete] = useState<HSN | null>(null);
 
     // Filter & Pagination State
     const [searchQuery, setSearchQuery] = useState("");
@@ -58,7 +72,9 @@ export default function HSNTable() {
             itc_hs_code: "",
             commodity: "",
             gst_hsn_code: "",
-            description: "",
+            itc_hs_code_description: "",
+            gst_hsn_code_description: "",
+            chapter: "",
             gst_rate: 0 as any,
             govt_notification_no: "",
             govt_published_date: ""
@@ -127,7 +143,9 @@ export default function HSNTable() {
             itc_hs_code: hsn.itc_hs_code,
             commodity: hsn.commodity,
             gst_hsn_code: hsn.gst_hsn_code,
-            description: hsn.description,
+            itc_hs_code_description: hsn.itc_hs_code_description || "",
+            gst_hsn_code_description: hsn.gst_hsn_code_description || "",
+            chapter: hsn.chapter || "",
             gst_rate: hsn.gst_rate,
             govt_notification_no: hsn.govt_notification_no || "",
             govt_published_date: hsn.govt_published_date || "",
@@ -155,53 +173,17 @@ export default function HSNTable() {
     };
 
     // --- DELETE ---
-    const onDelete = async (hsn: HSN) => {
-        if (!confirm(`Delete HSN ${hsn.itc_hs_code}?`)) return;
+    const confirmDelete = async () => {
+        if (!hsnToDelete) return;
         try {
-            const res = await fetch(`/api/hsn/${hsn.id}`, { method: "DELETE" });
+            const res = await fetch(`/api/hsn/${hsnToDelete.id}`, { method: "DELETE" });
             if (!res.ok) throw new Error("Failed");
             fetchHsn();
             toast({ title: "HSN Deleted", description: "Successfully deleted HSN code." });
         } catch (e: any) {
             toast({ variant: "destructive", title: "Error", description: e.message || "Failed to delete" });
-        }
-    };
-
-    // --- GENERATE EMBEDDINGS ---
-    const handleGenerateEmbeddings = async () => {
-        // No confirmation alert as requested
-        setGenerating(true);
-        let completed = false;
-        let processedTotal = 0;
-
-        try {
-            // Loop until server says complete
-            while (!completed) {
-                const res = await fetch("/api/hsn/generate-embeddings", { method: "POST" });
-                const data = await res.json();
-
-                if (!res.ok) throw new Error(data.error || "Failed");
-
-                processedTotal += data.processed;
-
-                // If no more items remaining or 0 processed (safety condition), stop
-                if (data.remaining === 0 || data.processed === 0) {
-                    completed = true;
-                }
-            }
-            toast({
-                title: "Embedding Generation Complete",
-                description: `Successfully generated embeddings for ${processedTotal} items.`
-            });
-        } catch (e: any) {
-            console.error(e);
-            toast({
-                variant: "destructive",
-                title: "Embedding Generation Failed",
-                description: e.message
-            });
         } finally {
-            setGenerating(false);
+            setHsnToDelete(null);
         }
     };
 
@@ -228,24 +210,15 @@ export default function HSNTable() {
                             placeholder="Search by code or description..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-8 focus-visible:ring-green-500"
+                            className="pl-8 focus-visible:ring-primary"
                         />
                     </div>
                 </div>
 
                 <Dialog open={open} onOpenChange={setOpen}>
                     <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
-                            onClick={handleGenerateEmbeddings}
-                            disabled={generating}
-                        >
-                            {generating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
-                            {generating ? "Generating..." : "Generate Embeddings"}
-                        </Button>
                         <DialogTrigger asChild>
-                            <Button className="bg-green-600 hover:bg-green-700">
+                            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                                 <Plus className="w-4 h-4 mr-2" /> Add HSN
                             </Button>
                         </DialogTrigger>
@@ -254,7 +227,7 @@ export default function HSNTable() {
                         <DialogHeader><DialogTitle>Add New HSN Code</DialogTitle></DialogHeader>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                             <HSNFormFields form={form} />
-                            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={form.formState.isSubmitting}>
+                            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                 Save HSN
                             </Button>
@@ -263,40 +236,74 @@ export default function HSNTable() {
                 </Dialog>
             </div>
 
-            <div className="border rounded-md bg-card overflow-x-auto">
+            <div className="border rounded-xl shadow-sm bg-card overflow-hidden">
                 <Table>
-                    <TableHeader className="bg-muted/50">
-                        <TableRow>
-                            <TableHead className="font-bold text-foreground w-[120px]">ITC HS</TableHead>
-                            <TableHead className="font-bold text-foreground w-[100px]">GST HSN</TableHead>
-                            <TableHead className="font-bold text-foreground w-[25%]">Commodity</TableHead>
-                            <TableHead className="font-bold text-foreground">Description</TableHead>
-                            <TableHead className="font-bold text-foreground text-center w-[100px]">GST %</TableHead>
-                            <TableHead className="font-bold text-foreground w-[100px]">Actions</TableHead>
+                    <TableHeader className="bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                        <TableRow className="border-b border-border/60 hover:bg-transparent">
+                            <TableHead className="py-4 pl-6 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[120px]">ITC HS</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[100px]">GST HSN</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[150px]">Chapter</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[200px]">Commodity</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground min-w-[250px]">ITC HS Description</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground min-w-[250px]">GST HSN Description</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center w-[80px]">GST %</TableHead>
+                            <TableHead className="py-4 pr-6 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[100px] text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow><TableCell colSpan={6} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                            <TableRow><TableCell colSpan={8} className="h-32 text-center text-muted-foreground"><Loader2 className="animate-spin inline mr-2 h-5 w-5" /> Loading records...</TableCell></TableRow>
                         ) : hsnCodes.length === 0 ? (
-                            <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">No HSN codes found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={8} className="h-32 text-center text-muted-foreground italic">No HSN codes found matching your criteria.</TableCell></TableRow>
                         ) : (
-                            hsnCodes.map(hsn => (
-                                <TableRow key={hsn.id}>
-                                    <TableCell className="font-medium whitespace-nowrap">{hsn.itc_hs_code}</TableCell>
-                                    <TableCell className="font-mono text-xs">{hsn.gst_hsn_code}</TableCell>
-                                    <TableCell className="text-xs whitespace-normal break-words align-top">{hsn.commodity}</TableCell>
-                                    <TableCell className="text-xs whitespace-normal break-words align-top">
-                                        {hsn.description}
+                            hsnCodes.map((hsn, index) => (
+                                <TableRow key={hsn.id} className={`align-top border-b border-border/40 transition-colors hover:bg-muted/30 ${index % 2 === 0 ? 'bg-background' : 'bg-muted/5'}`}>
+                                    <TableCell className="pl-6 py-4 align-top w-[120px]">
+                                        <div className="inline-flex items-center rounded-md border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-xs font-semibold text-primary font-mono transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                                            {hsn.itc_hs_code}
+                                        </div>
                                     </TableCell>
-                                    <TableCell className="text-center">{hsn.gst_rate}%</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            <Button variant="ghost" size="icon" onClick={() => startEdit(hsn)}>
-                                                <Pencil className="w-4 h-4 text-green-600" />
+                                    <TableCell className="py-4 align-top w-[100px]">
+                                        <div className="inline-flex items-center rounded-md border border-border bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground font-mono">
+                                            {hsn.gst_hsn_code}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top">
+                                        <div className="text-sm font-medium text-foreground/80 leading-snug whitespace-normal break-words w-[150px]">
+                                            {hsn.chapter || <span className="text-muted-foreground/40 italic">-</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top">
+                                        <div className="text-sm text-foreground/70 leading-snug whitespace-normal break-words w-[200px]">
+                                            {hsn.commodity || <span className="text-muted-foreground/40 italic">-</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top">
+                                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-normal break-words min-w-[250px]">
+                                            {hsn.itc_hs_code_description || <span className="text-muted-foreground/40 italic">No description available</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top">
+                                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-normal break-words min-w-[250px]">
+                                            {hsn.gst_hsn_code_description || <span className="text-muted-foreground/40 italic">No description available</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top text-center">
+                                        {hsn.gst_rate !== null && hsn.gst_rate !== undefined ? (
+                                            <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold ${hsn.gst_rate > 18 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : hsn.gst_rate > 12 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                                                {hsn.gst_rate}%
+                                            </span>
+                                        ) : (
+                                            <span className="text-muted-foreground/40 italic">-</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="pr-6 py-4 align-top text-right w-[100px]">
+                                        <div className="flex items-center justify-end gap-1">
+                                            <Button variant="ghost" size="icon" onClick={() => startEdit(hsn)} className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full">
+                                                <Pencil className="w-3.5 h-3.5" />
                                             </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => onDelete(hsn)}>
-                                                <Trash2 className="w-4 h-4 text-red-600" />
+                                            <Button variant="ghost" size="icon" onClick={() => setHsnToDelete(hsn)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full">
+                                                <Trash2 className="w-3.5 h-3.5" />
                                             </Button>
                                         </div>
                                     </TableCell>
@@ -366,6 +373,23 @@ export default function HSNTable() {
                     </form>
                 </DialogContent>
             </Dialog>
+
+            {/* DELETE ALERT DIALOG */}
+            <AlertDialog open={!!hsnToDelete} onOpenChange={() => setHsnToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete HSN Code <b>{hsnToDelete?.itc_hs_code}</b>.
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
@@ -392,8 +416,18 @@ function HSNFormFields({ form }: { form: any }) {
             </div>
 
             <div className="grid gap-2">
-                <Label>Description</Label>
-                <Textarea {...form.register("description")} placeholder="Detailed description of goods" className="h-24" />
+                <Label>Chapter / Category</Label>
+                <Input {...form.register("chapter")} placeholder="e.g. Articles of Iron or Steel" />
+            </div>
+
+            <div className="grid gap-2">
+                <Label>ITC HS Code Description</Label>
+                <Textarea {...form.register("itc_hs_code_description")} placeholder="Description from ITC HS Code source" className="h-20" />
+            </div>
+
+            <div className="grid gap-2">
+                <Label>GST HSN Code Description</Label>
+                <Textarea {...form.register("gst_hsn_code_description")} placeholder="Description from GST HSN Code source" className="h-20" />
             </div>
 
             <div className="grid grid-cols-3 gap-4">

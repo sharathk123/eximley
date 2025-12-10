@@ -450,7 +450,8 @@ CREATE TABLE IF NOT EXISTS public.itc_gst_hsn_mapping (
     itc_hs_code TEXT,
     commodity TEXT,
     gst_hsn_code TEXT NOT NULL,
-    description TEXT,
+    itc_hs_code_description TEXT,
+    gst_hsn_code_description TEXT,
     gst_rate NUMERIC,
     govt_notification_no TEXT,
     govt_published_date DATE,
@@ -468,7 +469,8 @@ CREATE INDEX IF NOT EXISTS idx_govt_published_date ON public.itc_gst_hsn_mapping
 CREATE INDEX IF NOT EXISTS idx_itc_hs_code_lower ON public.itc_gst_hsn_mapping( lower(coalesce(itc_hs_code,'')) );
 CREATE INDEX IF NOT EXISTS idx_gst_hsn_code_lower ON public.itc_gst_hsn_mapping( lower(coalesce(gst_hsn_code,'')) );
 CREATE INDEX IF NOT EXISTS idx_itc_commodity_gin ON public.itc_gst_hsn_mapping USING GIN (to_tsvector('simple', coalesce(commodity,'')));
-CREATE INDEX IF NOT EXISTS idx_itc_description_gin ON public.itc_gst_hsn_mapping USING GIN (to_tsvector('simple', coalesce(description,'')));
+CREATE INDEX IF NOT EXISTS idx_itc_hs_description_gin ON public.itc_gst_hsn_mapping USING GIN (to_tsvector('simple', coalesce(itc_hs_code_description,'')));
+CREATE INDEX IF NOT EXISTS idx_gst_hsn_description_gin ON public.itc_gst_hsn_mapping USING GIN (to_tsvector('simple', coalesce(gst_hsn_code_description,'')));
 
 -- Enable RLS and policies (read for authenticated; write for super admins)
 ALTER TABLE public.itc_gst_hsn_mapping ENABLE ROW LEVEL SECURITY;
@@ -2883,3 +2885,15 @@ BEGIN
   LIMIT match_count;
 END;
 $$;
+
+-- =============================================================
+-- HSN DATA MANAGEMENT
+-- =============================================================
+
+CREATE OR REPLACE FUNCTION truncate_hsn_data()
+RETURNS void AS $$
+BEGIN
+  TRUNCATE TABLE public.itc_gst_hsn_embeddings CASCADE;
+  TRUNCATE TABLE public.itc_gst_hsn_mapping CASCADE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
