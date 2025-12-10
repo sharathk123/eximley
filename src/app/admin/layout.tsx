@@ -22,7 +22,7 @@ export default async function AdminLayout({
     } = await supabase.auth.getUser();
 
     if (!user) {
-        redirect("/login");
+        redirect("/login?code=session_expired");
     }
 
     // Strict Check for Super Admin

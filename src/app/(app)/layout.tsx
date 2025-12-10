@@ -33,7 +33,7 @@ export default async function AppLayout({
     } = await supabase.auth.getUser();
 
     if (!user) {
-        redirect("/login");
+        redirect("/login?code=session_expired");
     }
 
     return (
@@ -45,8 +45,8 @@ export default async function AppLayout({
                 </div>
                 <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
                     <NavItem href="/dashboard" icon={<LayoutDashboard className="w-5 h-5" />} label="Dashboard" />
-                    <NavItem href="/products" icon={<Box className="w-5 h-5" />} label="Products" />
-                    <NavItem href="/entities" icon={<Users className="w-5 h-5" />} label="Entities" />
+
+                    {/* Export Lifecycle */}
                     <NavItem href="/enquiries" icon={<Mail className="w-5 h-5" />} label="Enquiries" />
                     <NavItem href="/quotes" icon={<FileCheck className="w-5 h-5" />} label="Quotes" />
                     <NavItem href="/invoices/proforma" icon={<ScrollText className="w-5 h-5" />} label="Proforma Invoices" />
@@ -54,11 +54,18 @@ export default async function AppLayout({
                     <NavItem href="/purchase-orders" icon={<ShoppingCart className="w-5 h-5" />} label="Purchase Orders" />
                     <NavItem href="/shipments" icon={<Package className="w-5 h-5" />} label="Shipments" />
                     <NavItem href="/shipping-bills" icon={<FileCheck className="w-5 h-5" />} label="Shipping Bills" />
-                    <NavItem href="/incentives" icon={<TrendingUp className="w-5 h-5" />} label="Incentives" />
                     <NavItem href="/brcs" icon={<Banknote className="w-5 h-5" />} label="e-BRC" />
+                    <NavItem href="/incentives" icon={<TrendingUp className="w-5 h-5" />} label="Incentives" />
                     <NavItem href="/compliance/lut" icon={<Scale className="w-5 h-5" />} label="LUT Management" />
+
+                    {/* Master Data */}
+                    <div className="pt-2 pb-1 px-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">Masters</div>
+                    <NavItem href="/products" icon={<Box className="w-5 h-5" />} label="Products" />
+                    <NavItem href="/entities" icon={<Users className="w-5 h-5" />} label="Entities" />
                     <NavItem href="/skus" icon={<Tags className="w-5 h-5" />} label="SKU Management" />
 
+                    {/* Reference & Settings */}
+                    <div className="pt-2 pb-1 px-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">System</div>
                     <NavItem href="/hsn" icon={<FileText className="w-5 h-5" />} label="ITC-HSN Lookup" />
                     {/* <NavItem href="/calculator" icon={<Calculator className="w-5 h-5"/>} label="Landed Cost" /> */}
                     <NavItem href="/settings/company" icon={<Settings className="w-5 h-5" />} label="Settings" />

@@ -93,6 +93,17 @@ function LoginForm() {
                         </p>
                     </div>
                 )}
+                {searchParams.get("code") === "session_expired" && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
+                        <div className="text-yellow-600 mt-0.5">⚠️</div>
+                        <div>
+                            <p className="text-sm text-yellow-800 font-medium">Session Expired</p>
+                            <p className="text-xs text-yellow-700 mt-1">
+                                For your security, your session has timed out. Please sign in again.
+                            </p>
+                        </div>
+                    </div>
+                )}
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
