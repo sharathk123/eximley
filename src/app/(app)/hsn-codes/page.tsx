@@ -12,16 +12,15 @@ import { Badge } from "@/components/ui/badge";
 
 interface HSNCode {
     id: string;
-    hsn_code?: string;
     itc_hs_code: string;
-    commodity: string;
     gst_hsn_code: string;
-    description: string; // This is the 'description' column from DB, usually merged or from GST
-    // For display, we might want specific columns if available, but API returns 'description'
-    gst_rate: number;
-    chapter?: string;
+    commodity: string;
     itc_hs_code_description?: string;
     gst_hsn_code_description?: string;
+    chapter?: string;
+    gst_rate: number;
+    govt_notification_no?: string;
+    govt_published_date?: string;
 }
 
 export default function HSNCodesPage() {
@@ -136,16 +135,17 @@ export default function HSNCodesPage() {
                             <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[100px]">GST HSN</TableHead>
                             <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[150px]">Chapter</TableHead>
                             <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[200px]">Commodity</TableHead>
-                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground min-w-[250px]">Description</TableHead>
-                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center w-[100px]">GST Rate</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground min-w-[250px]">ITC HS Description</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground min-w-[250px]">GST HSN Description</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center w-[100px]">GST %</TableHead>
                             {returnTo && <TableHead className="py-4 pr-6 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground text-right w-[100px]">Action</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow><TableCell colSpan={returnTo ? 7 : 6} className="h-32 text-center text-muted-foreground"><Loader2 className="animate-spin inline mr-2 h-5 w-5" /> Loading records...</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={returnTo ? 8 : 7} className="h-32 text-center text-muted-foreground"><Loader2 className="animate-spin inline mr-2 h-5 w-5" /> Loading records...</TableCell></TableRow>
                         ) : hsnCodes.length === 0 ? (
-                            <TableRow><TableCell colSpan={returnTo ? 7 : 6} className="h-32 text-center text-muted-foreground italic">No HSN codes found matching "{searchTerm}".</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={returnTo ? 8 : 7} className="h-32 text-center text-muted-foreground italic">No HSN codes found matching "{searchTerm}".</TableCell></TableRow>
                         ) : (
                             hsnCodes.map((hsn, index) => (
                                 <TableRow
@@ -175,15 +175,19 @@ export default function HSNCodesPage() {
                                     </TableCell>
                                     <TableCell className="py-4 align-top">
                                         <div className="text-sm text-foreground/90 leading-relaxed whitespace-normal break-words min-w-[250px]">
-                                            {/* Prioritize ITC Description if available, else standard description */}
-                                            {hsn.itc_hs_code_description || hsn.description || <span className="text-muted-foreground/40 italic">No description available</span>}
+                                            {hsn.itc_hs_code_description || <span className="text-muted-foreground/40 italic">No description available</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top">
+                                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-normal break-words min-w-[250px]">
+                                            {hsn.gst_hsn_code_description || <span className="text-muted-foreground/40 italic">No description available</span>}
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-4 align-top text-center">
                                         {hsn.gst_rate !== null && hsn.gst_rate !== undefined ? (
                                             <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold ${hsn.gst_rate > 18 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                    hsn.gst_rate > 12 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                                                        'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                hsn.gst_rate > 12 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                                                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                                 }`}>
                                                 {hsn.gst_rate}%
                                             </span>
