@@ -113,6 +113,12 @@ export function HSNSelectionDialog({ open, onOpenChange, candidates, product, on
                                                 GST: {cand.gst_hsn_code}
                                             </Badge>
 
+                                            {cand.govt_published_date && (
+                                                <Badge variant="secondary" className="text-[10px] font-normal">
+                                                    {new Date(cand.govt_published_date).toLocaleDateString()}
+                                                </Badge>
+                                            )}
+
                                             <Badge variant="outline" className={`text-[10px] font-medium border ${badgeClass}`}>
                                                 {label} ({confidence}%)
                                             </Badge>

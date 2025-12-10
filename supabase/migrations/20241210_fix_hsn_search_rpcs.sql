@@ -15,6 +15,8 @@ RETURNS TABLE (
   gst_hsn_code text,
   description text,
   commodity text,
+  govt_notification_no text,
+  govt_published_date date,
   similarity float,
   match_type text
 )
@@ -51,6 +53,8 @@ BEGIN
     m.gst_hsn_code,
     COALESCE(m.gst_hsn_code_description, m.itc_hs_code_description) as description,
     m.commodity,
+    m.govt_notification_no,
+    m.govt_published_date,
     GREATEST(COALESCE(v.score, 0), COALESCE(k.score, 0)) as similarity, 
     CASE 
         WHEN v.mapping_id IS NOT NULL AND k.mapping_id IS NOT NULL THEN 'hybrid'

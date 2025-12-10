@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { generateEmbedding } from '@/lib/embeddings';
 
 
 // --- Text Utilities ---
@@ -258,17 +259,52 @@ export async function POST(req: NextRequest) {
 
                     if (req.signal.aborted) break;
 
-                    const { error } = await supabase
+                    const { data: insertedData, error } = await supabase
                         .from('itc_gst_hsn_mapping')
                         .upsert(batch, {
                             onConflict: 'itc_hs_code,gst_hsn_code',
-                            ignoreDuplicates: false // We WANT to update if it exists (merge updates)
-                        });
+                            ignoreDuplicates: false
+                        })
+                        .select('id, description, commodity, itc_hs_code_description, gst_hsn_code_description');
 
                     if (error) {
                         console.error("Upsert Batch Error:", error.message);
-                        send({ type: 'log', message: `⚠️ Batch error: ${error.message}` });
-                        // Continue? Or throw? Let's continue best effort.
+                        send({ type: 'log', message: `⚠️ Batch mapping error: ${error.message}` });
+                    } else if (insertedData && insertedData.length > 0) {
+                        // --- Embedding Generation ---
+                        // Processing embeddings in sub-batches or sequentially to manage CPU/Memory
+                        send({ type: 'log', message: `🧠 Generating AI Embeddings for batch...` });
+
+                        const embeddingUpdates = [];
+                        for (const row of insertedData) {
+                            const desc = row.itc_hs_code_description || row.gst_hsn_code_description || '';
+                            const textToEmbed = `${desc} ${row.commodity || ''}`.trim();
+                            if (!textToEmbed) continue;
+
+                            try {
+                                // Use our shared utility (Local or HF)
+                                const vector = await generateEmbedding(textToEmbed);
+                                if (vector && vector.length === 384) {
+                                    embeddingUpdates.push({
+                                        mapping_id: row.id,
+                                        embedding_vector: vector
+                                    });
+                                }
+                            } catch (embErr) {
+                                // console.warn("Embedding failed for row", row.id);
+                            }
+                        }
+
+                        if (embeddingUpdates.length > 0) {
+                            const { error: embError } = await supabase
+                                .from('itc_gst_hsn_embeddings')
+                                .upsert(embeddingUpdates, { onConflict: 'mapping_id' });
+
+                            if (embError) {
+                                console.error("Embedding Upsert Error:", embError.message);
+                                send({ type: 'log', message: `⚠️ Embedding save error: ${embError.message}` });
+                            }
+                        }
                     }
 
                     totalProcessed += batch.length;

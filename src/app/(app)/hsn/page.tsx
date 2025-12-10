@@ -376,8 +376,15 @@ export default function HSNPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-4 align-top w-[100px]">
-                                        <div className="inline-flex items-center rounded-md border border-border bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground font-mono">
-                                            {hsn.gst_hsn_code}
+                                        <div className="flex flex-col gap-1 items-start">
+                                            <div className="inline-flex items-center rounded-md border border-border bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground font-mono">
+                                                {hsn.gst_hsn_code}
+                                            </div>
+                                            {hsn.govt_published_date && (
+                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                                    FY {new Date(hsn.govt_published_date).getFullYear()}
+                                                </span>
+                                            )}
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-4 align-top">

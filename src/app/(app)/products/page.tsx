@@ -1190,7 +1190,14 @@ export default function ProductsPage() {
                                                     {/* HSN Code and Chapter */}
                                                     <div className="flex justify-between items-start">
                                                         <div>
-                                                            <p className="font-bold text-xl">{hsn.hsn_code}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="font-bold text-xl">{hsn.itc_hs_code || hsn.hsn_code}</p>
+                                                                {hsn.govt_published_date && (
+                                                                    <Badge variant="secondary" className="text-[10px] h-5">
+                                                                        {new Date(hsn.govt_published_date).getFullYear()}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                             {hsn.chapter && (
                                                                 <p className="text-xs text-muted-foreground">Chapter {hsn.chapter}</p>
                                                             )}

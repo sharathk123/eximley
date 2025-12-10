@@ -1,5 +1,7 @@
 -- FIX: Update search_hsn_smart to include govt_published_date
--- This ensures consistency between search results and standard listing
+-- We DROP the function first because we are changing the return type (adding columns)
+-- Valid signatures to drop just in case
+DROP FUNCTION IF EXISTS public.search_hsn_smart(TEXT, INT, INT);
 
 CREATE OR REPLACE FUNCTION public.search_hsn_smart(
   p_search_text TEXT,
