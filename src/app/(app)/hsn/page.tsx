@@ -23,6 +23,7 @@ const hsnSchema = z.object({
 export default function HSNPage() {
     const { toast } = useToast();
     const [hsnCodes, setHsnCodes] = useState<any[]>([]);
+    const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
 
@@ -41,13 +42,8 @@ export default function HSNPage() {
     const itemsPerPage = 10;
 
     // Derived State
-    const filteredCodes = hsnCodes.filter(hsn =>
-        (hsn.itc_hs_code || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (hsn.description || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    const totalPages = Math.ceil(filteredCodes.length / itemsPerPage);
-    const paginatedCodes = filteredCodes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    // Derived State
+    const paginatedCodes = hsnCodes; // Now directly from API
 
     // Reset page on search
     useEffect(() => {
@@ -61,20 +57,42 @@ export default function HSNPage() {
 
     // --- FETCH ---
 
-    const fetchHsn = () => {
+    // --- FETCH ---
+    const fetchHsn = (page = currentPage, search = searchQuery) => {
         setLoading(true);
-        // Fetching with high limit for client-side search on lookup page
-        fetch("/api/hsn?limit=1000")
+        const params = new URLSearchParams({
+            page: page.toString(),
+            limit: itemsPerPage.toString(),
+        });
+        if (search) params.append("search", search);
+
+        fetch(`/api/hsn?${params}`)
             .then(res => res.json())
             .then(data => {
-                if (data.hsnCodes) setHsnCodes(data.hsnCodes);
+                if (data.hsnCodes) {
+                    setHsnCodes(data.hsnCodes);
+                    setMeta(data.meta || { total: 0, totalPages: 0 });
+                }
             })
             .finally(() => setLoading(false));
     }
 
+    // Initial Load & Page Change
     useEffect(() => {
-        fetchHsn();
-    }, []);
+        fetchHsn(currentPage, searchQuery);
+    }, [currentPage]);
+
+    // Debounced Search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (currentPage === 1) {
+                fetchHsn(1, searchQuery);
+            } else {
+                setCurrentPage(1);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const onSubmit = async (values: z.infer<typeof hsnSchema>) => {
         try {
@@ -330,30 +348,70 @@ export default function HSNPage() {
 
             <div className="border rounded-md bg-card overflow-x-auto">
                 <Table>
-                    <TableHeader className="bg-muted/50">
-                        <TableRow>
-                            <TableHead className="font-bold text-foreground w-[120px]">ITC HS</TableHead>
-                            <TableHead className="font-bold text-foreground w-[100px]">GST HSN</TableHead>
-                            <TableHead className="font-bold text-foreground w-[25%]">Commodity</TableHead>
-                            <TableHead className="font-bold text-foreground">Description</TableHead>
-                            <TableHead className="font-bold text-foreground text-center w-[100px]">GST %</TableHead>
+                    <TableHeader className="bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                        <TableRow className="border-b border-border/60 hover:bg-transparent">
+                            <TableHead className="py-4 pl-6 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[120px]">ITC HS</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[100px]">GST HSN</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[150px]">Chapter</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[200px]">Commodity</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground min-w-[250px]">ITC HS Description</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground min-w-[250px]">GST HSN Description</TableHead>
+                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center w-[100px]">GST %</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow><TableCell colSpan={5} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                            <TableRow><TableCell colSpan={7} className="h-32 text-center text-muted-foreground"><Loader2 className="animate-spin inline mr-2 h-5 w-5" /> Loading records...</TableCell></TableRow>
                         ) : paginatedCodes.length === 0 ? (
-                            <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">No HSN codes found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={7} className="h-32 text-center text-muted-foreground italic">No HSN codes found matching "{searchQuery}".</TableCell></TableRow>
                         ) : (
-                            paginatedCodes.map(hsn => (
-                                <TableRow key={hsn.id}>
-                                    <TableCell className="font-medium whitespace-nowrap">{hsn.itc_hs_code}</TableCell>
-                                    <TableCell className="font-mono text-xs">{hsn.gst_hsn_code}</TableCell>
-                                    <TableCell className="text-xs whitespace-normal break-words align-top">{hsn.commodity}</TableCell>
-                                    <TableCell className="text-xs whitespace-normal break-words align-top">
-                                        {hsn.description}
+                            paginatedCodes.map((hsn, index) => (
+                                <TableRow
+                                    key={hsn.id}
+                                    className={`align-top border-b border-border/40 transition-colors hover:bg-muted/30 ${index % 2 === 0 ? 'bg-background' : 'bg-muted/5'}`}
+                                >
+                                    <TableCell className="pl-6 py-4 align-top w-[120px]">
+                                        <div className="inline-flex items-center rounded-md border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-xs font-semibold text-primary font-mono transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                                            {hsn.itc_hs_code}
+                                        </div>
                                     </TableCell>
-                                    <TableCell className="text-center">{hsn.gst_rate}%</TableCell>
+                                    <TableCell className="py-4 align-top w-[100px]">
+                                        <div className="inline-flex items-center rounded-md border border-border bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground font-mono">
+                                            {hsn.gst_hsn_code}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top">
+                                        <div className="text-sm font-medium text-foreground/80 leading-snug whitespace-normal break-words w-[150px]">
+                                            {hsn.chapter || <span className="text-muted-foreground/40 italic">-</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top">
+                                        <div className="text-sm text-foreground/70 leading-snug whitespace-normal break-words w-[200px]">
+                                            {hsn.commodity || <span className="text-muted-foreground/40 italic">-</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top">
+                                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-normal break-words min-w-[250px]">
+                                            {hsn.itc_hs_code_description || <span className="text-muted-foreground/40 italic">No description available</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top">
+                                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-normal break-words min-w-[250px]">
+                                            {hsn.gst_hsn_code_description || <span className="text-muted-foreground/40 italic">No description available</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-4 align-top text-center">
+                                        {hsn.gst_rate !== null && hsn.gst_rate !== undefined ? (
+                                            <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold ${hsn.gst_rate > 18 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                hsn.gst_rate > 12 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                                                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                }`}>
+                                                {hsn.gst_rate}%
+                                            </span>
+                                        ) : (
+                                            <span className="text-muted-foreground/40 italic">-</span>
+                                        )}
+                                    </TableCell>
                                 </TableRow>
                             ))
                         )}
@@ -363,10 +421,10 @@ export default function HSNPage() {
 
             {/* PAGINATION CONTROLS */}
             {
-                !loading && filteredCodes.length > 0 && (
+                !loading && meta.total > 0 && (
                     <div className="flex items-center justify-end gap-2 text-sm">
                         <div className="text-muted-foreground mr-4">
-                            Page {currentPage} of {totalPages} ({filteredCodes.length} total)
+                            Page {currentPage} of {meta.totalPages} ({meta.total} total)
                         </div>
                         <Button
                             variant="outline"
@@ -389,8 +447,8 @@ export default function HSNPage() {
                         <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(p => Math.min(meta.totalPages, p + 1))}
+                            disabled={currentPage === meta.totalPages}
                             title="Next Page"
                         >
                             <ChevronRight className="h-4 w-4" />
@@ -398,8 +456,8 @@ export default function HSNPage() {
                         <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => setCurrentPage(totalPages)}
-                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(meta.totalPages)}
+                            disabled={currentPage === meta.totalPages}
                             title="Last Page"
                         >
                             <ChevronsRight className="h-4 w-4" />
