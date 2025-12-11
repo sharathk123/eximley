@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const orderId = params.id;
+    const { id: orderId } = await params;
     const supabase = await createSessionClient();
     const { data: { user } } = await supabase.auth.getUser();
 

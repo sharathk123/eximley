@@ -3,13 +3,14 @@ import { DocumentService } from '@/lib/services/documentService';
 
 export async function POST(
     request: Request,
-    { params }: { params: { documentId: string } }
+    { params }: { params: Promise<{ documentId: string }> }
 ) {
     try {
+        const { documentId } = await params;
         const body = await request.json();
         const { expiresIn, maxDownloads, recipientEmail } = body;
 
-        const shareData = await DocumentService.createShareLink(params.documentId, {
+        const shareData = await DocumentService.createShareLink(documentId, {
             expiresIn,
             maxDownloads,
             recipientEmail

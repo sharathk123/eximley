@@ -5,13 +5,13 @@ import { getUserAndCompany } from "@/lib/helpers/api";
 // Mark shipping bill as filed with customs
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     const supabase = await createSessionClient();
 
     try {
         const { companyId } = await getUserAndCompany(supabase);
-        const { id } = params;
 
         // Security check
         const { data: existing } = await supabase

@@ -47,6 +47,9 @@ interface QuoteEditDialogProps {
     initialValues?: any;
 }
 
+
+type QuoteFormValues = z.infer<typeof quoteEditSchema>;
+
 export function QuoteEditDialog({ quote, open, onOpenChange, onSuccess, initialValues }: QuoteEditDialogProps) {
     const [loading, setLoading] = useState(false);
     const [buyers, setBuyers] = useState<any[]>([]);
@@ -55,8 +58,8 @@ export function QuoteEditDialog({ quote, open, onOpenChange, onSuccess, initialV
     const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
     const { toast } = useToast();
 
-    const form = useForm<z.infer<typeof quoteEditSchema>>({
-        resolver: zodResolver(quoteEditSchema),
+    const form = useForm<QuoteFormValues>({
+        resolver: zodResolver(quoteEditSchema) as any,
         defaultValues: {
             buyer_id: "",
             quote_date: new Date().toISOString().split('T')[0],

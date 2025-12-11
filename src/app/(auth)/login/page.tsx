@@ -17,7 +17,8 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const loginSchema = z.object({
     email: z.string().email("Invalid email address"),
@@ -134,7 +135,11 @@ function LoginForm() {
                         />
 
                         {error && (
-                            <div className="text-sm text-red-500 font-medium">{error}</div>
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Error</AlertTitle>
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
                         )}
 
                         <Button type="submit" className="w-full" disabled={loading}>

@@ -44,14 +44,17 @@ const costSheetSchema = z.object({
     final_price: z.number().optional(), // Calculated
 });
 
+
+type CostSheetFormValues = z.infer<typeof costSheetSchema>;
+
 export default function CostingPage() {
     const [sheets, setSheets] = useState<any[]>([]);
     const [products, setProducts] = useState<any[]>([]);
     const [currencies, setCurrencies] = useState<any[]>([]);
     const [isOpen, setIsOpen] = useState(false);
 
-    const form = useForm<z.infer<typeof costSheetSchema>>({
-        resolver: zodResolver(costSheetSchema),
+    const form = useForm<CostSheetFormValues>({
+        resolver: zodResolver(costSheetSchema) as any,
         defaultValues: {
             name: "",
             currency_code: "USD",

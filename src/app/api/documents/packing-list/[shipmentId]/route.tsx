@@ -5,8 +5,9 @@ import { PackingList } from "@/components/documents/PackingList";
 
 export async function GET(
     request: Request,
-    { params }: { params: { shipmentId: string } }
+    { params }: { params: Promise<{ shipmentId: string }> }
 ) {
+    const { shipmentId } = await params;
     const supabase = await createSessionClient();
 
     try {
@@ -32,7 +33,7 @@ export async function GET(
           )
         )
       `)
-            .eq("id", params.shipmentId)
+            .eq("id", shipmentId)
             .single();
 
         if (shipmentError || !shipment) {

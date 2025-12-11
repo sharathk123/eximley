@@ -10,8 +10,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { CalendarIcon, Plus, Trash2, Loader2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
+
+const countries = [
+    { id: 1, name: "India", phone_code: "+91", flag_emoji: "🇮🇳", code: "IN" },
+    { id: 2, name: "USA", phone_code: "+1", flag_emoji: "🇺🇸", code: "US" },
+    { id: 3, name: "UK", phone_code: "+44", flag_emoji: "🇬🇧", code: "GB" },
+    { id: 4, name: "UAE", phone_code: "+971", flag_emoji: "🇦🇪", code: "AE" },
+    { id: 5, name: "Canada", phone_code: "+1", flag_emoji: "🇨🇦", code: "CA" },
+    { id: 6, name: "Australia", phone_code: "+61", flag_emoji: "🇦🇺", code: "AU" },
+    { id: 7, name: "Germany", phone_code: "+49", flag_emoji: "🇩🇪", code: "DE" },
+    { id: 8, name: "France", phone_code: "+33", flag_emoji: "🇫🇷", code: "FR" },
+    { id: 9, name: "China", phone_code: "+86", flag_emoji: "🇨🇳", code: "CN" },
+    { id: 10, name: "Japan", phone_code: "+81", flag_emoji: "🇯🇵", code: "JP" },
+];
 
 const itemSchema = z.object({
     sku_id: z.string().min(1, "Product/SKU is required"),
@@ -35,7 +52,150 @@ const enquirySchema = z.object({
     items: z.array(itemSchema),
 });
 
-// ... (lines 38-190 unchanged)
+interface EnquiryEditDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    enquiry?: any;
+    onSave: () => void;
+}
+
+
+type EnquiryFormValues = z.infer<typeof enquirySchema>;
+
+export function EnquiryEditDialog({ open, onOpenChange, enquiry, onSave }: EnquiryEditDialogProps) {
+    const { toast } = useToast();
+    const [skus, setSkus] = useState<any[]>([]);
+
+    const form = useForm<EnquiryFormValues>({
+        resolver: zodResolver(enquirySchema) as any,
+        defaultValues: {
+            customer_name: "",
+            customer_email: "",
+            customer_phone: "",
+            customer_company: "",
+            customer_country: "",
+            currency_code: "USD",
+            source: "website",
+            subject: "",
+            description: "",
+            priority: "medium",
+            next_follow_up_date: "",
+            items: [],
+        },
+    });
+
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: "items",
+    });
+
+    useEffect(() => {
+        fetchSkus();
+    }, []);
+
+    useEffect(() => {
+        if (open) {
+            if (enquiry) {
+                form.reset({
+                    customer_name: enquiry.customer_name || "",
+                    customer_email: enquiry.email || "",
+                    customer_phone: enquiry.phone || "",
+                    customer_company: enquiry.customer_company || "",
+                    customer_country: enquiry.customer_country || "",
+                    currency_code: enquiry.currency_code || "USD",
+                    source: enquiry.source || "website",
+                    subject: enquiry.subject || "",
+                    description: enquiry.description || "",
+                    priority: enquiry.priority || "medium",
+                    next_follow_up_date: enquiry.next_follow_up_date || "",
+                    items: enquiry.enquiry_items?.map((item: any) => ({
+                        sku_id: item.sku_id,
+                        quantity: item.quantity,
+                        target_price: item.target_price,
+                        notes: item.notes
+                    })) || [],
+                });
+            } else {
+                form.reset({
+                    customer_name: "",
+                    customer_email: "",
+                    customer_phone: "",
+                    customer_company: "",
+                    customer_country: "",
+                    currency_code: "USD",
+                    source: "website",
+                    subject: "",
+                    description: "",
+                    priority: "medium",
+                    next_follow_up_date: "",
+                    items: [],
+                });
+            }
+        }
+    }, [open, enquiry, form]);
+
+    async function fetchSkus() {
+        try {
+            const res = await fetch("/api/skus");
+            const data = await res.json();
+            if (data.skus) setSkus(data.skus);
+        } catch (error) {
+            console.error("Failed to fetch SKUs", error);
+        }
+    }
+
+    async function onSubmit(values: z.infer<typeof enquirySchema>) {
+        try {
+            const endpoint = enquiry ? "/api/enquiries" : "/api/enquiries";
+            const method = enquiry ? "PUT" : "POST";
+            const body = enquiry ? { ...values, id: enquiry.id } : values;
+
+            const res = await fetch(endpoint, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to save enquiry");
+            }
+
+            toast({ title: "Success", description: "Enquiry saved successfully" });
+            onOpenChange(false);
+            onSave();
+        } catch (error: any) {
+            console.error(error);
+            toast({ title: "Error", description: error.message, variant: "destructive" });
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>{enquiry ? "Edit Enquiry" : "New Enquiry"}</DialogTitle>
+                </DialogHeader>
+
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        {/* Customer Details */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField control={form.control} name="customer_name" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Customer Name <span className="text-destructive">*</span></FormLabel>
+                                    <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                            <FormField control={form.control} name="customer_company" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Company <span className="text-muted-foreground">(Optional)</span></FormLabel>
+                                    <FormControl><Input placeholder="Acme Corp" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                        </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <FormField control={form.control} name="customer_email" render={({ field }) => (
@@ -91,43 +251,180 @@ const enquirySchema = z.object({
                             )} />
                         </div>
 
-// ... (lines 243-400 unchanged)
+                        <div className="grid grid-cols-3 gap-4">
+                            <FormField control={form.control} name="source" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Source</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select source" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="website">Website</SelectItem>
+                                            <SelectItem value="email">Email</SelectItem>
+                                            <SelectItem value="phone">Phone</SelectItem>
+                                            <SelectItem value="referral">Referral</SelectItem>
+                                            <SelectItem value="trade_show">Trade Show</SelectItem>
+                                            <SelectItem value="social_media">Social Media</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                            <FormField control={form.control} name="priority" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Priority</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select priority" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="low">Low</SelectItem>
+                                            <SelectItem value="medium">Medium</SelectItem>
+                                            <SelectItem value="high">High</SelectItem>
+                                            <SelectItem value="urgent">Urgent</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                            <FormField control={form.control} name="next_follow_up_date" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Next Follow-up</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <FormControl>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full pl-3 text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {field.value ? (
+                                                        format(new Date(field.value), "PPP")
+                                                    ) : (
+                                                        <span>Pick a date</span>
+                                                    )}
+                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                            </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={field.value ? new Date(field.value) : undefined}
+                                                onSelect={(date) => field.onChange(date ? date.toISOString() : "")}
+                                                disabled={(date) =>
+                                                    date < new Date(new Date().setHours(0, 0, 0, 0))
+                                                }
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                        </div>
 
-                                        {form.formState.errors.items?.[index]?.sku_id && (
-                                            <p className="text-[10px] text-destructive mt-1">Product is required</p>
-                                        )}
-                                    </div>
-                                    <div className="col-span-3">
-                                        <FormLabel className="text-xs">Qty <span className="text-destructive">*</span></FormLabel>
-                                        <Input
-                                            type="number"
-                                            className="h-8 text-xs"
-                                            min="1"
-                                            {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
-                                        />
-                                    </div>
-                                    <div className="col-span-3">
-                                        <FormLabel className="text-xs">Target Price</FormLabel>
-                                        <Input
-                                            type="number"
-                                            className="h-8 text-xs"
-                                            {...form.register(`items.${index}.target_price`, { valueAsNumber: true })}
-                                        />
-                                    </div>
-                                    <div className="col-span-5">
-                                        <FormLabel className="text-xs">Notes</FormLabel>
-                                        <Input
-                                            className="h-8 text-xs"
-                                            {...form.register(`items.${index}.notes`)}
-                                        />
-                                    </div>
-                                    <div className="col-span-1 flex justify-end">
-                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(index)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                        <FormField control={form.control} name="subject" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Subject</FormLabel>
+                                <FormControl><Input placeholder="Enquiry Subject" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+
+                        <FormField control={form.control} name="description" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Description / Notes</FormLabel>
+                                <FormControl><Textarea placeholder="Details..." className="min-h-[100px]" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+
+                        {/* Items Section */}
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-sm font-medium">Interested Products</h3>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => append({ sku_id: "", quantity: 1, target_price: 0, notes: "" })}
+                                >
+                                    <Plus className="mr-2 h-4 w-4" /> Add Product
+                                </Button>
+                            </div>
+
+                            {fields.length === 0 && (
+                                <div className="text-center p-4 border border-dashed rounded-md text-muted-foreground text-sm">
+                                    No products added yet.
                                 </div>
-                            ))}
+                            )}
+
+                            <div className="space-y-2">
+                                {fields.map((field, index) => (
+                                    <div key={field.id} className="grid grid-cols-12 gap-2 items-start bg-muted/40 p-2 rounded-md">
+                                        <div className="col-span-12 md:col-span-5">
+                                            <FormLabel className="text-xs">Product <span className="text-destructive">*</span></FormLabel>
+                                            <Select
+                                                onValueChange={(val) => form.setValue(`items.${index}.sku_id`, val)}
+                                                defaultValue={field.sku_id}
+                                                value={form.watch(`items.${index}.sku_id`)}
+                                            >
+                                                <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue placeholder="Select Product" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {skus.map((sku) => (
+                                                        <SelectItem key={sku.id} value={sku.id}>
+                                                            {sku.sku_code} - {sku.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            {form.formState.errors.items?.[index]?.sku_id && (
+                                                <p className="text-[10px] text-destructive mt-1">Product is required</p>
+                                            )}
+                                        </div>
+                                        <div className="col-span-4 md:col-span-2">
+                                            <FormLabel className="text-xs">Qty <span className="text-destructive">*</span></FormLabel>
+                                            <Input
+                                                type="number"
+                                                className="h-8 text-xs"
+                                                min="1"
+                                                {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
+                                            />
+                                        </div>
+                                        <div className="col-span-4 md:col-span-2">
+                                            <FormLabel className="text-xs">Target Price</FormLabel>
+                                            <Input
+                                                type="number"
+                                                className="h-8 text-xs"
+                                                {...form.register(`items.${index}.target_price`, { valueAsNumber: true })}
+                                            />
+                                        </div>
+                                        <div className="col-span-3 md:col-span-2">
+                                            <FormLabel className="text-xs">Notes</FormLabel>
+                                            <Input
+                                                className="h-8 text-xs"
+                                                {...form.register(`items.${index}.notes`)}
+                                            />
+                                        </div>
+                                        <div className="col-span-1 flex justify-end md:mt-6">
+                                            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="flex justify-end space-x-2 pt-4 sticky bottom-0 bg-background pb-2">
@@ -148,6 +445,6 @@ const enquirySchema = z.object({
                     </form>
                 </Form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }

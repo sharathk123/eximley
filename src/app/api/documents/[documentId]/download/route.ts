@@ -3,10 +3,11 @@ import { DocumentService } from '@/lib/services/documentService';
 
 export async function GET(
     request: Request,
-    { params }: { params: { documentId: string } }
+    { params }: { params: Promise<{ documentId: string }> }
 ) {
     try {
-        const { url, fileName } = await DocumentService.downloadDocument(params.documentId);
+        const { documentId } = await params;
+        const { url, fileName } = await DocumentService.downloadDocument(documentId);
 
         // Redirect to signed URL
         return NextResponse.redirect(url);

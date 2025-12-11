@@ -8,8 +8,9 @@ import { ERRORS } from "@/lib/constants/messages";
 
 export async function GET(
     request: Request,
-    { params }: { params: { orderId: string } }
+    { params }: { params: Promise<{ orderId: string }> }
 ) {
+    const { orderId } = await params;
     const supabase = await createSessionClient();
 
     try {
@@ -27,7 +28,7 @@ export async function GET(
           skus (*)
         )
       `)
-            .eq("id", params.orderId)
+            .eq("id", orderId)
             .single();
 
         if (orderError || !order) {
@@ -61,7 +62,7 @@ export async function GET(
                     company_id: order.company_id,
                     document_type: "commercial_invoice",
                     reference_type: "order",
-                    reference_id: params.orderId,
+                    reference_id: orderId,
                     file_name: `Commercial-Invoice-${order.order_number}.pdf`,
                     uploaded_by: user.id,
                 },

@@ -5,13 +5,13 @@ import { NextRequest, NextResponse } from "next/server";
 // POST /api/brcs/[id]/realize - Record payment realization
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const supabase = await createSessionClient();
         const { companyId } = await getUserAndCompany(supabase);
 
-        const brcId = params.id;
+        const { id: brcId } = await params;
         const body = await req.json();
         const {
             amount,

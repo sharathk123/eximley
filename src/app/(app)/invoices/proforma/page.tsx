@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -20,8 +15,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Pagination,
@@ -31,52 +24,25 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, Plus, Loader2, Edit, Trash2, LayoutGrid, List, FileText, Download, ScrollText, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { Search, Plus, Loader2, FileText } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-    FormDescription,
-} from "@/components/ui/form";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 
-const invoiceSchema = z.object({
-    id: z.string().optional(),
-    buyer_id: z.string().min(1, "Buyer required"),
-    currency_code: z.string().min(1, "Currency required"),
-    date: z.string().min(1, "Date required"),
-    conversion_rate: z.coerce.number().min(0.0001),
-    items: z.array(z.object({
-        sku_id: z.string().min(1, "SKU required"),
-        quantity: z.coerce.number().min(1),
-        unit_price: z.coerce.number().min(0),
-    })).min(1, "At least one item required"),
-    lut_id: z.string().optional(),
-});
+import { ProformaList } from "@/components/invoices/ProformaList";
+import { ProformaDialog } from "@/components/invoices/ProformaDialog";
 
 export default function ProformaPage() {
     const [invoices, setInvoices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState("all");
-    const [deletingPI, setDeletingPI] = useState<any>(null);
-    const [convertingPI, setConvertingPI] = useState<any>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+
+    // Actions State
     const [isOpen, setIsOpen] = useState(false);
     const [editingPI, setEditingPI] = useState<any>(null);
+    const [deletingPI, setDeletingPI] = useState<any>(null);
+    const [convertingPI, setConvertingPI] = useState<any>(null);
 
     // Data for forms
     const [buyers, setBuyers] = useState<any[]>([]);
@@ -86,21 +52,6 @@ export default function ProformaPage() {
 
     const itemsPerPage = 12;
     const { toast } = useToast();
-
-    const form = useForm<z.infer<typeof invoiceSchema>>({
-        resolver: zodResolver(invoiceSchema) as any,
-        defaultValues: {
-            date: new Date().toISOString().split('T')[0],
-            currency_code: "USD",
-            conversion_rate: 1,
-            items: [{ sku_id: "", quantity: 1, unit_price: 0 }]
-        },
-    });
-
-    const { fields, append, remove, replace } = useFieldArray({
-        control: form.control,
-        name: "items"
-    });
 
     useEffect(() => {
         fetchData();
@@ -149,56 +100,12 @@ export default function ProformaPage() {
 
     const handleEdit = (pi: any) => {
         setEditingPI(pi);
-        form.reset({
-            id: pi.id,
-            buyer_id: pi.buyer_id,
-            currency_code: pi.currency_code,
-            date: pi.date.split('T')[0],
-            conversion_rate: pi.conversion_rate,
-            lut_id: pi.lut_id || "",
-            items: pi.proforma_items.map((item: any) => ({
-                sku_id: item.sku_id,
-                quantity: item.quantity,
-                unit_price: item.unit_price
-            }))
-        });
         setIsOpen(true);
     };
 
     const handleCreate = () => {
         setEditingPI(null);
-        form.reset({
-            date: new Date().toISOString().split('T')[0],
-            currency_code: "USD",
-            conversion_rate: 1,
-            lut_id: "",
-            items: [{ sku_id: "", quantity: 1, unit_price: 0 }]
-        });
         setIsOpen(true);
-    };
-
-    const onSubmit = async (values: z.infer<typeof invoiceSchema>) => {
-        try {
-            const method = editingPI ? "PUT" : "POST";
-            const res = await fetch("/api/invoices/proforma", {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(values),
-            });
-
-            if (res.ok) {
-                setIsOpen(false);
-                setEditingPI(null);
-                form.reset();
-                fetchData();
-                toast({ title: "Success", description: `Invoice ${editingPI ? 'updated' : 'created'} successfully` });
-            } else {
-                const err = await res.json();
-                toast({ title: "Error", description: err.error, variant: "destructive" });
-            }
-        } catch (err) {
-            console.error(err);
-        }
     };
 
     const handleDelete = async () => {
@@ -258,20 +165,6 @@ export default function ProformaPage() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedInvoices = filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'draft': return 'secondary';
-            case 'sent': return 'default';
-            case 'converted': return 'default'; // Using default (primary) for completed states
-            default: return 'outline';
-        }
-    };
-
-    // Calculate dynamic total for preview
-    const watchItems = form.watch("items");
-    const previewTotal = watchItems?.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unit_price || 0)), 0) || 0;
-    const watchCurrency = form.watch("currency_code");
-
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -325,142 +218,16 @@ export default function ProformaPage() {
                         />
                     ) : (
                         <>
-                            {viewMode === 'card' ? (
-                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {paginatedInvoices.map((inv) => (
-                                        <Card key={inv.id} className="shadow-sm hover:shadow-md transition-shadow">
-                                            <CardContent className="p-5 space-y-3">
-                                                <div className="flex justify-between items-start">
-                                                    <div className="flex-1">
-                                                        <div className="font-semibold text-lg">{inv.invoice_number}</div>
-                                                        <div className="text-sm text-muted-foreground">
-                                                            {inv.entities?.name || "No buyer"}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-1">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8"
-                                                            onClick={() => handleEdit(inv)}
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8"
-                                                            onClick={() => setDeletingPI(inv)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex gap-2">
-                                                    <Badge variant={getStatusColor(inv.status)}>{inv.status}</Badge>
-                                                    <Badge variant="outline">{inv.currency_code}</Badge>
-                                                </div>
-
-                                                <div className="space-y-1 text-sm text-muted-foreground pt-2">
-                                                    <div>Date: {new Date(inv.date).toLocaleDateString()}</div>
-                                                    <div className="font-semibold text-foreground">
-                                                        Total: {inv.currency_code} {inv.total_amount.toFixed(2)}
-                                                    </div>
-                                                    {inv.proforma_items && (
-                                                        <div>{inv.proforma_items.length} item(s)</div>
-                                                    )}
-                                                    {inv.quotes && inv.quotes.length > 0 && (
-                                                        <div className="pt-1">
-                                                            From Quote: <Link href="/quotes" className="text-primary hover:underline">{inv.quotes[0].quote_number}</Link>
-                                                        </div>
-                                                    )}
-                                                    {inv.export_orders && inv.export_orders.length > 0 && (
-                                                        <div className="pt-1">
-                                                            To Order: <Link href="/orders" className="text-primary hover:underline">{inv.export_orders[0].order_number}</Link>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {inv.status !== 'converted' && (
-                                                    <div className="flex gap-2 pt-2">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => setConvertingPI(inv)}
-                                                            className="w-full"
-                                                        >
-                                                            <ScrollText className="h-3 w-3 mr-1" /> To Order
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="border rounded-md bg-card">
-                                    <Table className="table-fixed">
-                                        <TableHeader className="bg-muted/50">
-                                            <TableRow>
-                                                <TableHead className="w-[140px]">Invoice #</TableHead>
-                                                <TableHead className="w-[200px]">Buyer</TableHead>
-                                                <TableHead className="w-[120px]">Date</TableHead>
-                                                <TableHead className="w-[150px]">Total</TableHead>
-                                                <TableHead className="w-[140px]">Status</TableHead>
-                                                <TableHead className="w-[120px] text-right">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {paginatedInvoices.map((inv) => (
-                                                <TableRow key={inv.id}>
-                                                    <TableCell className="font-medium">{inv.invoice_number}</TableCell>
-                                                    <TableCell>{inv.entities?.name || "—"}</TableCell>
-                                                    <TableCell>{new Date(inv.date).toLocaleDateString()}</TableCell>
-                                                    <TableCell>
-                                                        {inv.currency_code} {inv.total_amount.toFixed(2)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge variant={getStatusColor(inv.status)}>{inv.status}</Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex justify-end gap-2">
-                                                            {inv.status !== 'converted' && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => setConvertingPI(inv)}
-                                                                >
-                                                                    To Order
-                                                                </Button>
-                                                            )}
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8"
-                                                                onClick={() => handleEdit(inv)}
-                                                            >
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8"
-                                                                onClick={() => setDeletingPI(inv)}
-                                                            >
-                                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                                            </Button>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
+                            <ProformaList
+                                invoices={paginatedInvoices}
+                                viewMode={viewMode}
+                                onEdit={handleEdit}
+                                onDelete={setDeletingPI}
+                                onConvert={setConvertingPI}
+                            />
 
                             {totalPages > 1 && (
-                                <Pagination>
+                                <Pagination className="mt-4">
                                     <PaginationContent>
                                         <PaginationItem>
                                             <PaginationPrevious
@@ -493,171 +260,19 @@ export default function ProformaPage() {
                 </TabsContent>
             </Tabs>
 
-            {/* Create/Edit Dialog */}
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>{editingPI ? 'Edit Proforma Invoice' : 'New Proforma Invoice'}</DialogTitle>
-                    </DialogHeader>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="buyer_id"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Buyer</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="Select Buyer" /></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    {buyers.map(b => (
-                                                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="date"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Date</FormLabel>
-                                            <FormControl><Input type="date" {...field} /></FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="currency_code"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Currency</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    {currencies.map(c => (
-                                                        <SelectItem key={c.code} value={c.code}>{c.code} - {c.name}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="conversion_rate"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Exchange Rate (to Local)</FormLabel>
-                                            <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <FormField
-                                control={form.control}
-                                name="lut_id"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Letter of Undertaking (LUT)</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Select active LUT for zero-rated export" /></SelectTrigger></FormControl>
-                                            <SelectContent>
-                                                <SelectItem value=" ">None (IGST Paid)</SelectItem>
-                                                {luts.map(lut => (
-                                                    <SelectItem key={lut.id} value={lut.id}>
-                                                        {lut.lut_number} (FY {lut.financial_year})
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormDescription className="text-xs text-muted-foreground">
-                                            Select LUT to export without paying IGST. Leave empty if paying IGST.
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <Separator />
-
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="font-semibold">Line Items</h3>
-                                    <Button type="button" variant="outline" size="sm" onClick={() => append({ sku_id: "", quantity: 1, unit_price: 0 })}>
-                                        <Plus className="mr-2 h-4 w-4" /> Add Item
-                                    </Button>
-                                </div>
-
-                                <div className="space-y-2">
-                                    {fields.map((field, index) => (
-                                        <div key={field.id} className="flex gap-2 items-end">
-                                            <FormField
-                                                control={form.control}
-                                                name={`items.${index}.sku_id`}
-                                                render={({ field }) => (
-                                                    <FormItem className="flex-1">
-                                                        <FormControl>
-                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                                <SelectTrigger><SelectValue placeholder="Select SKU" /></SelectTrigger>
-                                                                <SelectContent>
-                                                                    {skus.map(s => (
-                                                                        <SelectItem key={s.id} value={s.id}>{s.sku_code} - {s.name}</SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </FormControl>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                            <FormField
-                                                control={form.control}
-                                                name={`items.${index}.quantity`}
-                                                render={({ field }) => (
-                                                    <FormItem className="w-24">
-                                                        <FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                            <FormField
-                                                control={form.control}
-                                                name={`items.${index}.unit_price`}
-                                                render={({ field }) => (
-                                                    <FormItem className="w-32">
-                                                        <FormControl><Input type="number" placeholder="Price" {...field} /></FormControl>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="flex justify-end text-lg font-bold border-t pt-2">
-                                    Total: {watchCurrency} {previewTotal.toFixed(2)}
-                                </div>
-                            </div>
-
-                            <Button type="submit" className="w-full">
-                                {editingPI ? 'Update Invoice' : 'Create Invoice'}
-                            </Button>
-                        </form>
-                    </Form>
-                </DialogContent>
-            </Dialog>
+            <ProformaDialog
+                open={isOpen}
+                onOpenChange={setIsOpen}
+                initialData={editingPI}
+                onSuccess={() => {
+                    fetchData();
+                    toast({ title: "Success", description: `Invoice ${editingPI ? 'updated' : 'created'} successfully` });
+                }}
+                buyers={buyers}
+                skus={skus}
+                currencies={currencies}
+                luts={luts}
+            />
 
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={!!deletingPI} onOpenChange={(open) => !open && setDeletingPI(null)}>

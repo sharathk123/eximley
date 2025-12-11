@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CheckCircle, XCircle, Clock, ShieldAlert } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 type Company = {
     id: string;
@@ -19,6 +20,7 @@ export default function CompaniesTable() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [updating, setUpdating] = useState<string | null>(null);
+    const { toast } = useToast();
 
     useEffect(() => {
         fetchCompanies();
@@ -49,8 +51,9 @@ export default function CompaniesTable() {
             if (!res.ok) throw new Error("Failed to update status");
 
             await fetchCompanies(); // Refresh list
+            toast({ title: "Success", description: "Company status updated" });
         } catch (err: any) {
-            alert(err.message);
+            toast({ title: "Error", description: err.message, variant: "destructive" });
         } finally {
             setUpdating(null);
         }

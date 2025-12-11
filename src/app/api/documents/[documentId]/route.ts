@@ -3,8 +3,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
     request: Request,
-    { params }: { params: { documentId: string } }
+    { params }: { params: Promise<{ documentId: string }> }
 ) {
+    const { documentId } = await params;
     const supabase = await createSessionClient();
 
     try {
@@ -17,7 +18,7 @@ export async function GET(
         const { data: document, error: docError } = await supabase
             .from("documents")
             .select("*")
-            .eq("id", params.documentId)
+            .eq("id", documentId)
             .single();
 
         if (docError || !document) {
@@ -42,8 +43,9 @@ export async function GET(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { documentId: string } }
+    { params }: { params: Promise<{ documentId: string }> }
 ) {
+    const { documentId } = await params;
     const supabase = await createSessionClient();
 
     try {
@@ -56,7 +58,7 @@ export async function DELETE(
         const { data: document, error: docError } = await supabase
             .from("documents")
             .select("*")
-            .eq("id", params.documentId)
+            .eq("id", documentId)
             .single();
 
         if (docError || !document) {
@@ -76,7 +78,7 @@ export async function DELETE(
         const { error: dbError } = await supabase
             .from("documents")
             .delete()
-            .eq("id", params.documentId);
+            .eq("id", documentId);
 
         if (dbError) {
             return NextResponse.json({ error: dbError.message }, { status: 500 });

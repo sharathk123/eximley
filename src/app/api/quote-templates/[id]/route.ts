@@ -2,10 +2,10 @@
 import { createSessionClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const supabase = await createSessionClient();
-        const { id } = params;
+        const { id } = await params;
 
         const { data: template, error } = await supabase
             .from("quote_templates")
@@ -21,10 +21,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const supabase = await createSessionClient();
-        const { id } = params;
+        const { id } = await params;
 
         const { error } = await supabase
             .from("quote_templates")

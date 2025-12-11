@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, Loader2, FileUp } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 
 export function UploadDocumentDialog({
@@ -27,6 +28,8 @@ export function UploadDocumentDialog({
     const [file, setFile] = useState<File | null>(null);
     const [docType, setDocType] = useState("Commercial Invoice");
     const [loading, setLoading] = useState(false);
+
+    const { toast } = useToast();
 
     const handleUpload = async () => {
         if (!file) return;
@@ -48,9 +51,10 @@ export function UploadDocumentDialog({
             setOpen(false);
             setFile(null);
             onUploadSuccess();
+            toast({ title: "Success", description: "Document uploaded successfully" });
         } catch (error) {
             console.error(error);
-            alert("Failed to upload document");
+            toast({ title: "Error", description: "Failed to upload document", variant: "destructive" });
         } finally {
             setLoading(false);
         }

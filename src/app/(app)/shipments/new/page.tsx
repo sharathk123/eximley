@@ -27,6 +27,9 @@ const shipmentSchema = z.object({
     incoterm: z.string().optional(),
 });
 
+
+type ShipmentFormValues = z.infer<typeof shipmentSchema>;
+
 export default function NewShipmentPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -53,8 +56,8 @@ export default function NewShipmentPage() {
             .catch(console.error);
     }, []);
 
-    const form = useForm<z.infer<typeof shipmentSchema>>({
-        resolver: zodResolver(shipmentSchema),
+    const form = useForm<ShipmentFormValues>({
+        resolver: zodResolver(shipmentSchema) as any,
         defaultValues: {
             reference_no: "",
             type: "export",

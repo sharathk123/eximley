@@ -25,7 +25,7 @@ export default async function AdminPage() {
             value: companyCount || 0,
             icon: Building2,
             desc: "Registered entities",
-            color: "text-blue-600 dark:text-blue-400",
+            color: "text-blue-600 dark:text-blue-400", // Could map to primary/secondary but blue is standard for info
             bg: "bg-blue-100 dark:bg-blue-900/20"
         },
         {
@@ -33,8 +33,8 @@ export default async function AdminPage() {
             value: userCount || 0,
             icon: Users,
             desc: "Active user profiles",
-            color: "text-indigo-600 dark:text-indigo-400",
-            bg: "bg-indigo-100 dark:bg-indigo-900/20"
+            color: "text-primary",
+            bg: "bg-primary/10"
         },
         {
             title: "HSN Codes",

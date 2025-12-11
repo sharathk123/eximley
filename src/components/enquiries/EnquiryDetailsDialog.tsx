@@ -1,5 +1,5 @@
-
 "use client";
+
 
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -12,7 +12,7 @@ import { DocumentBrowser } from '@/components/documents/DocumentBrowser';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from "@/lib/utils";
-import { toast } from 'sonner';
+import { useToast } from "@/components/ui/use-toast";
 
 interface EnquiryDetailsDialogProps {
     enquiry: any;
@@ -28,13 +28,14 @@ export function EnquiryDetailsDialog({ enquiry, open, onOpenChange, onEdit, onCo
     const [activeTab, setActiveTab] = useState("details");
     const [generatingPdf, setGeneratingPdf] = useState(false);
     const [revising, setRevising] = useState(false);
+    const { toast } = useToast();
 
     if (!enquiry) return null;
 
     const handleGeneratePDF = async () => {
         try {
             setGeneratingPdf(true);
-            const response = await fetch(`/api/enquiries/${enquiry.id}/generate-pdf`, {
+            const response = await fetch(`/ api / enquiries / ${enquiry.id}/generate-pdf`, {
                 method: 'POST',
             });
 
@@ -59,10 +60,10 @@ export function EnquiryDetailsDialog({ enquiry, open, onOpenChange, onEdit, onCo
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
-            toast.success("PDF Downloaded");
+            toast({ title: "Success", description: "PDF Downloaded" });
         } catch (error) {
             console.error(error);
-            toast.error("Failed to generate PDF");
+            toast({ title: "Error", description: "Failed to generate PDF", variant: "destructive" });
         } finally {
             setGeneratingPdf(false);
         }
@@ -79,12 +80,12 @@ export function EnquiryDetailsDialog({ enquiry, open, onOpenChange, onEdit, onCo
 
             if (!response.ok) throw new Error('Failed to create revision');
 
-            toast.success("New revision created");
+            toast({ title: "Success", description: "New revision created" });
             if (onRefresh) onRefresh();
             onOpenChange(false); // Close dialog to refresh list
         } catch (error) {
             console.error(error);
-            toast.error("Failed to create revision");
+            toast({ title: "Error", description: "Failed to create revision", variant: "destructive" });
         } finally {
             setRevising(false);
         }
