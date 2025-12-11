@@ -1,6 +1,7 @@
 
 import { createSessionClient } from "@/lib/supabase/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { NumberingService } from "@/lib/services/numberingService";
 
 export async function GET(request: Request) {
     const supabase = await createSessionClient();
@@ -86,9 +87,8 @@ export async function POST(request: Request) {
             items // Array of { sku_id, quantity, unit_price }
         } = body;
 
-        // Auto-generate invoice number (Simple logic for now)
-        // Ideally should check DB for last number like we did in Quotes/Enquiries
-        const invoice_number = `PI-${Date.now().toString().slice(-6)}`;
+        // Auto-generate invoice number using centralized service
+        const invoice_number = await NumberingService.generateNextNumber(companyUser.company_id, 'PROFORMA');
 
         // Calculate total
         const total_amount = items.reduce((sum: number, item: any) => sum + (item.quantity * item.unit_price), 0);

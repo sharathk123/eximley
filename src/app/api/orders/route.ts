@@ -2,6 +2,7 @@ import { createSessionClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { getUserAndCompany } from "@/lib/helpers/api";
 import { ERRORS } from "@/lib/constants/messages";
+import { NumberingService } from "@/lib/services/numberingService";
 
 export async function GET(request: Request) {
     const supabase = await createSessionClient();
@@ -87,10 +88,8 @@ export async function POST(request: Request) {
             items // Array of { sku_id, quantity, unit_price }
         } = body;
 
-        // Auto-generate order number (Standardize to match convert logic if possible, or keep simple)
-        // Using simple date-based for now to avoid complex locking logic in this snippet, 
-        // but ideally should match the ORD-YYYY-XXX format from PI conversion.
-        const order_number = `ORD-${Date.now().toString().slice(-6)}`;
+        // Auto-generate order number using centralized service
+        const order_number = await NumberingService.generateNextNumber(companyUser.company_id, 'ORDER');
 
         // Calculate total
         const total_amount = items.reduce((sum: number, item: any) => sum + (item.quantity * item.unit_price), 0);

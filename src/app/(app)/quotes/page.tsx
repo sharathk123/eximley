@@ -28,44 +28,20 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, Plus, Loader2, Edit, Trash2, LayoutGrid, List, FileText, Copy, ArrowRight } from "lucide-react";
+import { Search, Plus, Loader2, Edit, Trash2, LayoutGrid, List, FileText, Copy, ArrowRight, Download, CheckCircle2, X, BarChart3, LayoutTemplate, MoreHorizontal } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { QuoteAnalytics } from "@/components/quotes/QuoteAnalytics";
+import { QuoteTemplateDialog } from "@/components/quotes/QuoteTemplateDialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SaveTemplateDialog } from "@/components/quotes/SaveTemplateDialog"; // Import for edit dialog if we add it there, or main page
+
 import Link from "next/link";
 import { useToast } from "@/components/ui/use-toast";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { IncotermSelect } from "@/components/common/IncotermSelect";
+import { IncotermSelect } from "@/components/common/IncotermSelect"; // Should be unused now, check usage
+import { QuoteDetailsDialog } from "@/components/quotes/QuoteDetailsDialog";
+import { QuoteEditDialog } from "@/components/quotes/QuoteEditDialog";
 
-const quoteSchema = z.object({
-    buyer_id: z.string().min(1, "Buyer required"),
-    quote_date: z.string().min(1, "Date required"),
-    valid_until: z.string().optional(),
-    currency_code: z.string().min(1, "Currency required"),
-    incoterm: z.string().optional(),
-    incoterm_place: z.string().optional(),
-    notes: z.string().optional(),
-    items: z.array(z.object({
-        sku_id: z.string().min(1, "SKU required"),
-        quantity: z.coerce.number().min(1),
-        unit_price: z.coerce.number().min(0.01),
-        description: z.string().optional(),
-    })).min(1, "At least one item required"),
-});
+
 
 export default function QuotesPage() {
     const [quotes, setQuotes] = useState<any[]>([]);
@@ -75,34 +51,26 @@ export default function QuotesPage() {
     const [deletingQuote, setDeletingQuote] = useState<any>(null);
     const [convertingQuote, setConvertingQuote] = useState<any>(null);
     const [revisingQuote, setRevisingQuote] = useState<any>(null);
+    const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+    const [selectedQuote, setSelectedQuote] = useState<any>(null);
+    const [editingQuote, setEditingQuote] = useState<any>(null);
+    const [selectedQuotes, setSelectedQuotes] = useState<string[]>([]);
+    const [bulkActionLoading, setBulkActionLoading] = useState(false);
+    const [showAnalytics, setShowAnalytics] = useState(false);
     const itemsPerPage = 12;
     const { toast } = useToast();
 
-    // Form Data
-    const [buyers, setBuyers] = useState<any[]>([]);
-    const [skus, setSkus] = useState<any[]>([]);
-    const [currencies, setCurrencies] = useState<any[]>([]);
+    // Dialog States
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isTemplateOpen, setIsTemplateOpen] = useState(false);
+    const [templateSelection, setTemplateSelection] = useState<any>(null);
 
-    const form = useForm<z.infer<typeof quoteSchema>>({
-        resolver: zodResolver(quoteSchema) as any,
-        defaultValues: {
-            quote_date: new Date().toISOString().split('T')[0],
-            currency_code: "USD",
-            items: [{ sku_id: "", quantity: 1, unit_price: 0 }]
-        }
-    });
 
-    const { fields, append, remove } = useFieldArray({
-        control: form.control,
-        name: "items"
-    });
 
     useEffect(() => {
         fetchQuotes();
-        fetchFormData();
     }, []);
 
     useEffect(() => {
@@ -110,22 +78,12 @@ export default function QuotesPage() {
     }, [currentPage]);
 
     async function fetchFormData() {
-        try {
-            const [entRes, skuRes, currRes] = await Promise.all([
-                fetch("/api/entities?type=buyer"),
-                fetch("/api/skus"),
-                fetch("/api/currencies")
-            ]);
-            const entData = await entRes.json();
-            const skuData = await skuRes.json();
-            const currData = await currRes.json();
-
-            if (entData.entities) setBuyers(entData.entities);
-            if (skuData.skus) setSkus(skuData.skus);
-            if (currData.currencies) setCurrencies(currData.currencies);
-        } catch (err) {
-            console.error(err);
-        }
+        // Buyers etc might still be needed if we pass them to EditDialog? 
+        // QuoteEditDialog fetches its own data.
+        // So we might not need to fetch them here anymore unless we use them for filters?
+        // Let's check usage. existing code used 'buyers' to populate select. 
+        // If we don't have filters using buyers, we can remove this.
+        // For now, let's keep it minimal or remove if unused.
     }
 
     async function fetchQuotes() {
@@ -214,6 +172,117 @@ export default function QuotesPage() {
         }
     };
 
+    const handleGeneratePdf = async (quoteId: string) => {
+        setGeneratingPdf(quoteId);
+        try {
+            const res = await fetch(`/api/quotes/${quoteId}/generate-pdf`, {
+                method: "POST",
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || "Failed to generate PDF");
+            }
+
+            // Get PDF as blob
+            const blob = await res.blob();
+
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Quote-${quoteId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            toast({
+                title: "Success",
+                description: "PDF downloaded successfully"
+            });
+        } catch (error: any) {
+            console.error(error);
+            toast({
+                title: "Error",
+                description: error.message || "Failed to generate PDF",
+                variant: "destructive"
+            });
+        } finally {
+            setGeneratingPdf(null);
+        }
+    };
+
+    const toggleQuoteSelection = (quoteId: string) => {
+        setSelectedQuotes(prev =>
+            prev.includes(quoteId)
+                ? prev.filter(id => id !== quoteId)
+                : [...prev, quoteId]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedQuotes.length === filteredQuotes.length) {
+            setSelectedQuotes([]);
+        } else {
+            setSelectedQuotes(filteredQuotes.map(q => q.id));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`Delete ${selectedQuotes.length} quotes?`)) return;
+
+        setBulkActionLoading(true);
+        try {
+            await Promise.all(
+                selectedQuotes.map(id =>
+                    fetch(`/api/quotes?id=${id}`, { method: 'DELETE' })
+                )
+            );
+
+            toast({
+                title: "Success",
+                description: `${selectedQuotes.length} quotes deleted`
+            });
+
+            setSelectedQuotes([]);
+            await fetchQuotes();
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to delete quotes", variant: "destructive" });
+        } finally {
+            setBulkActionLoading(false);
+        }
+    };
+
+    const handleBulkStatusUpdate = async (newStatus: string) => {
+        setBulkActionLoading(true);
+        try {
+            await Promise.all(
+                selectedQuotes.map(id =>
+                    fetch(`/api/quotes/${id}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    })
+                )
+            );
+
+            toast({
+                title: "Success",
+                description: `${selectedQuotes.length} quotes updated to ${newStatus}`
+            });
+
+            setSelectedQuotes([]);
+            await fetchQuotes();
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to update quotes", variant: "destructive" });
+        } finally {
+            setBulkActionLoading(false);
+        }
+    };
+
     const filteredQuotes = quotes.filter(quote => {
         const matchesSearch = quote.quote_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             quote.entities?.name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -244,194 +313,15 @@ export default function QuotesPage() {
                     <h2 className="text-3xl font-bold tracking-tight">Quotes</h2>
                     <p className="text-muted-foreground">Manage quotations and convert to Proforma Invoices.</p>
                 </div>
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                    <DialogTrigger asChild>
-                        <Button>
-                            <Plus className="mr-2 h-4 w-4" /> New Quote
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>Create New Quote</DialogTitle>
-                        </DialogHeader>
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(async (values) => {
-                                try {
-                                    const res = await fetch("/api/quotes", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify(values),
-                                    });
-                                    if (!res.ok) throw new Error("Failed to create quote");
-                                    await fetchQuotes();
-                                    setIsCreateOpen(false);
-                                    form.reset();
-                                    toast({ title: "Success", description: "Quote created successfully" });
-                                } catch (error) {
-                                    toast({ title: "Error", description: "Failed to create quote", variant: "destructive" });
-                                }
-                            })} className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="buyer_id"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Buyer</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select Buyer" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {buyers.map(b => (
-                                                            <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="quote_date"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Date</FormLabel>
-                                                <FormControl>
-                                                    <Input type="date" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="currency_code"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Currency</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select Currency" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {currencies.map(c => (
-                                                            <SelectItem key={c.code} value={c.code}>{c.code} - {c.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="valid_until"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Valid Until</FormLabel>
-                                                <FormControl>
-                                                    <Input type="date" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <IncotermSelect form={form} name="incoterm" />
-                                    <FormField
-                                        control={form.control}
-                                        name="incoterm_place"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Incoterm Place</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="e.g. Mumbai Port" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center">
-                                        <h4 className="font-semibold">Items</h4>
-                                        <Button type="button" variant="outline" size="sm" onClick={() => append({ sku_id: "", quantity: 1, unit_price: 0 })}>
-                                            <Plus className="h-4 w-4 mr-2" /> Add Item
-                                        </Button>
-                                    </div>
-                                    <div className="space-y-2">
-                                        {fields.map((field, index) => (
-                                            <div key={field.id} className="grid grid-cols-12 gap-2 items-end">
-                                                <div className="col-span-5">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name={`items.${index}.sku_id`}
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                                    <FormControl>
-                                                                        <SelectTrigger>
-                                                                            <SelectValue placeholder="Item" />
-                                                                        </SelectTrigger>
-                                                                    </FormControl>
-                                                                    <SelectContent>
-                                                                        {skus.map(s => (
-                                                                            <SelectItem key={s.id} value={s.id}>{s.name} ({s.sku_code})</SelectItem>
-                                                                        ))}
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </div>
-                                                <div className="col-span-2">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name={`items.${index}.quantity`}
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormControl>
-                                                                    <Input type="number" placeholder="Qty" {...field} />
-                                                                </FormControl>
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </div>
-                                                <div className="col-span-3">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name={`items.${index}.unit_price`}
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormControl>
-                                                                    <Input type="number" placeholder="Price" {...field} />
-                                                                </FormControl>
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </div>
-                                                <div className="col-span-2">
-                                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="flex justify-end gap-2">
-                                    <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-                                    <Button type="submit">Create Quote</Button>
-                                </div>
-                            </form>
-                        </Form>
-                    </DialogContent>
-                </Dialog>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setIsTemplateOpen(true)}>
+                        <LayoutTemplate className="h-4 w-4 mr-2" />
+                        Use Template
+                    </Button>
+                    <Button onClick={() => setIsCreateOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" /> New Quote
+                    </Button>
+                </div>
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -446,162 +336,83 @@ export default function QuotesPage() {
                             setCurrentPage(1);
                         }}
                     />
+
                 </div>
-                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant={showAnalytics ? "default" : "outline"}
+                        size="icon"
+                        onClick={() => setShowAnalytics(!showAnalytics)}
+                        title="Toggle Analytics Dashboard"
+                    >
+                        <BarChart3 className="h-4 w-4" />
+                    </Button>
+                    {!showAnalytics && <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />}
+                </div>
             </div>
 
-            <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
-                setActiveTab(value);
-                setCurrentPage(1);
-            }}>
-                <TabsList>
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="draft">Draft</TabsTrigger>
-                    <TabsTrigger value="sent">Sent</TabsTrigger>
-                    <TabsTrigger value="approved">Approved</TabsTrigger>
-                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                    <TabsTrigger value="converted">Converted</TabsTrigger>
-                </TabsList>
+            {showAnalytics ? (
+                <QuoteAnalytics />
+            ) : (
+                <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
+                    setActiveTab(value);
+                    setCurrentPage(1);
+                }}>
+                    <TabsList>
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="draft">Draft</TabsTrigger>
+                        <TabsTrigger value="sent">Sent</TabsTrigger>
+                        <TabsTrigger value="approved">Approved</TabsTrigger>
+                        <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                        <TabsTrigger value="converted">Converted</TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value={activeTab} className="mt-4">
-                    {loading ? (
-                        <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8" /></div>
-                    ) : filteredQuotes.length === 0 ? (
-                        <EmptyState
-                            icon={FileText}
-                            title="No quotes found"
-                            description="Create a quote from an enquiry or manually."
-                            actionLabel="Create Quote"
-                            onAction={() => setIsCreateOpen(true)}
-                            iconColor="text-blue-600 dark:text-blue-200"
-                            iconBgColor="bg-blue-100 dark:bg-blue-900"
-                        />
-                    ) : (
-                        <>
-                            {viewMode === 'card' ? (
-                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {paginatedQuotes.map((quote) => (
-                                        <Card key={quote.id} className="shadow-sm hover:shadow-md transition-shadow">
-                                            <CardContent className="p-5 space-y-3">
-                                                <div className="flex justify-between items-start">
-                                                    <div className="flex-1">
-                                                        <div className="font-semibold text-lg">{quote.quote_number}</div>
-                                                        <div className="text-sm text-muted-foreground">
-                                                            {quote.entities?.name || "No buyer"}
-                                                        </div>
-                                                        {quote.version > 1 && (
-                                                            <div className="text-xs text-muted-foreground">Version {quote.version}</div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex gap-1">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8"
-                                                            onClick={() => setDeletingQuote(quote)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                                        </Button>
-                                                    </div>
+                    <TabsContent value={activeTab} className="mt-4">
+                        {loading ? (
+                            <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8" /></div>
+                        ) : filteredQuotes.length === 0 ? (
+                            <EmptyState
+                                icon={FileText}
+                                title="No quotes found"
+                                description="Create a quote from an enquiry or manually."
+                                actionLabel="Create Quote"
+                                onAction={() => setIsCreateOpen(true)}
+                                iconColor="text-blue-600 dark:text-blue-200"
+                                iconBgColor="bg-blue-100 dark:bg-blue-900"
+                            />
+                        ) : (
+                            <>
+                                {viewMode === 'card' ? (
+                                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {paginatedQuotes.map((quote) => (
+                                            <Card key={quote.id} className={`shadow-sm hover:shadow-md transition-shadow relative ${selectedQuotes.includes(quote.id) ? 'ring-2 ring-primary bg-primary/5' : ''}`}>
+                                                <div className="absolute top-3 right-3 z-10">
+                                                    <Checkbox
+                                                        checked={selectedQuotes.includes(quote.id)}
+                                                        onCheckedChange={() => toggleQuoteSelection(quote.id)}
+                                                    />
                                                 </div>
-
-                                                <div className="flex gap-2">
-                                                    <Badge variant={getStatusColor(quote.status)}>{quote.status}</Badge>
-                                                    <Badge variant="outline">{quote.currency_code || 'USD'}</Badge>
-                                                </div>
-
-                                                <div className="space-y-1 text-sm text-muted-foreground pt-2">
-                                                    <div>Date: {new Date(quote.quote_date).toLocaleDateString()}</div>
-                                                    {quote.total_amount > 0 && (
-                                                        <div className="font-semibold text-foreground">
-                                                            Total: {quote.currency_code || 'USD'} {quote.total_amount.toFixed(2)}
-                                                        </div>
-                                                    )}
-                                                    {quote.quote_items && (
-                                                        <div>{quote.quote_items.length} item(s)</div>
-                                                    )}
-                                                    {quote.enquiries && (
-                                                        <div className="pt-1 text-xs">
-                                                            Enquiry: <Link href="/enquiries" className="text-primary hover:underline">{quote.enquiries.enquiry_number}</Link>
-                                                        </div>
-                                                    )}
-                                                    {quote.proforma_invoices && (
-                                                        <div className="pt-1 text-xs">
-                                                            PI: <span className="font-medium">{quote.proforma_invoices.invoice_number}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {quote.status !== 'converted' && quote.status !== 'rejected' && (
-                                                    <div className="flex gap-2 pt-2">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => setConvertingQuote(quote)}
-                                                        >
-                                                            <FileText className="h-3 w-3 mr-1" /> To PI
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => setRevisingQuote(quote)}
-                                                        >
-                                                            <Copy className="h-3 w-3 mr-1" /> Revise
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="border rounded-md bg-card">
-                                    <Table className="table-fixed">
-                                        <TableHeader className="bg-muted/50">
-                                            <TableRow>
-                                                <TableHead className="w-[140px]">Quote #</TableHead>
-                                                <TableHead className="w-[200px]">Buyer</TableHead>
-                                                <TableHead className="w-[120px]">Date</TableHead>
-                                                <TableHead className="w-[150px]">Total</TableHead>
-                                                <TableHead className="w-[140px]">Status</TableHead>
-                                                <TableHead className="w-[120px] text-right">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {paginatedQuotes.map((quote) => (
-                                                <TableRow key={quote.id}>
-                                                    <TableCell className="font-medium">
-                                                        {quote.quote_number}
-                                                        {quote.version > 1 && <span className="text-xs text-muted-foreground ml-1">(v{quote.version})</span>}
-                                                    </TableCell>
-                                                    <TableCell>{quote.entities?.name || "—"}</TableCell>
-                                                    <TableCell>{new Date(quote.quote_date).toLocaleDateString()}</TableCell>
-                                                    <TableCell>
-                                                        {quote.total_amount > 0 ? `${quote.currency_code || 'USD'} ${quote.total_amount.toFixed(2)}` : "—"}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge variant={getStatusColor(quote.status)}>{quote.status}</Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex justify-end gap-2">
-                                                            {quote.status !== 'converted' && quote.status !== 'rejected' && (
-                                                                <>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        onClick={() => setConvertingQuote(quote)}
-                                                                    >
-                                                                        To PI
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        onClick={() => setRevisingQuote(quote)}
-                                                                    >
-                                                                        Revise
-                                                                    </Button>
-                                                                </>
+                                                <CardContent className="p-5 space-y-3">
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex-1 pr-6">
+                                                            <div className="font-semibold text-lg">{quote.quote_number}</div>
+                                                            <div className="text-sm text-muted-foreground">
+                                                                {quote.entities?.name || "No buyer"}
+                                                            </div>
+                                                            {quote.version > 1 && (
+                                                                <div className="text-xs text-muted-foreground">Version {quote.version}</div>
                                                             )}
+                                                        </div>
+                                                        <div className="flex gap-1">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8"
+                                                                onClick={() => setEditingQuote(quote)}
+                                                                title="Edit"
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
@@ -611,47 +422,277 @@ export default function QuotesPage() {
                                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                                             </Button>
                                                         </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
+                                                    </div>
 
-                            {totalPages > 1 && (
-                                <Pagination>
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious
-                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                            <PaginationItem key={page}>
-                                                <PaginationLink
-                                                    onClick={() => setCurrentPage(page)}
-                                                    isActive={currentPage === page}
-                                                    className="cursor-pointer"
-                                                >
-                                                    {page}
-                                                </PaginationLink>
-                                            </PaginationItem>
+                                                    <div className="flex gap-2">
+                                                        <Badge variant={getStatusColor(quote.status)}>{quote.status}</Badge>
+                                                        <Badge variant="outline">{quote.currency_code || 'USD'}</Badge>
+                                                    </div>
+
+                                                    <div className="space-y-1 text-sm text-muted-foreground pt-2">
+                                                        <div>Date: {new Date(quote.quote_date).toLocaleDateString()}</div>
+                                                        {quote.total_amount > 0 && (
+                                                            <div className="font-semibold text-foreground">
+                                                                Total: {quote.currency_code || 'USD'} {quote.total_amount.toFixed(2)}
+                                                            </div>
+                                                        )}
+                                                        {quote.quote_items && (
+                                                            <div>{quote.quote_items.length} item(s)</div>
+                                                        )}
+                                                        {quote.enquiries && (
+                                                            <div className="pt-1 text-xs">
+                                                                Enquiry: <Link href="/enquiries" className="text-primary hover:underline">{quote.enquiries.enquiry_number}</Link>
+                                                            </div>
+                                                        )}
+                                                        {quote.proforma_invoices && (
+                                                            <div className="pt-1 text-xs">
+                                                                PI: <span className="font-medium">{quote.proforma_invoices.invoice_number}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex gap-2 pt-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="default"
+                                                            onClick={() => setSelectedQuote(quote)}
+                                                        >
+                                                            <FileText className="h-3 w-3 mr-1" />
+                                                            View Details
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => handleGeneratePdf(quote.id)}
+                                                            disabled={generatingPdf === quote.id}
+                                                        >
+                                                            {generatingPdf === quote.id ? (
+                                                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                                            ) : (
+                                                                <Download className="h-3 w-3 mr-1" />
+                                                            )}
+                                                            PDF
+                                                        </Button>
+                                                        {quote.status !== 'converted' && quote.status !== 'rejected' && (
+                                                            <>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => setConvertingQuote(quote)}
+                                                                >
+                                                                    <FileText className="h-3 w-3 mr-1" /> To PI
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => setRevisingQuote(quote)}
+                                                                >
+                                                                    <Copy className="h-3 w-3 mr-1" /> Revise
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
                                         ))}
-                                        <PaginationItem>
-                                            <PaginationNext
-                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
-                            )}
-                        </>
-                    )}
-                </TabsContent>
-            </Tabs>
+                                    </div>
+                                ) : (
+                                    <div className="border rounded-md bg-card">
+                                        <Table className="table-fixed">
+                                            <TableHeader className="bg-muted/50">
+                                                <TableRow>
+                                                    <TableHead className="w-[50px]">
+                                                        <Checkbox
+                                                            checked={selectedQuotes.length === filteredQuotes.length && filteredQuotes.length > 0}
+                                                            onCheckedChange={toggleSelectAll}
+                                                            aria-label="Select all"
+                                                        />
+                                                    </TableHead>
+                                                    <TableHead className="w-[140px]">Quote #</TableHead>
+                                                    <TableHead className="w-[200px]">Buyer</TableHead>
+                                                    <TableHead className="w-[120px]">Date</TableHead>
+                                                    <TableHead className="w-[150px]">Total</TableHead>
+                                                    <TableHead className="w-[140px]">Status</TableHead>
+                                                    <TableHead className="w-[120px] text-right">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {paginatedQuotes.map((quote) => (
+                                                    <TableRow key={quote.id} className={selectedQuotes.includes(quote.id) ? "bg-muted/50" : ""}>
+                                                        <TableCell>
+                                                            <Checkbox
+                                                                checked={selectedQuotes.includes(quote.id)}
+                                                                onCheckedChange={() => toggleQuoteSelection(quote.id)}
+                                                                aria-label={`Select quote ${quote.quote_number}`}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {quote.quote_number}
+                                                            {quote.version > 1 && <span className="text-xs text-muted-foreground ml-1">(v{quote.version})</span>}
+                                                        </TableCell>
+                                                        <TableCell>{quote.entities?.name || "—"}</TableCell>
+                                                        <TableCell>{new Date(quote.quote_date).toLocaleDateString()}</TableCell>
+                                                        <TableCell>
+                                                            {quote.total_amount > 0 ? `${quote.currency_code || 'USD'} ${quote.total_amount.toFixed(2)}` : "—"}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge variant={getStatusColor(quote.status)}>{quote.status}</Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex justify-end gap-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => setSelectedQuote(quote)}
+                                                                    title="View Details"
+                                                                >
+                                                                    <FileText className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => setEditingQuote(quote)}
+                                                                    title="Edit"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleGeneratePdf(quote.id)}
+                                                                    disabled={generatingPdf === quote.id}
+                                                                    title="Download PDF"
+                                                                >
+                                                                    {generatingPdf === quote.id ? (
+                                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                                    ) : (
+                                                                        <Download className="h-4 w-4" />
+                                                                    )}
+                                                                </Button>
+
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                            <MoreHorizontal className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem onClick={() => handleBulkStatusUpdate('sent')} disabled={quote.status === 'sent'}>
+                                                                            <ArrowRight className="h-4 w-4 mr-2" /> Mark as Sent
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem onClick={() => handleBulkStatusUpdate('approved')} disabled={quote.status === 'approved'}>
+                                                                            <CheckCircle2 className="h-4 w-4 mr-2" /> Mark as Approved
+                                                                        </DropdownMenuItem>
+                                                                        {quote.status !== 'converted' && quote.status !== 'rejected' && (
+                                                                            <>
+                                                                                <DropdownMenuItem onClick={() => setConvertingQuote(quote)}>
+                                                                                    <FileText className="h-4 w-4 mr-2" /> Convert to PI
+                                                                                </DropdownMenuItem>
+                                                                                <DropdownMenuItem onClick={() => setRevisingQuote(quote)}>
+                                                                                    <Copy className="h-4 w-4 mr-2" /> Create Revision
+                                                                                </DropdownMenuItem>
+                                                                            </>
+                                                                        )}
+                                                                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeletingQuote(quote)}>
+                                                                            <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                )}
+
+                                {totalPages > 1 && (
+                                    <Pagination>
+                                        <PaginationContent>
+                                            <PaginationItem>
+                                                <PaginationPrevious
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                />
+                                            </PaginationItem>
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                                <PaginationItem key={page}>
+                                                    <PaginationLink
+                                                        onClick={() => setCurrentPage(page)}
+                                                        isActive={currentPage === page}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        {page}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            ))}
+                                            <PaginationItem>
+                                                <PaginationNext
+                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                />
+                                            </PaginationItem>
+                                        </PaginationContent>
+                                    </Pagination>
+                                )}
+
+                                {/* Bulk Actions Floating Bar */}
+                                {selectedQuotes.length > 0 && (
+                                    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-4 bg-foreground text-background px-6 py-3 rounded-full shadow-lg z-50 animate-in slide-in-from-bottom-5">
+                                        <div className="font-medium text-sm whitespace-nowrap">
+                                            {selectedQuotes.length} selected
+                                        </div>
+                                        <div className="h-4 w-px bg-background/20" />
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="hover:bg-background/20 hover:text-background text-background h-8"
+                                                onClick={() => handleBulkStatusUpdate('approved')}
+                                                disabled={bulkActionLoading}
+                                            >
+                                                <CheckCircle2 className="h-4 w-4 mr-2" />
+                                                Approve
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="hover:bg-background/20 hover:text-background text-background h-8"
+                                                onClick={() => handleBulkStatusUpdate('sent')}
+                                                disabled={bulkActionLoading}
+                                            >
+                                                <ArrowRight className="h-4 w-4 mr-2" />
+                                                Send
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="hover:bg-destructive/90 hover:text-white text-destructive-foreground h-8"
+                                                onClick={handleBulkDelete}
+                                                disabled={bulkActionLoading}
+                                            >
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Delete
+                                            </Button>
+                                        </div>
+                                        <div className="h-4 w-px bg-background/20" />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 hover:bg-background/20 hover:text-background text-background rounded-full"
+                                            onClick={() => setSelectedQuotes([])}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
+
+                            </>
+                        )}
+                    </TabsContent>
+                </Tabs>
+            )}
 
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={!!deletingQuote} onOpenChange={(open) => !open && setDeletingQuote(null)}>
@@ -689,6 +730,16 @@ export default function QuotesPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
+            <QuoteTemplateDialog
+                open={isTemplateOpen}
+                onOpenChange={setIsTemplateOpen}
+                onSelectTemplate={(data) => {
+                    setTemplateSelection(data);
+                    setIsCreateOpen(true);
+                    setIsTemplateOpen(false);
+                }}
+            />
+
             {/* Create Revision Confirmation Dialog */}
             <AlertDialog open={!!revisingQuote} onOpenChange={(open) => !open && setRevisingQuote(null)}>
                 <AlertDialogContent>
@@ -706,6 +757,33 @@ export default function QuotesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Quote Details Dialog */}
+            <QuoteDetailsDialog
+                quote={selectedQuote}
+                open={!!selectedQuote}
+                onOpenChange={(open) => !open && setSelectedQuote(null)}
+                onRefresh={fetchQuotes}
+            />
+
+            {/* Quote Edit Dialog */}
+            <QuoteEditDialog
+                quote={editingQuote}
+                open={!!editingQuote}
+                onOpenChange={(open) => !open && setEditingQuote(null)}
+                onSuccess={fetchQuotes}
+            />
+            {/* Quote Edit Dialog for Creation */}
+            <QuoteEditDialog
+                quote={null}
+                initialValues={templateSelection}
+                open={isCreateOpen}
+                onOpenChange={(open) => {
+                    setIsCreateOpen(open);
+                    if (!open) setTemplateSelection(null);
+                }}
+                onSuccess={fetchQuotes}
+            />
         </div >
     );
 }

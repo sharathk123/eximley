@@ -1,6 +1,7 @@
 import { createSessionClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { getUserAndCompany } from "@/lib/helpers/api";
+import { NumberingService } from "@/lib/services/numberingService";
 
 export async function GET(request: Request) {
     const supabase = await createSessionClient();
@@ -56,7 +57,6 @@ export async function POST(request: Request) {
         const body = await request.json();
 
         const {
-            sb_number,
             sb_date,
             export_order_id,
             invoice_id,
@@ -74,9 +74,9 @@ export async function POST(request: Request) {
         } = body;
 
         // Validation
-        if (!sb_number || !sb_date || !fob_value) {
+        if (!sb_date || !fob_value) {
             return NextResponse.json(
-                { error: "SB number, date, and FOB value are required" },
+                { error: "SB date and FOB value are required" },
                 { status: 400 }
             );
         }
@@ -93,12 +93,15 @@ export async function POST(request: Request) {
             parseFloat(freight_value || 0) +
             parseFloat(insurance_value || 0);
 
+        // Generate SB number if not provided
+        const sbNumberToUse = body.sb_number || await NumberingService.generateNextNumber(companyId, 'SHIPPING_BILL');
+
         // Create shipping bill
         const { data: shippingBill, error: sbError } = await supabase
             .from("shipping_bills")
             .insert({
                 company_id: companyId,
-                sb_number,
+                sb_number: sbNumberToUse,
                 sb_date,
                 export_order_id,
                 invoice_id,

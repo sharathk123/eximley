@@ -1536,6 +1536,9 @@ CREATE TABLE public.quote_items (
     line_total NUMERIC GENERATED ALWAYS AS (
         quantity * unit_price * (1 - discount_percent/100)
     ) STORED,
+    total_price NUMERIC GENERATED ALWAYS AS (
+        quantity * unit_price * (1 - discount_percent/100) * (1 + tax_percent/100)
+    ) STORED,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

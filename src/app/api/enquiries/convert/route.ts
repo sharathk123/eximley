@@ -1,5 +1,6 @@
 import { createSessionClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { NumberingService } from "@/lib/services/numberingService";
 
 // POST - Convert enquiry to Quote
 export async function POST(request: Request) {
@@ -41,32 +42,7 @@ export async function POST(request: Request) {
         }
 
         // Generate Quote number
-        const { data: existingQuotes } = await supabase
-            .from("quotes")
-            .select("quote_number")
-            .eq("company_id", companyUser.company_id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-
-        let quoteNumber = "QT-2024-001";
-        if (existingQuotes && existingQuotes.length > 0) {
-            const lastNumber = existingQuotes[0].quote_number;
-            const match = lastNumber.match(/QT-(\d{4})-(\d{3})/);
-            if (match) {
-                const year = new Date().getFullYear();
-                const lastYear = parseInt(match[1]);
-                const lastSeq = parseInt(match[2]);
-
-                if (year === lastYear) {
-                    quoteNumber = `QT-${year}-${String(lastSeq + 1).padStart(3, '0')}`;
-                } else {
-                    quoteNumber = `QT-${year}-001`;
-                }
-            }
-        } else {
-            const year = new Date().getFullYear();
-            quoteNumber = `QT-${year}-001`;
-        }
+        const quoteNumber = await NumberingService.generateNextNumber(companyUser.company_id, 'QUOTE');
 
         // Create Quote
         const { data: quote, error: quoteError } = await supabase

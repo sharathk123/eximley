@@ -1,5 +1,6 @@
 import { createSessionClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { NumberingService } from "@/lib/services/numberingService";
 
 // GET - Fetch all enquiries with optional filtering
 export async function GET(request: Request) {
@@ -33,7 +34,14 @@ export async function GET(request: Request) {
                 *,
                 enquiry_items (
                     *,
-                    skus (name, sku_code)
+                    skus (
+                        id,
+                        name,
+                        sku_code,
+                        products (
+                            name
+                        )
+                    )
                 ),
                 entities (
                     id,
@@ -96,38 +104,15 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "No company found" }, { status: 404 });
         }
 
-        // Generate enquiry number
-        const { data: existingEnquiries } = await supabase
-            .from("enquiries")
-            .select("enquiry_number")
-            .eq("company_id", companyUser.company_id)
-            .order("created_at", { ascending: false })
-            .limit(1);
+        // Generate enquiry number using centralized service
+        const enquiryNumber = await NumberingService.generateNextNumber(companyUser.company_id, 'ENQUIRY');
 
-        let enquiryNumber = "ENQ-2024-001";
-        if (existingEnquiries && existingEnquiries.length > 0) {
-            const lastNumber = existingEnquiries[0].enquiry_number;
-            const match = lastNumber.match(/ENQ-(\d{4})-(\d{3})/);
-            if (match) {
-                const year = new Date().getFullYear();
-                const lastYear = parseInt(match[1]);
-                const lastSeq = parseInt(match[2]);
-
-                if (year === lastYear) {
-                    enquiryNumber = `ENQ-${year}-${String(lastSeq + 1).padStart(3, '0')}`;
-                } else {
-                    enquiryNumber = `ENQ-${year}-001`;
-                }
-            }
-        } else {
-            const year = new Date().getFullYear();
-            enquiryNumber = `ENQ-${year}-001`;
-        }
+        const { items, currency_code, ...enquiryData } = body;
 
         const { data: enquiry, error } = await supabase
             .from("enquiries")
             .insert({
-                ...body,
+                ...enquiryData,
                 company_id: companyUser.company_id,
                 enquiry_number: enquiryNumber,
                 assigned_to: user.id,
@@ -137,13 +122,11 @@ export async function POST(request: Request) {
 
         if (error) throw error;
 
-        if (error) throw error;
-
         // Insert Items if present
-        if (body.items && body.items.length > 0) {
-            const itemsToInsert = body.items.map((item: any) => ({
+        if (items && items.length > 0) {
+            const itemsToInsert = items.map((item: any) => ({
                 enquiry_id: enquiry.id,
-                sku_id: item.sku_id,
+                sku_id: item.sku_id || null, // Ensure sku_id is used
                 quantity: item.quantity || 1,
                 target_price: item.target_price,
                 notes: item.notes
@@ -168,7 +151,7 @@ export async function PUT(request: Request) {
     try {
         const supabase = await createSessionClient();
         const body = await request.json();
-        const { id, items, ...updates } = body;
+        const { id, items, currency_code, ...updates } = body;
 
         if (!id) {
             return NextResponse.json({ error: "Enquiry ID required" }, { status: 400 });
@@ -192,14 +175,14 @@ export async function PUT(request: Request) {
         if (error) throw error;
 
         // Update Items: Delete all and re-insert (Simple strategy)
-        if (body.items) {
+        if (items) {
             // Delete existing
             await supabase.from("enquiry_items").delete().eq("enquiry_id", id);
 
-            if (body.items.length > 0) {
-                const itemsToInsert = body.items.map((item: any) => ({
+            if (items.length > 0) {
+                const itemsToInsert = items.map((item: any) => ({
                     enquiry_id: id,
-                    sku_id: item.sku_id,
+                    sku_id: item.sku_id || null,
                     quantity: item.quantity || 1,
                     target_price: item.target_price,
                     notes: item.notes

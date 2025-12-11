@@ -2,7 +2,34 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
 const mockSupabase = {
-    from: vi.fn(),
+    auth: {
+        getUser: vi.fn().mockResolvedValue({
+            data: { user: { id: 'user-123' } },
+            error: null,
+        }),
+    },
+    from: vi.fn((table) => {
+        if (table === 'company_users') {
+            return {
+                select: vi.fn().mockReturnValue({
+                    eq: vi.fn().mockReturnValue({
+                        single: vi.fn().mockResolvedValue({
+                            data: { company_id: 'company-123' },
+                            error: null,
+                        }),
+                    }),
+                }),
+            }
+        }
+        return {
+            insert: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({ data: {}, error: null }),
+                }),
+            }),
+            select: vi.fn().mockReturnThis(),
+        }
+    }),
     storage: {
         from: vi.fn(),
     },
@@ -83,15 +110,29 @@ describe('Documents Upload API', () => {
                 remove: vi.fn(),
             })
 
-            mockSupabase.from.mockReturnValue({
-                insert: vi.fn().mockReturnValue({
-                    select: vi.fn().mockReturnValue({
-                        single: vi.fn().mockResolvedValue({
-                            data: mockDocument,
-                            error: null,
+            mockSupabase.from.mockImplementation((table) => {
+                if (table === 'company_users') {
+                    return {
+                        select: vi.fn().mockReturnValue({
+                            eq: vi.fn().mockReturnValue({
+                                single: vi.fn().mockResolvedValue({
+                                    data: { company_id: 'company-123' },
+                                    error: null,
+                                }),
+                            }),
+                        }),
+                    }
+                }
+                return {
+                    insert: vi.fn().mockReturnValue({
+                        select: vi.fn().mockReturnValue({
+                            single: vi.fn().mockResolvedValue({
+                                data: mockDocument,
+                                error: null,
+                            }),
                         }),
                     }),
-                }),
+                }
             })
 
             const { POST } = await import('@/app/api/documents/upload/route')
@@ -125,15 +166,29 @@ describe('Documents Upload API', () => {
                 remove: removeMock,
             })
 
-            mockSupabase.from.mockReturnValue({
-                insert: vi.fn().mockReturnValue({
-                    select: vi.fn().mockReturnValue({
-                        single: vi.fn().mockResolvedValue({
-                            data: null,
-                            error: new Error('Database error'),
+            mockSupabase.from.mockImplementation((table) => {
+                if (table === 'company_users') {
+                    return {
+                        select: vi.fn().mockReturnValue({
+                            eq: vi.fn().mockReturnValue({
+                                single: vi.fn().mockResolvedValue({
+                                    data: { company_id: 'company-123' },
+                                    error: null,
+                                }),
+                            }),
+                        }),
+                    }
+                }
+                return {
+                    insert: vi.fn().mockReturnValue({
+                        select: vi.fn().mockReturnValue({
+                            single: vi.fn().mockResolvedValue({
+                                data: null,
+                                error: new Error('Database error'),
+                            }),
                         }),
                     }),
-                }),
+                }
             })
 
             const { POST } = await import('@/app/api/documents/upload/route')
@@ -167,14 +222,28 @@ describe('Documents Upload API', () => {
 
             const mockQuery = {
                 eq: vi.fn().mockReturnThis(),
-                order: vi.fn().mockResolvedValue({
-                    data: mockDocuments,
-                    error: null,
-                }),
+                order: vi.fn().mockReturnThis(),
+                range: vi.fn().mockReturnThis(),
+                limit: vi.fn().mockReturnThis(),
+                then: (resolve: any) => resolve({ data: mockDocuments, error: null }),
             }
 
-            mockSupabase.from.mockReturnValue({
-                select: vi.fn().mockReturnValue(mockQuery),
+            mockSupabase.from.mockImplementation((table) => {
+                if (table === 'company_users') {
+                    return {
+                        select: vi.fn().mockReturnValue({
+                            eq: vi.fn().mockReturnValue({
+                                single: vi.fn().mockResolvedValue({
+                                    data: { company_id: 'company-123' },
+                                    error: null,
+                                }),
+                            }),
+                        }),
+                    }
+                }
+                return {
+                    select: vi.fn().mockReturnValue(mockQuery),
+                }
             })
 
             const { GET } = await import('@/app/api/documents/upload/route')

@@ -1,7 +1,9 @@
 import { createSessionClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { NumberingService } from "@/lib/services/numberingService";
 
 // GET - Fetch all quotes with optional filtering
+export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
     try {
         const supabase = await createSessionClient();
@@ -57,7 +59,7 @@ export async function GET(request: Request) {
                     skus (
                         sku_code,
                         name,
-                        hsn_code,
+                        hs_code,
                         products (
                             hsn_code
                         )
@@ -103,33 +105,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "No company found" }, { status: 404 });
         }
 
-        // Generate quote number
-        const { data: existingQuotes } = await supabase
-            .from("quotes")
-            .select("quote_number")
-            .eq("company_id", companyUser.company_id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-
-        let quoteNumber = "QT-2024-001";
-        if (existingQuotes && existingQuotes.length > 0) {
-            const lastNumber = existingQuotes[0].quote_number;
-            const match = lastNumber.match(/QT-(\d{4})-(\d{3})/);
-            if (match) {
-                const year = new Date().getFullYear();
-                const lastYear = parseInt(match[1]);
-                const lastSeq = parseInt(match[2]);
-
-                if (year === lastYear) {
-                    quoteNumber = `QT-${year}-${String(lastSeq + 1).padStart(3, '0')}`;
-                } else {
-                    quoteNumber = `QT-${year}-001`;
-                }
-            }
-        } else {
-            const year = new Date().getFullYear();
-            quoteNumber = `QT-${year}-001`;
-        }
+        // Generate quote number using centralized service
+        const quoteNumber = await NumberingService.generateNextNumber(companyUser.company_id, 'QUOTE');
 
         // Create quote
         const { data: quote, error: quoteError } = await supabase
@@ -182,11 +159,38 @@ export async function PUT(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        // Calculate totals from items if items are provided
+        let calculatedTotals = {};
+        if (items && Array.isArray(items)) {
+            let subtotal = 0;
+            let totalDiscount = 0;
+            let totalTax = 0;
+
+            items.forEach((item: any) => {
+                const itemSubtotal = (item.quantity || 0) * (item.unit_price || 0);
+                const discount = itemSubtotal * ((item.discount_percent || 0) / 100);
+                const afterDiscount = itemSubtotal - discount;
+                const tax = afterDiscount * ((item.tax_percent || 0) / 100);
+
+                subtotal += itemSubtotal;
+                totalDiscount += discount;
+                totalTax += tax;
+            });
+
+            calculatedTotals = {
+                subtotal: subtotal,
+                discount_amount: totalDiscount,
+                tax_amount: totalTax,
+                total_amount: subtotal - totalDiscount + totalTax
+            };
+        }
+
         // Update quote
         const { data: quote, error: quoteError } = await supabase
             .from("quotes")
             .update({
                 ...updates,
+                ...calculatedTotals,
                 updated_at: new Date().toISOString(),
             })
             .eq("id", id)
@@ -202,10 +206,14 @@ export async function PUT(request: Request) {
 
             // Insert new items
             if (items.length > 0) {
-                const quoteItems = items.map((item: any) => ({
-                    quote_id: id,
-                    ...item,
-                }));
+                const quoteItems = items.map((item: any) => {
+                    // Remove the id field if it exists (for new items)
+                    const { id: itemId, ...itemData } = item;
+                    return {
+                        quote_id: id,
+                        ...itemData,
+                    };
+                });
 
                 const { error: itemsError } = await supabase
                     .from("quote_items")

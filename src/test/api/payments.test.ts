@@ -4,7 +4,10 @@ import { NextRequest } from 'next/server'
 // Mock Supabase
 const mockSupabase = {
     auth: {
-        getUser: vi.fn(),
+        getUser: vi.fn().mockResolvedValue({
+            data: { user: { id: 'user-123' } },
+            error: null,
+        }),
     },
     from: vi.fn(),
     storage: {
@@ -45,14 +48,26 @@ describe('Payments API', () => {
 
             const mockQuery = {
                 eq: vi.fn().mockReturnThis(),
-                order: vi.fn().mockResolvedValue({
-                    data: mockPayments,
-                    error: null,
-                }),
+                order: vi.fn().mockReturnThis(),
+                then: (resolve: any) => resolve({ data: mockPayments, error: null }),
             }
 
-            mockSupabase.from.mockReturnValue({
-                select: vi.fn().mockReturnValue(mockQuery),
+            mockSupabase.from.mockImplementation((table) => {
+                if (table === 'company_users') {
+                    return {
+                        select: vi.fn().mockReturnValue({
+                            eq: vi.fn().mockReturnValue({
+                                single: vi.fn().mockResolvedValue({
+                                    data: { company_id: 'company-123' },
+                                    error: null,
+                                }),
+                            }),
+                        }),
+                    }
+                }
+                return {
+                    select: vi.fn().mockReturnValue(mockQuery),
+                }
             })
 
             const { GET } = await import('@/app/api/payments/route')
@@ -67,14 +82,26 @@ describe('Payments API', () => {
         it('should filter payments by order_id', async () => {
             const mockQuery = {
                 eq: vi.fn().mockReturnThis(),
-                order: vi.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
+                order: vi.fn().mockReturnThis(),
+                then: (resolve: any) => resolve({ data: [], error: null }),
             }
 
-            mockSupabase.from.mockReturnValue({
-                select: vi.fn().mockReturnValue(mockQuery),
+            mockSupabase.from.mockImplementation((table) => {
+                if (table === 'company_users') {
+                    return {
+                        select: vi.fn().mockReturnValue({
+                            eq: vi.fn().mockReturnValue({
+                                single: vi.fn().mockResolvedValue({
+                                    data: { company_id: 'company-123' },
+                                    error: null,
+                                }),
+                            }),
+                        }),
+                    }
+                }
+                return {
+                    select: vi.fn().mockReturnValue(mockQuery),
+                }
             })
 
             const { GET } = await import('@/app/api/payments/route')
@@ -97,6 +124,18 @@ describe('Payments API', () => {
             const mockOrder = { total_amount: 1000 }
 
             mockSupabase.from.mockImplementation((table) => {
+                if (table === 'company_users') {
+                    return {
+                        select: vi.fn().mockReturnValue({
+                            eq: vi.fn().mockReturnValue({
+                                single: vi.fn().mockResolvedValue({
+                                    data: { company_id: 'company-123' },
+                                    error: null,
+                                }),
+                            }),
+                        }),
+                    }
+                }
                 if (table === 'order_payments') {
                     return {
                         insert: vi.fn().mockReturnValue({
@@ -159,6 +198,18 @@ describe('Payments API', () => {
             let capturedStatus = ''
 
             mockSupabase.from.mockImplementation((table) => {
+                if (table === 'company_users') {
+                    return {
+                        select: vi.fn().mockReturnValue({
+                            eq: vi.fn().mockReturnValue({
+                                single: vi.fn().mockResolvedValue({
+                                    data: { company_id: 'company-123' },
+                                    error: null,
+                                }),
+                            }),
+                        }),
+                    }
+                }
                 if (table === 'order_payments') {
                     return {
                         insert: vi.fn().mockReturnValue({

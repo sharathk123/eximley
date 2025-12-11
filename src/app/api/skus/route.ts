@@ -17,7 +17,7 @@ export async function GET() {
 
         const { data: skus, error } = await supabase
             .from("skus")
-            .select("*, products(name)")
+            .select("*, products(name, price, currency)") // Fetch name, price and currency from products
             .eq("company_id", userData.company_id)
             .order("created_at", { ascending: false });
 
@@ -27,6 +27,8 @@ export async function GET() {
         const flattenedSkus = skus.map((sku: any) => ({
             ...sku,
             product_name: sku.products?.name,
+            product_price: sku.products?.price,
+            product_currency: sku.products?.currency,
         }));
 
         return NextResponse.json({ skus: flattenedSkus });
