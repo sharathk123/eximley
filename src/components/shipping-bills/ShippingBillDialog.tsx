@@ -227,7 +227,7 @@ export function ShippingBillDialog({
                                 name="port_code"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Port Code</FormLabel>
+                                        <FormLabel>Port Code <span className="text-destructive">*</span></FormLabel>
                                         <FormControl>
                                             <Input {...field} placeholder="e.g. INMAA1" />
                                         </FormControl>
@@ -240,9 +240,9 @@ export function ShippingBillDialog({
                                 name="customs_house"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Customs House</FormLabel>
+                                        <FormLabel>Customs House <span className="text-destructive">*</span></FormLabel>
                                         <FormControl>
-                                            <Input {...field} />
+                                            <Input {...field} placeholder="e.g. Air Cargo Complex" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -289,10 +289,144 @@ export function ShippingBillDialog({
                             />
                             <FormField
                                 control={form.control}
+                                name="vessel_name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Vessel/Flight Name <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                            <Input {...field} placeholder="e.g. MSC MEDITERRANEAN" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="voyage_number"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Voyage/Flight Number</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} placeholder="e.g. 123R" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="number_of_packages"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Number of Packages <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                            <Input type="number" {...field} placeholder="0" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="gross_weight"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Gross Weight (KG) <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                            <Input type="number" step="0.01" {...field} placeholder="0.00" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="net_weight"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Net Weight (KG) <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                            <Input type="number" step="0.01" {...field} placeholder="0.00" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="ad_code"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>AD Code <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                            <Input {...field} placeholder="e.g. 1234567" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <div className="col-span-2">
+                                <FormField
+                                    control={form.control}
+                                    name="consignee_name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Consignee Name <span className="text-destructive">*</span></FormLabel>
+                                            <FormControl>
+                                                <Input {...field} placeholder="Buyer company name" />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            <div className="col-span-2">
+                                <FormField
+                                    control={form.control}
+                                    name="consignee_address"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Consignee Address <span className="text-destructive">*</span></FormLabel>
+                                            <FormControl>
+                                                <Input {...field} placeholder="Complete address" />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            <FormField
+                                control={form.control}
+                                name="consignee_country"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Destination Country <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                            <Input {...field} placeholder="e.g. USA" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="container_numbers"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Container Numbers</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} placeholder="e.g. ABCD1234567" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
                                 name="let_export_order_number"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>LEO Number</FormLabel>
+                                        <FormLabel>LEO Number <span className="text-destructive">*</span></FormLabel>
                                         <FormControl>
                                             <Input {...field} />
                                         </FormControl>
@@ -305,7 +439,7 @@ export function ShippingBillDialog({
                                 name="let_export_date"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>LEO Date</FormLabel>
+                                        <FormLabel>LEO Date <span className="text-destructive">*</span></FormLabel>
                                         <FormControl>
                                             <Input type="date" {...field} />
                                         </FormControl>

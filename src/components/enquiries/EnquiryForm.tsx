@@ -58,7 +58,7 @@ const enquirySchema = z.object({
     description: z.string().optional(),
     priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
     next_follow_up_date: z.string().optional(),
-    items: z.array(itemSchema),
+    items: z.array(itemSchema).min(1, "At least one product is required"),
 });
 
 type EnquiryFormValues = z.infer<typeof enquirySchema>;
@@ -145,7 +145,7 @@ export function EnquiryForm({ enquiry }: EnquiryFormProps) {
     }
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto pb-10">
+        <div className="space-y-6 max-w-7xl mx-auto pb-10">
             <div className="flex items-center gap-4 mb-6">
                 <Button variant="ghost" size="icon" onClick={() => router.back()}>
                     <ArrowLeft className="h-4 w-4" />

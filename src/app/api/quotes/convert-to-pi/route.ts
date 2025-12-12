@@ -44,32 +44,8 @@ export async function POST(request: Request) {
         }
 
         // Generate PI number
-        const { data: existingPIs } = await supabase
-            .from("proforma_invoices")
-            .select("invoice_number")
-            .eq("company_id", companyUser.company_id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-
-        let piNumber = "PI-2024-001";
-        if (existingPIs && existingPIs.length > 0) {
-            const lastNumber = existingPIs[0].invoice_number;
-            const match = lastNumber.match(/PI-(\d{4})-(\d{3})/);
-            if (match) {
-                const year = new Date().getFullYear();
-                const lastYear = parseInt(match[1]);
-                const lastSeq = parseInt(match[2]);
-
-                if (year === lastYear) {
-                    piNumber = `PI-${year}-${String(lastSeq + 1).padStart(3, '0')}`;
-                } else {
-                    piNumber = `PI-${year}-001`;
-                }
-            }
-        } else {
-            const year = new Date().getFullYear();
-            piNumber = `PI-${year}-001`;
-        }
+        const { NumberingService } = await import("@/lib/services/numberingService");
+        const piNumber = await NumberingService.generateNextNumber(companyUser.company_id, 'PROFORMA');
 
         // Create Proforma Invoice
         const { data: pi, error: piError } = await supabase

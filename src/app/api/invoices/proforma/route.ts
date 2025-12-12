@@ -5,57 +5,82 @@ import { NumberingService } from "@/lib/services/numberingService";
 
 export async function GET(request: Request) {
     const supabase = await createSessionClient();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
+
         if (authError || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        const url = new URL(request.url);
-        const id = url.searchParams.get("id");
 
         let query: any = supabase
             .from("proforma_invoices")
             .select(`
                 *,
-                entities(name),
-                currencies(symbol),
                 proforma_items(
                     *,
                     skus(
-                        sku_code,
-                        name,
-                        hsn_code,
-                        products (
-                            hsn_code
-                        )
+                        *,
+                        products(*)
                     )
-                ),
-                quotes(
-                    id,
-                    quote_number
-                ),
-                export_orders(
-                    id,
-                    order_number
                 )
-            `);
+            `)
+            .eq("company_id", (await getUserCompany(supabase, user.id)).company_id)
+            .order("created_at", { ascending: false });
 
         if (id) {
             query = query.eq("id", id).single();
-        } else {
-            query = query.order("created_at", { ascending: false });
         }
 
-        const { data, error } = await query;
+        const { data: rawData, error: invError } = await query;
+        if (invError) throw invError;
 
-        if (error) throw error;
+        // Normalize to array for processing
+        let invoices = id ? [rawData] : (rawData || []);
 
-        return NextResponse.json({ invoices: id ? [data] : data });
+        // 2. Fetch Related Data (Manually to avoid Join/FK issues)
+        // Extract IDs
+        const buyerIds = [...new Set(invoices.map((i: any) => i.buyer_id).filter(Boolean))];
+        const bankIds = [...new Set(invoices.map((i: any) => i.bank_id).filter(Boolean))];
+        const currencyCodes = [...new Set(invoices.map((i: any) => i.currency_code).filter(Boolean))];
+
+        // Parallel Fetch
+        const [buyersRes, banksRes, currenciesRes] = await Promise.all([
+            buyerIds.length ? supabase.from("entities").select("id, name").in("id", buyerIds) : { data: [] },
+            bankIds.length ? supabase.from("company_banks").select("*").in("id", bankIds) : { data: [] },
+            currencyCodes.length ? supabase.from("currencies").select("code, symbol").in("code", currencyCodes) : { data: [] }
+        ]);
+
+        // Create Maps
+        const buyerMap = new Map(buyersRes.data?.map((b: any) => [b.id, b]) || []);
+        const bankMap = new Map(banksRes.data?.map((b: any) => [b.id, b]) || []);
+        const currencyMap = new Map(currenciesRes.data?.map((c: any) => [c.code, c]) || []);
+
+        // 3. Enrich Invoices
+        const enrichedInvoices = invoices.map((inv: any) => ({
+            ...inv,
+            entities: buyerMap.get(inv.buyer_id) || null,
+            company_banks: bankMap.get(inv.bank_id) || null,
+            currencies: currencyMap.get(inv.currency_code) || null
+        }));
+
+        return NextResponse.json({ invoices: id ? enrichedInvoices[0] : enrichedInvoices });
     } catch (error: any) {
+        console.error("API Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
+}
+
+// Helper to get company (reused)
+async function getUserCompany(supabase: any, userId: string) {
+    const { data } = await supabase
+        .from("company_users")
+        .select("company_id")
+        .eq("user_id", userId)
+        .single();
+    return data || { company_id: null };
 }
 
 export async function POST(request: Request) {
@@ -84,7 +109,14 @@ export async function POST(request: Request) {
             currency_code,
             conversion_rate,
             lut_id,
-            items // Array of { sku_id, quantity, unit_price }
+            items, // Array of { sku_id, quantity, unit_price }
+            // New fields
+            incoterm,
+            incoterm_place,
+            payment_terms,
+            port_of_loading,
+            port_of_discharge,
+            bank_id
         } = body;
 
         // Auto-generate invoice number using centralized service
@@ -105,7 +137,13 @@ export async function POST(request: Request) {
                 conversion_rate,
                 lut_id: lut_id || null,
                 total_amount,
-                status: 'draft'
+                status: 'draft',
+                incoterm: incoterm || null,
+                incoterm_place: incoterm_place || null,
+                payment_terms: payment_terms || null,
+                port_of_loading: port_of_loading || null,
+                port_of_discharge: port_of_discharge || null,
+                bank_id: bank_id || null
             })
             .select()
             .single();

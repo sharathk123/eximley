@@ -1,0 +1,72 @@
+[2025-12-12T08:44:07.451Z] Invoices Found: undefined, Error: {
+  "code": "PGRST200",
+  "details": "Searched for a foreign key relationship between 'proforma_invoices' and 'company_banks' in the schema 'public', but no matches were found.",
+  "hint": "Perhaps you meant 'companies' instead of 'company_banks'.",
+  "message": "Could not find a relationship between 'proforma_invoices' and 'company_banks' in the schema cache"
+}
+[2025-12-12T08:44:07.454Z] Invoices Found: undefined, Error: {
+  "code": "PGRST200",
+  "details": "Searched for a foreign key relationship between 'proforma_invoices' and 'company_banks' in the schema 'public', but no matches were found.",
+  "hint": "Perhaps you meant 'companies' instead of 'company_banks'.",
+  "message": "Could not find a relationship between 'proforma_invoices' and 'company_banks' in the schema cache"
+}
+[2025-12-12T08:44:10.266Z] Invoices Found: undefined, Error: {
+  "code": "PGRST200",
+  "details": "Searched for a foreign key relationship between 'proforma_invoices' and 'company_banks' in the schema 'public', but no matches were found.",
+  "hint": "Perhaps you meant 'companies' instead of 'company_banks'.",
+  "message": "Could not find a relationship between 'proforma_invoices' and 'company_banks' in the schema cache"
+}
+[2025-12-12T08:46:11.812Z] Invoices Found: undefined, Error: {
+  "code": "42712",
+  "details": null,
+  "hint": null,
+  "message": "table name \"proforma_invoices_currencies_1\" specified more than once"
+}
+[2025-12-12T08:46:13.945Z] Invoices Found: undefined, Error: {
+  "code": "42712",
+  "details": null,
+  "hint": null,
+  "message": "table name \"proforma_invoices_currencies_1\" specified more than once"
+}
+[2025-12-12T08:49:01.107Z] Invoices Found: undefined, Error: {
+  "code": "42712",
+  "details": null,
+  "hint": null,
+  "message": "table name \"proforma_invoices_currencies_1\" specified more than once"
+}
+[2025-12-12T08:49:04.346Z] Invoices Found: undefined, Error: {
+  "code": "42712",
+  "details": null,
+  "hint": null,
+  "message": "table name \"proforma_invoices_currencies_1\" specified more than once"
+}
+[2025-12-12T08:49:06.959Z] Invoices Found: undefined, Error: {
+  "code": "42712",
+  "details": null,
+  "hint": null,
+  "message": "table name \"proforma_invoices_currencies_1\" specified more than once"
+}
+[2025-12-12T08:49:14.945Z] Invoices Found: undefined, Error: {
+  "code": "42712",
+  "details": null,
+  "hint": null,
+  "message": "table name \"proforma_invoices_currencies_1\" specified more than once"
+}
+[2025-12-12T08:49:14.947Z] Invoices Found: undefined, Error: {
+  "code": "42712",
+  "details": null,
+  "hint": null,
+  "message": "table name \"proforma_invoices_currencies_1\" specified more than once"
+}
+[2025-12-12T08:50:39.193Z] Invoices Found: undefined, Error: {
+  "code": "42703",
+  "details": null,
+  "hint": "Perhaps you meant to reference the column \"skus_2.hs_code\".",
+  "message": "column skus_2.hsn_code does not exist"
+}
+[2025-12-12T08:50:41.492Z] Invoices Found: undefined, Error: {
+  "code": "42703",
+  "details": null,
+  "hint": "Perhaps you meant to reference the column \"skus_2.hs_code\".",
+  "message": "column skus_2.hsn_code does not exist"
+}

@@ -174,6 +174,7 @@ export function EnquiryList({
                         <TableHead className="hidden md:table-cell w-[100px]">Source</TableHead>
                         <TableHead className="w-[100px]">Status</TableHead>
                         <TableHead className="w-[100px]">Priority</TableHead>
+                        <TableHead className="w-[150px]">Reference</TableHead>
                         <TableHead className="w-[100px] text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -203,6 +204,16 @@ export function EnquiryList({
                             <TableCell className="hidden md:table-cell capitalize">{enquiry.source?.replace('_', ' ') || "—"}</TableCell>
                             <TableCell><Badge variant={getStatusColor(enquiry.status) as any}>{enquiry.status}</Badge></TableCell>
                             <TableCell><Badge variant={getPriorityColor(enquiry.priority) as any}>{enquiry.priority}</Badge></TableCell>
+                            <TableCell>
+                                {enquiry.quotes && enquiry.quotes.length > 0 ? (
+                                    <div className="flex items-center text-muted-foreground text-xs" onClick={(e) => e.stopPropagation()}>
+                                        <span className="mr-1">To:</span>
+                                        <a href={`/quotes/${enquiry.quotes[0].id}`} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:underline font-medium">
+                                            {enquiry.quotes[0].quote_number}
+                                        </a>
+                                    </div>
+                                ) : <span className="text-muted-foreground text-xs">—</span>}
+                            </TableCell>
                             <TableCell className="text-right">
                                 <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                                     <Button

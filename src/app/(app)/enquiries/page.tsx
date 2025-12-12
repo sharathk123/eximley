@@ -9,6 +9,7 @@ import {
     Pagination,
     PaginationContent,
     PaginationItem,
+    PaginationLink,
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
@@ -22,7 +23,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Loader2, MessageSquare } from "lucide-react";
+import { Search, Plus, Loader2, MessageSquare, FileText } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EnquiryBulkUploadDialog } from "@/components/enquiries/EnquiryBulkUploadDialog";
@@ -159,7 +160,7 @@ export default function EnquiriesPage() {
     const paginatedEnquiries = filteredEnquiries.slice(startIndex, startIndex + itemsPerPage);
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto p-6">
+        <div className="space-y-6 max-w-7xl mx-auto">
             <PageHeader
                 title="Enquiries"
                 description="Manage customer enquiries and convert to orders."
@@ -175,7 +176,7 @@ export default function EnquiriesPage() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Search enquiries..."
-                        className="pl-8 bg-card border-border"
+                        className="pl-8"
                         value={searchQuery}
                         onChange={(e) => {
                             setSearchQuery(e.target.value);
@@ -190,12 +191,14 @@ export default function EnquiriesPage() {
                 setActiveTab(value);
                 setCurrentPage(1);
             }}>
-                <TabsList className="bg-muted">
-                    {['all', 'new', 'contacted', 'quoted', 'won', 'lost', 'converted'].map(tab => (
-                        <TabsTrigger key={tab} value={tab} className="capitalize data-[state=active]:bg-background data-[state=active]:text-foreground">
-                            {tab}
-                        </TabsTrigger>
-                    ))}
+                <TabsList>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="new">New</TabsTrigger>
+                    <TabsTrigger value="contacted">Contacted</TabsTrigger>
+                    <TabsTrigger value="quoted">Quoted</TabsTrigger>
+                    <TabsTrigger value="won">Won</TabsTrigger>
+                    <TabsTrigger value="lost">Lost</TabsTrigger>
+                    <TabsTrigger value="converted">Converted</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value={activeTab} className="mt-4">
@@ -208,6 +211,8 @@ export default function EnquiriesPage() {
                             description={searchQuery ? "No results match your search." : "Typically, new enquiries will appear here."}
                             actionLabel={searchQuery ? "Clear Search" : "Add Enquiry"}
                             onAction={searchQuery ? () => setSearchQuery("") : () => router.push("/enquiries/create")}
+                            iconColor="text-blue-600 dark:text-blue-200"
+                            iconBgColor="bg-blue-100 dark:bg-blue-900"
                         />
                     ) : (
                         <>
@@ -228,11 +233,17 @@ export default function EnquiriesPage() {
                                                 className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                                             />
                                         </PaginationItem>
-                                        <PaginationItem>
-                                            <span className="px-4 text-sm text-muted-foreground">
-                                                Page {currentPage} of {totalPages}
-                                            </span>
-                                        </PaginationItem>
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                            <PaginationItem key={page}>
+                                                <PaginationLink
+                                                    onClick={() => setCurrentPage(page)}
+                                                    isActive={currentPage === page}
+                                                    className="cursor-pointer"
+                                                >
+                                                    {page}
+                                                </PaginationLink>
+                                            </PaginationItem>
+                                        ))}
                                         <PaginationItem>
                                             <PaginationNext
                                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}

@@ -248,7 +248,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
     const totals = calculateTotals();
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto pb-10">
+        <div className="space-y-6 max-w-7xl mx-auto pb-10">
             <div className="flex items-center gap-4 mb-6">
                 <Button variant="ghost" size="icon" onClick={() => router.back()}>
                     <ArrowLeft className="h-4 w-4" />
@@ -512,7 +512,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
                                                 name={`items.${index}.sku_id`}
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Product</FormLabel>
+                                                        <FormLabel>Product <span className="text-destructive">*</span></FormLabel>
                                                         <Select onValueChange={field.onChange} value={field.value}>
                                                             <FormControl>
                                                                 <SelectTrigger>
@@ -550,7 +550,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
                                             name={`items.${index}.quantity`}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Qty</FormLabel>
+                                                    <FormLabel>Qty <span className="text-destructive">*</span></FormLabel>
                                                     <FormControl>
                                                         <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
                                                     </FormControl>
@@ -563,7 +563,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
                                             name={`items.${index}.unit_price`}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Price</FormLabel>
+                                                    <FormLabel>Price <span className="text-destructive">*</span></FormLabel>
                                                     <FormControl>
                                                         <Input type="number" step="0.01" {...field} onChange={e => field.onChange(Number(e.target.value))} />
                                                     </FormControl>
@@ -649,7 +649,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
                         </CardContent>
                     </Card>
 
-                    <div className="flex justify-end gap-3 sticky bottom-4 bg-background/80 backdrop-blur-sm p-4 border rounded-lg shadow-lg z-10">
+                    <div className="flex justify-end gap-3 pt-6">
                         <Button type="button" variant="outline" onClick={() => setIsSaveTemplateOpen(true)} className="mr-auto">
                             <LayoutTemplate className="w-4 h-4 mr-2" />
                             Save Template

@@ -235,7 +235,8 @@ export function QuoteList({
                         <TableHead className="w-[200px]">Buyer</TableHead>
                         <TableHead className="w-[120px]">Date</TableHead>
                         <TableHead className="w-[150px]">Total</TableHead>
-                        <TableHead className="w-[140px]">Status</TableHead>
+                        <TableHead className="w-[150px]">Status</TableHead>
+                        <TableHead className="w-[180px]">Reference</TableHead>
                         <TableHead className="w-[120px] text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -263,6 +264,27 @@ export function QuoteList({
                             </TableCell>
                             <TableCell>
                                 <Badge variant={getStatusColor(quote.status)}>{quote.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                                <div className="space-y-1">
+                                    {quote.enquiries && (
+                                        <div className="flex items-center text-muted-foreground text-xs">
+                                            <span className="mr-1">From:</span>
+                                            <a href={`/enquiries/${quote.enquiries.id}`} onClick={(e) => e.stopPropagation()} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:underline font-medium">
+                                                {quote.enquiries.enquiry_number}
+                                            </a>
+                                        </div>
+                                    )}
+                                    {quote.proforma_invoices && (
+                                        <div className="flex items-center text-muted-foreground text-xs">
+                                            <span className="mr-1">To:</span>
+                                            <a href={`/invoices/proforma/${quote.proforma_invoices.id}`} onClick={(e) => e.stopPropagation()} className="bg-blue-100/50 text-blue-700 dark:text-blue-400 dark:bg-blue-900/30 px-1.5 py-0.5 rounded hover:underline font-medium">
+                                                {quote.proforma_invoices.invoice_number}
+                                            </a>
+                                        </div>
+                                    )}
+                                    {(!quote.enquiries && !quote.proforma_invoices) && <span className="text-muted-foreground text-xs">—</span>}
+                                </div>
                             </TableCell>
                             <TableCell className="text-right" onClick={handleActionClick}>
                                 <div className="flex justify-end gap-2">

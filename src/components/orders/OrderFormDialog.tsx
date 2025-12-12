@@ -148,7 +148,7 @@ export function OrderFormDialog({
                                 name="buyer_id"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Buyer</FormLabel>
+                                        <FormLabel>Buyer <span className="text-destructive">*</span></FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select Buyer" /></SelectTrigger></FormControl>
                                             <SelectContent>
@@ -166,7 +166,7 @@ export function OrderFormDialog({
                                 name="order_date"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Order Date</FormLabel>
+                                        <FormLabel>Order Date <span className="text-destructive">*</span></FormLabel>
                                         <FormControl><Input type="date" {...field} /></FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -180,7 +180,7 @@ export function OrderFormDialog({
                                 name="currency_code"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Currency</FormLabel>
+                                        <FormLabel>Currency <span className="text-destructive">*</span></FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
@@ -234,6 +234,43 @@ export function OrderFormDialog({
                                 </FormItem>
                             )}
                         />
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="payment_method"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Payment Method</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select payment method" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="LC">LC (Letter of Credit)</SelectItem>
+                                                <SelectItem value="TT">TT (Telegraphic Transfer)</SelectItem>
+                                                <SelectItem value="DA">DA (Documents Against Acceptance)</SelectItem>
+                                                <SelectItem value="DP">DP (Documents Against Payment)</SelectItem>
+                                                <SelectItem value="CAD">CAD (Cash Against Documents)</SelectItem>
+                                                <SelectItem value="Advance">Advance Payment</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="shipment_period"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Shipment Period</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g. Within 30 days" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
                         <Separator />
 
                         <div className="space-y-4">
@@ -246,46 +283,54 @@ export function OrderFormDialog({
 
                             <div className="space-y-2">
                                 {fields.map((field, index) => (
-                                    <div key={field.id} className="flex gap-2 items-end">
-                                        <FormField
-                                            control={form.control}
-                                            name={`items.${index}.sku_id`}
-                                            render={({ field }) => (
-                                                <FormItem className="flex-1">
-                                                    <FormControl>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                                                            <SelectTrigger><SelectValue placeholder="Select SKU" /></SelectTrigger>
-                                                            <SelectContent>
-                                                                {skus.map(s => (
-                                                                    <SelectItem key={s.id} value={s.id}>{s.sku_code} - {s.name}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </FormControl>
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name={`items.${index}.quantity`}
-                                            render={({ field }) => (
-                                                <FormItem className="w-24">
-                                                    <FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl>
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name={`items.${index}.unit_price`}
-                                            render={({ field }) => (
-                                                <FormItem className="w-32">
-                                                    <FormControl><Input type="number" placeholder="Price" {...field} /></FormControl>
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                                            <Trash2 className="h-4 w-4 text-red-500" />
-                                        </Button>
+                                    <div key={field.id} className="border rounded-lg p-3 space-y-3 bg-muted/20">
+                                        <div className="flex gap-2 items-end">
+                                            <FormField
+                                                control={form.control}
+                                                name={`items.${index}.sku_id`}
+                                                render={({ field }) => (
+                                                    <FormItem className="flex-1">
+                                                        <FormLabel className="text-sm">Product/SKU <span className="text-destructive">*</span></FormLabel>
+                                                        <FormControl>
+                                                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                                                <SelectTrigger><SelectValue placeholder="Select SKU" /></SelectTrigger>
+                                                                <SelectContent>
+                                                                    {skus.map(s => (
+                                                                        <SelectItem key={s.id} value={s.id}>{s.sku_code} - {s.name}</SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name={`items.${index}.quantity`}
+                                                render={({ field }) => (
+                                                    <FormItem className="w-24">
+                                                        <FormLabel className="text-sm">Qty <span className="text-destructive">*</span></FormLabel>
+                                                        <FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name={`items.${index}.unit_price`}
+                                                render={({ field }) => (
+                                                    <FormItem className="w-32">
+                                                        <FormLabel className="text-sm">Price <span className="text-destructive">*</span></FormLabel>
+                                                        <FormControl><Input type="number" placeholder="Price" {...field} /></FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length === 1}>
+                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -301,6 +346,6 @@ export function OrderFormDialog({
                     </form>
                 </Form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }

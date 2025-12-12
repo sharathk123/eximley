@@ -117,12 +117,9 @@ export function useQuoteActions(quote: any, onRefresh?: () => void): UseQuoteAct
 
             // Navigate to PIs page or the specific PI
             if (data.pi && data.pi.id) {
-                // If we have a PI details page, we could go there.
-                // For now, listing page seems safer unless we know the route exists.
-                // Assuming /proforma-invoices/[id] might exist later.
-                router.push('/proforma-invoices');
+                router.push(`/invoices/proforma/${data.pi.id}`);
             } else {
-                router.push('/proforma-invoices');
+                router.push('/invoices/proforma');
             }
 
         } catch (error: any) {

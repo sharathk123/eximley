@@ -18,7 +18,7 @@ async function runMigration() {
 
     try {
         console.log('📂 Reading migration file...');
-        const migrationPath = path.join(__dirname, '../supabase/migrations/20251212050000_add_quote_shipping_fields.sql');
+        const migrationPath = path.join(__dirname, '../supabase/migrations/20251212000000_add_pi_fields.sql');
         const migrationSql = fs.readFileSync(migrationPath, 'utf8');
 
         console.log('🚀 Executing migration...');
