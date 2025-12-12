@@ -45,6 +45,10 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ shippingBills: data });
     } catch (error: any) {
+        // Check if it's an authentication error
+        if (error.message?.includes('Unauthorized') || error.message?.includes('not authenticated')) {
+            return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
+        }
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

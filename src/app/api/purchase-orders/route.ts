@@ -4,6 +4,13 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
     const supabase = await createSessionClient();
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
@@ -47,9 +54,23 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const supabase = await createSessionClient();
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     try {
         const body = await request.json();
         const { vendor_id, order_date, currency_code, items, export_order_id, status } = body;
+
+        // Validate required fields
+        if (!vendor_id || !order_date || !currency_code || !items || !Array.isArray(items) || items.length === 0) {
+            return NextResponse.json({
+                error: "Missing required fields: vendor_id, order_date, currency_code, and items array required"
+            }, { status: 400 });
+        }
 
         // 1. Generate PO Number (Simple Sequential or Random for MVP)
         // Ideally use a database function or sequence, here using Date based distinct ID
