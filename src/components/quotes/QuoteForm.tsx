@@ -24,7 +24,7 @@ const quoteSchema = z.object({
     valid_until: z.string().optional(),
     currency_code: z.string().min(1, "Currency required"),
     incoterms: z.string().optional(),
-    incoterm_place: z.string().optional(),
+    // Note: incoterm_place removed - not in database schema
     payment_terms: z.string().optional(),
     delivery_terms: z.string().optional(),
     notes: z.string().optional(),
@@ -64,14 +64,13 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
     const [currencies, setCurrencies] = useState<any[]>([]);
     const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
 
-    // Default values logic
-    const defaultValues = {
+    // Default values logic - ensure all fields have values (not undefined)
+    const defaultValues: QuoteFormValues = {
         buyer_id: "",
         quote_date: new Date().toISOString().split('T')[0],
         valid_until: "",
         currency_code: "USD",
         incoterms: "",
-        incoterm_place: "",
         payment_terms: "",
         delivery_terms: "",
         notes: "",
@@ -81,7 +80,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
         packaging_details: "",
         origin_country: "India",
         estimated_delivery: "",
-        items: [{ sku_id: "", quantity: 1, unit_price: 0 }]
+        items: [{ sku_id: "", quantity: 1, unit_price: 0, discount_percent: 0, tax_percent: 0 }]
     };
 
     const form = useForm<QuoteFormValues>({
@@ -114,7 +113,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
 
             // If no items, ensure at least one
             if (formattedItems.length === 0) {
-                formattedItems.push({ sku_id: "", quantity: 1, unit_price: 0 });
+                formattedItems.push({ sku_id: "", quantity: 1, unit_price: 0, discount_percent: 0, tax_percent: 0 });
             }
 
             form.reset({
@@ -123,7 +122,6 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
                 valid_until: initialData.valid_until ? new Date(initialData.valid_until).toISOString().split('T')[0] : '',
                 currency_code: initialData.currency_code || 'USD',
                 incoterms: initialData.incoterms || '',
-                incoterm_place: initialData.incoterm_place || '',
                 payment_terms: initialData.payment_terms || '',
                 delivery_terms: initialData.delivery_terms || '',
                 notes: initialData.notes || '',
@@ -148,7 +146,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
                     unit_price: Number(item.unit_price) || 0,
                     discount_percent: Number(item.discount_percent) || 0,
                     tax_percent: Number(item.tax_percent) || 0,
-                })) || [{ sku_id: "", quantity: 1, unit_price: 0 }]
+                })) || [{ sku_id: "", quantity: 1, unit_price: 0, discount_percent: 0, tax_percent: 0 }]
             });
         }
     }, [initialData, initialValues, form]);
@@ -177,7 +175,22 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
         try {
             const url = "/api/quotes";
             const method = mode === 'edit' ? "PUT" : "POST";
-            const body = mode === 'edit' ? { ...values, id: initialData.id } : values;
+
+            // Clean the payload - remove any undefined/empty optional fields
+            const cleanedValues = { ...values };
+            if (!cleanedValues.incoterms) delete cleanedValues.incoterms;
+            if (!cleanedValues.payment_terms) delete cleanedValues.payment_terms;
+            if (!cleanedValues.delivery_terms) delete cleanedValues.delivery_terms;
+            if (!cleanedValues.notes) delete cleanedValues.notes;
+            if (!cleanedValues.port_loading) delete cleanedValues.port_loading;
+            if (!cleanedValues.port_discharge) delete cleanedValues.port_discharge;
+            if (!cleanedValues.mode_transport) delete cleanedValues.mode_transport;
+            if (!cleanedValues.packaging_details) delete cleanedValues.packaging_details;
+            if (!cleanedValues.origin_country) delete cleanedValues.origin_country;
+            if (!cleanedValues.estimated_delivery) delete cleanedValues.estimated_delivery;
+            if (!cleanedValues.valid_until) delete cleanedValues.valid_until;
+
+            const body = mode === 'edit' ? { ...cleanedValues, id: initialData.id } : cleanedValues;
 
             const res = await fetch(url, {
                 method,
@@ -359,21 +372,8 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
                             <CardDescription>Delivery, payment, and transport details.</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <IncotermSelect form={form} name="incoterms" />
-                                <FormField
-                                    control={form.control}
-                                    name="incoterm_place"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Incoterm Place</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="e.g., New York Port" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
                                 <FormField
                                     control={form.control}
                                     name="payment_terms"
