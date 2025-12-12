@@ -63,7 +63,6 @@ export async function POST(request: Request) {
                     email: enquiry.customer_email,
                     phone: enquiry.customer_phone,
                     country: enquiry.customer_country,
-                    created_by: user.id,
                 })
                 .select()
                 .single();
