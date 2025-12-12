@@ -139,18 +139,12 @@ export function ProformaHeader({
                         variant="outline"
                         size="sm"
                         onClick={() => handleMarkStatus('rejected')}
-                    <>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleMarkStatus('rejected')}
-                            disabled={updatingStatus}
-                            className="hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-                        >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Mark Rejected
-                        </Button>
-                    </>
+                        disabled={updatingStatus}
+                        className="hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                    >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Mark Rejected
+                    </Button>
                 )}
             </div>
 
