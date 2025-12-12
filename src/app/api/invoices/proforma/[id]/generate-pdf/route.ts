@@ -59,7 +59,7 @@ export async function POST(
             // Use existing invoice number if it matches pattern, otherwise construct it
             const fileName = DocumentFormatter.formatDocumentName(
                 invoice.invoice_number.toUpperCase().startsWith('PI') ? invoice.invoice_number : `PI-${invoice.invoice_number}`,
-                1, // Version - TODO: get from invoice version col
+                invoice.version || 1,
                 invoice.status
             );
             const filePath = `proforma_invoices/${id}/${fileName}`;

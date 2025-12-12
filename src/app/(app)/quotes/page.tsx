@@ -238,9 +238,10 @@ export default function QuotesPage() {
                 onOpenChange={setIsTemplateOpen}
                 onSelectTemplate={(data) => {
                     setTemplateSelection(data);
-                    // setIsCreateOpen(true); // OLD
-                    // TODO: Implement passing template data to create page
-                    alert("Template selection will be restored in next update. Please create manually for now.");
+                    // Store template data in sessionStorage for the create page to pick up
+                    sessionStorage.setItem('quoteTemplate', JSON.stringify(data));
+                    router.push('/quotes/create?from=template');
+                    setIsTemplateOpen(false);
                 }}
             />
 
