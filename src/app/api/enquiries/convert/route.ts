@@ -41,6 +41,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Enquiry not found" }, { status: 404 });
         }
 
+        // Validate that enquiry has a buyer (entity_id)
+        if (!enquiry.entity_id) {
+            return NextResponse.json({
+                error: "Cannot convert enquiry: Please assign a buyer/customer to the enquiry first"
+            }, { status: 400 });
+        }
+
         // Use company_id from the enquiry itself (guaranteed to be correct)
         const companyId = enquiry.company_id;
 
