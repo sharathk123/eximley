@@ -30,6 +30,8 @@ import {
     Loader2
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { DocumentFormatter } from "@/lib/utils/documentFormatter";
 
 interface QuoteListProps {
     quotes: any[];
@@ -39,7 +41,6 @@ interface QuoteListProps {
     onSelectAll: (checked: boolean) => void;
     onEdit: (quote: any) => void;
     onDelete: (quote: any) => void;
-    onViewDetails: (quote: any) => void;
     onGeneratePdf: (id: string) => void;
     generatingPdfId: string | null;
     onConvertToPI: (quote: any) => void;
@@ -47,6 +48,10 @@ interface QuoteListProps {
     onMarkSent: (quote: any) => void;
     onMarkApproved: (quote: any) => void;
 }
+
+
+
+// ... imports ...
 
 export function QuoteList({
     quotes,
@@ -56,7 +61,6 @@ export function QuoteList({
     onSelectAll,
     onEdit,
     onDelete,
-    onViewDetails,
     onGeneratePdf,
     generatingPdfId,
     onConvertToPI,
@@ -64,6 +68,7 @@ export function QuoteList({
     onMarkSent,
     onMarkApproved
 }: QuoteListProps) {
+    const router = useRouter();
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -77,12 +82,39 @@ export function QuoteList({
         }
     };
 
+    const handleRowClick = (id: string) => {
+        router.push(`/quotes/${id}`);
+    };
+
+    const handleActionClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+    };
+
+    if (!quotes || quotes.length === 0) {
+        return (
+            <div className="border rounded-md bg-card p-12 flex flex-col items-center justify-center text-center">
+                <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                    <FileText className="h-8 w-8 text-muted-foreground/50" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">No quotes found</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
+                    Create a new quote to get started with your sales process.
+                </p>
+                {/* Action button would go here if we had a create handler, or just let the header button do it */}
+            </div>
+        );
+    }
+
     if (viewMode === 'card') {
         return (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {quotes.map((quote) => (
-                    <Card key={quote.id} className={`shadow-sm hover:shadow-md transition-shadow relative ${selectedQuotes.includes(quote.id) ? 'ring-2 ring-primary bg-primary/5' : ''}`}>
-                        <div className="absolute top-3 right-3 z-10">
+                    <Card
+                        key={quote.id}
+                        className={`shadow-sm hover:shadow-md hover-lift transition-shadow relative cursor-pointer border-l-4 border-l-primary ${selectedQuotes.includes(quote.id) ? 'bg-primary/5' : ''}`}
+                        onClick={() => handleRowClick(quote.id)}
+                    >
+                        <div className="absolute top-3 right-3 z-10" onClick={handleActionClick}>
                             <Checkbox
                                 checked={selectedQuotes.includes(quote.id)}
                                 onCheckedChange={() => onSelectQuote(quote.id)}
@@ -91,21 +123,21 @@ export function QuoteList({
                         <CardContent className="p-5 space-y-3">
                             <div className="flex justify-between items-start">
                                 <div className="flex-1 pr-6">
-                                    <div className="font-semibold text-lg">{quote.quote_number}</div>
+                                    <div className="font-semibold text-lg">
+                                        {DocumentFormatter.formatDocumentNumber(quote.quote_number, quote.version || 1, quote.status)}
+                                    </div>
                                     <div className="text-sm text-muted-foreground">
                                         {quote.entities?.name || "No buyer"}
                                     </div>
-                                    {quote.version > 1 && (
-                                        <div className="text-xs text-muted-foreground">Version {quote.version}</div>
-                                    )}
                                 </div>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1" onClick={handleActionClick}>
                                     <Button
                                         variant="ghost"
                                         size="icon"
                                         className="h-8 w-8"
                                         onClick={() => onEdit(quote)}
                                         title="Edit"
+
                                     >
                                         <Edit className="h-4 w-4" />
                                     </Button>
@@ -136,7 +168,7 @@ export function QuoteList({
                                     <div>{quote.quote_items.length} item(s)</div>
                                 )}
                                 {quote.enquiries && (
-                                    <div className="pt-1 text-xs">
+                                    <div className="pt-1 text-xs" onClick={handleActionClick}>
                                         Enquiry: <Link href="/enquiries" className="text-primary hover:underline">{quote.enquiries.enquiry_number}</Link>
                                     </div>
                                 )}
@@ -147,15 +179,7 @@ export function QuoteList({
                                 )}
                             </div>
 
-                            <div className="flex gap-2 pt-2">
-                                <Button
-                                    size="sm"
-                                    variant="default"
-                                    onClick={() => onViewDetails(quote)}
-                                >
-                                    <FileText className="h-3 w-3 mr-1" />
-                                    View Details
-                                </Button>
+                            <div className="flex gap-2 pt-2" onClick={handleActionClick}>
                                 <Button
                                     size="sm"
                                     variant="outline"
@@ -217,8 +241,12 @@ export function QuoteList({
                 </TableHeader>
                 <TableBody>
                     {quotes.map((quote) => (
-                        <TableRow key={quote.id} className={selectedQuotes.includes(quote.id) ? "bg-muted/50" : ""}>
-                            <TableCell>
+                        <TableRow
+                            key={quote.id}
+                            className={`cursor-pointer hover:bg-muted/50 ${selectedQuotes.includes(quote.id) ? "bg-muted/50" : ""}`}
+                            onClick={() => handleRowClick(quote.id)}
+                        >
+                            <TableCell onClick={handleActionClick}>
                                 <Checkbox
                                     checked={selectedQuotes.includes(quote.id)}
                                     onCheckedChange={() => onSelectQuote(quote.id)}
@@ -226,8 +254,7 @@ export function QuoteList({
                                 />
                             </TableCell>
                             <TableCell className="font-medium">
-                                {quote.quote_number}
-                                {quote.version > 1 && <span className="text-xs text-muted-foreground ml-1">(v{quote.version})</span>}
+                                {DocumentFormatter.formatDocumentNumber(quote.quote_number, quote.version || 1, quote.status)}
                             </TableCell>
                             <TableCell>{quote.entities?.name || "—"}</TableCell>
                             <TableCell>{new Date(quote.quote_date).toLocaleDateString()}</TableCell>
@@ -237,16 +264,8 @@ export function QuoteList({
                             <TableCell>
                                 <Badge variant={getStatusColor(quote.status)}>{quote.status}</Badge>
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right" onClick={handleActionClick}>
                                 <div className="flex justify-end gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => onViewDetails(quote)}
-                                        title="View Details"
-                                    >
-                                        <FileText className="h-4 w-4" />
-                                    </Button>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -286,6 +305,9 @@ export function QuoteList({
                                                 <>
                                                     <DropdownMenuItem onClick={() => onConvertToPI(quote)}>
                                                         <FileText className="h-4 w-4 mr-2" /> Convert to PI
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => router.push(`/quotes/${quote.id}/edit`)}>
+                                                        <Edit className="mr-2 h-4 w-4" /> Edit
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => onRevise(quote)}>
                                                         <Copy className="h-4 w-4 mr-2" /> Create Revision

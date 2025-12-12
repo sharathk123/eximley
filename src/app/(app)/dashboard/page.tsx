@@ -13,6 +13,9 @@ interface DashboardData {
         active_shipments: number;
         active_quotes: number;
         pending_orders: number;
+        total_enquiries: number;
+        new_enquiries: number;
+        won_enquiries: number;
     };
     recent_shipments: any[];
     recent_orders: any[];
@@ -26,7 +29,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         // Fetch dashboard data
-        fetch("/api/dashboard")
+        fetch("/api/dashboard", { cache: "no-store" })
             .then((res) => {
                 if (!res.ok) throw new Error("Failed to fetch");
                 return res.json();
@@ -119,26 +122,38 @@ export default function DashboardPage() {
                 </Card>
             )}
 
-            {/* Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-3">
+            {/* Dashboard Stats */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Link href="/enquiries">
+                    <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200 cursor-pointer">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Total Enquiries</CardTitle>
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{data.stats.total_enquiries}</div>
+                            <p className="text-xs text-muted-foreground">
+                                {data.stats.new_enquiries} new, {data.stats.won_enquiries} won
+                            </p>
+                        </CardContent>
+                    </Card>
+                </Link>
 
-                {/* Active Quotes */}
-                <Card className="shadow-sm hover:shadow-md transition-all">
+                <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Active Quotes</CardTitle>
-                        <FileText className="h-4 w-4 text-blue-500" />
+                        <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{data.stats.active_quotes}</div>
-                        <p className="text-xs text-muted-foreground">Draft or Negotiation</p>
+                        <p className="text-xs text-muted-foreground">Drafts & Sent quotes</p>
                     </CardContent>
                 </Card>
 
-                {/* Pending Orders */}
-                <Card className="shadow-sm hover:shadow-md transition-all">
+                <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-                        <ClipboardCheck className="h-4 w-4 text-orange-500" />
+                        <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{data.stats.pending_orders}</div>
@@ -146,15 +161,16 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
 
-                {/* Active Shipments */}
-                <Card className="shadow-sm hover:shadow-md transition-all">
+                <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Active Shipments</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-green-500" />
+                        <Package className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{data.stats.active_shipments}</div>
-                        <p className="text-xs text-muted-foreground">In Transit</p>
+                        <p className="text-xs text-muted-foreground">
+                            of {data.stats.total_shipments} total shipments
+                        </p>
                     </CardContent>
                 </Card>
             </div>

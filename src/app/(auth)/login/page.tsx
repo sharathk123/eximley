@@ -106,7 +106,7 @@ function LoginForm() {
                     </div>
                 )}
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
                         <FormField
                             control={form.control}
                             name="email"
@@ -114,7 +114,13 @@ function LoginForm() {
                                 <FormItem>
                                     <FormLabel>Email</FormLabel>
                                     <FormControl>
-                                        <Input type="email" placeholder="john@company.com" {...field} />
+                                        <Input
+                                            type="email"
+                                            placeholder="john@company.com"
+                                            {...field}
+                                            autoComplete="off"
+                                            data-lpignore="true"
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -127,7 +133,13 @@ function LoginForm() {
                                 <FormItem>
                                     <FormLabel>Password</FormLabel>
                                     <FormControl>
-                                        <Input type="password" placeholder="••••••••" {...field} />
+                                        <Input
+                                            type="password"
+                                            placeholder="••••••••"
+                                            {...field}
+                                            autoComplete="new-password"
+                                            data-lpignore="true"
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

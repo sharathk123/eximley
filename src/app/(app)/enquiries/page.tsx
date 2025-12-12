@@ -25,25 +25,23 @@ import {
 import { Search, Plus, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EnquiryEditDialog } from "@/components/enquiries/EnquiryEditDialog";
-import { EnquiryDetailsDialog } from "@/components/enquiries/EnquiryDetailsDialog";
 import { EnquiryBulkUploadDialog } from "@/components/enquiries/EnquiryBulkUploadDialog";
 import { EnquiryList } from "@/components/enquiries/EnquiryList";
+import { PageHeader } from "@/components/ui/page-header";
+import { useRouter } from "next/navigation";
 
 export default function EnquiriesPage() {
+    const router = useRouter();
     const [enquiries, setEnquiries] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState("all");
-    const [openAdd, setOpenAdd] = useState(false);
 
     // Dialog states
-    const [editingEnquiry, setEditingEnquiry] = useState<any>(null);
-    const [viewingEnquiry, setViewingEnquiry] = useState<any>(null);
     const [deletingEnquiry, setDeletingEnquiry] = useState<any>(null);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [viewMode, setViewMode] = useState<'card' | 'list'>('card'); // Defaulting to card for premium look
+    const [viewMode, setViewMode] = useState<'card' | 'list'>('list'); // Default to list view
     const itemsPerPage = 12;
     const { toast } = useToast();
 
@@ -52,13 +50,23 @@ export default function EnquiriesPage() {
     }, []);
 
     useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            fetchEnquiries();
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
+
+    useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentPage]);
 
     async function fetchEnquiries() {
         setLoading(true);
         try {
-            const res = await fetch("/api/enquiries");
+            const params = new URLSearchParams();
+            if (searchQuery) params.set("search", searchQuery);
+
+            const res = await fetch(`/api/enquiries?${params.toString()}`, { cache: 'no-store' });
             const data = await res.json();
             if (data.enquiries) setEnquiries(data.enquiries);
         } catch (error) {
@@ -68,15 +76,6 @@ export default function EnquiriesPage() {
             setLoading(false);
         }
     }
-
-    const handleEdit = (enquiry: any) => {
-        setEditingEnquiry(enquiry);
-        setOpenAdd(true);
-    };
-
-    const handleView = (enquiry: any) => {
-        setViewingEnquiry(enquiry);
-    };
 
     const handleDelete = async () => {
         if (!deletingEnquiry) return;
@@ -121,7 +120,6 @@ export default function EnquiriesPage() {
                     </Button>
                 ),
             });
-            setViewingEnquiry(null);
         } catch (error) {
             console.error(error);
             toast({ title: "Error", description: "Failed to convert enquiry", variant: "destructive" });
@@ -145,10 +143,6 @@ export default function EnquiriesPage() {
 
             await fetchEnquiries();
             toast({ title: "Success", description: `Enquiry marked as ${status}` });
-
-            if (viewingEnquiry && viewingEnquiry.id === enquiry.id) {
-                setViewingEnquiry({ ...viewingEnquiry, status });
-            }
         } catch (error) {
             console.error(error);
             toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
@@ -156,11 +150,8 @@ export default function EnquiriesPage() {
     };
 
     const filteredEnquiries = enquiries.filter(enquiry => {
-        const matchesSearch = enquiry.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            enquiry.customer_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            enquiry.customer_company?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesTab = activeTab === "all" || enquiry.status === activeTab;
-        return matchesSearch && matchesTab;
+        return matchesTab;
     });
 
     const totalPages = Math.ceil(filteredEnquiries.length / itemsPerPage);
@@ -169,21 +160,15 @@ export default function EnquiriesPage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto p-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-foreground">Enquiries</h2>
-                    <p className="text-muted-foreground mt-1">Manage customer enquiries and convert to orders.</p>
-                </div>
-                <div className="flex gap-2">
-                    <EnquiryBulkUploadDialog onUploadComplete={fetchEnquiries} />
-                    <Button onClick={() => {
-                        setEditingEnquiry(null);
-                        setOpenAdd(true);
-                    }}>
-                        <Plus className="mr-2 h-4 w-4" /> Add Enquiry
-                    </Button>
-                </div>
-            </div>
+            <PageHeader
+                title="Enquiries"
+                description="Manage customer enquiries and convert to orders."
+            >
+                <EnquiryBulkUploadDialog onUploadComplete={fetchEnquiries} />
+                <Button onClick={() => router.push("/enquiries/create")}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Enquiry
+                </Button>
+            </PageHeader>
 
             <div className="flex items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-sm">
@@ -222,18 +207,14 @@ export default function EnquiriesPage() {
                             title="No enquiries found"
                             description={searchQuery ? "No results match your search." : "Typically, new enquiries will appear here."}
                             actionLabel={searchQuery ? "Clear Search" : "Add Enquiry"}
-                            onAction={searchQuery ? () => setSearchQuery("") : () => setOpenAdd(true)}
-                            iconColor="text-primary"
-                            iconBgColor="bg-primary/10"
+                            onAction={searchQuery ? () => setSearchQuery("") : () => router.push("/enquiries/create")}
                         />
                     ) : (
                         <>
                             <EnquiryList
                                 enquiries={paginatedEnquiries}
                                 viewMode={viewMode}
-                                onEdit={handleEdit}
                                 onDelete={setDeletingEnquiry}
-                                onView={handleView}
                                 onConvert={handleConvertToPI}
                                 onMarkStatus={handleMarkStatus}
                             />
@@ -265,25 +246,6 @@ export default function EnquiriesPage() {
                     )}
                 </TabsContent>
             </Tabs>
-
-            <EnquiryEditDialog
-                open={openAdd}
-                onOpenChange={setOpenAdd}
-                enquiry={editingEnquiry}
-                onSave={fetchEnquiries}
-            />
-
-            <EnquiryDetailsDialog
-                open={!!viewingEnquiry}
-                onOpenChange={(open) => !open && setViewingEnquiry(null)}
-                enquiry={viewingEnquiry}
-                onEdit={(enquiry) => {
-                    setViewingEnquiry(null);
-                    handleEdit(enquiry);
-                }}
-                onConvert={handleConvertToPI}
-                onMarkStatus={(status) => viewingEnquiry && handleMarkStatus(viewingEnquiry, status)}
-            />
 
             <AlertDialog open={!!deletingEnquiry} onOpenChange={(open) => !open && setDeletingEnquiry(null)}>
                 <AlertDialogContent>

@@ -18,21 +18,21 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Get user's company
-        const { data: companyUser } = await supabase
-            .from("company_users")
-            .select("company_id")
-            .eq("user_id", user.id)
-            .single();
-
-        if (!companyUser) {
-            return NextResponse.json({ error: "No company found" }, { status: 404 });
-        }
-
-        // Get enquiry details
+        // Get enquiry details with items
         const { data: enquiry, error: enquiryError } = await supabase
             .from("enquiries")
-            .select("*")
+            .select(`
+                *,
+                enquiry_items (
+                    *,
+                    skus (
+                        id,
+                        name,
+                        sku_code,
+                        products (name)
+                    )
+                )
+            `)
             .eq("id", enquiry_id)
             .single();
 
@@ -41,17 +41,20 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Enquiry not found" }, { status: 404 });
         }
 
+        // Use company_id from the enquiry itself (guaranteed to be correct)
+        const companyId = enquiry.company_id;
+
         // Generate Quote number
-        const quoteNumber = await NumberingService.generateNextNumber(companyUser.company_id, 'QUOTE');
+        const quoteNumber = await NumberingService.generateNextNumber(companyId, 'QUOTE');
 
         // Create Quote
         const { data: quote, error: quoteError } = await supabase
             .from("quotes")
             .insert({
-                company_id: companyUser.company_id,
+                company_id: companyId,
                 quote_number: quoteNumber,
                 enquiry_id: enquiry_id,
-                buyer_id: enquiry.entity_id,
+                buyer_id: enquiry.entity_id, // Ensure enquiry has entity_id
                 quote_date: new Date().toISOString().split('T')[0],
                 currency_code: 'USD',
                 status: 'draft',
@@ -62,15 +65,15 @@ export async function POST(request: Request) {
 
         if (quoteError) throw quoteError;
 
-        // Create Quote items from enquiry products_interested
-        if (enquiry.products_interested && Array.isArray(enquiry.products_interested)) {
-            const quoteItems = enquiry.products_interested.map((product: any) => ({
+        // Create Quote items from enquiry_items
+        if (enquiry.enquiry_items && Array.isArray(enquiry.enquiry_items)) {
+            const quoteItems = enquiry.enquiry_items.map((item: any) => ({
                 quote_id: quote.id,
-                sku_id: product.sku_id,
-                product_name: product.product_name || '',
-                description: product.notes || '',
-                quantity: product.quantity || 1,
-                unit_price: product.unit_price || 0,
+                sku_id: item.sku_id,
+                product_name: item.skus?.products?.name || item.skus?.name || 'Unknown Product',
+                description: item.notes || '',
+                quantity: item.quantity || 1,
+                unit_price: item.target_price || 0, // Map target_price to unit_price
             }));
 
             if (quoteItems.length > 0) {

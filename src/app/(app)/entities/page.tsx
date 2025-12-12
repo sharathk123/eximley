@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, Users, Loader2 } from "lucide-react";
@@ -140,18 +141,15 @@ export default function EntitiesPage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Contacts Directory</h2>
-                    <p className="text-muted-foreground">Manage Buyers, Suppliers, and Partners.</p>
-                </div>
-                <div className="flex gap-2">
-                    <EntityBulkUpload onSuccess={fetchEntities} />
-                    <Button onClick={handleCreate}>
-                        <Plus className="mr-2 h-4 w-4" /> Add Contact
-                    </Button>
-                </div>
-            </div>
+            <PageHeader
+                title="Contacts Directory"
+                description="Manage Buyers, Suppliers, and Partners."
+            >
+                <EntityBulkUpload onSuccess={fetchEntities} />
+                <Button onClick={handleCreate}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Contact
+                </Button>
+            </PageHeader>
 
             <div className="flex items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-sm">
@@ -190,8 +188,6 @@ export default function EntitiesPage() {
                             description="Add buyers, suppliers, or partners to manage your network."
                             actionLabel="Add Contact"
                             onAction={handleCreate}
-                            iconColor="text-blue-600 dark:text-blue-200"
-                            iconBgColor="bg-blue-100 dark:bg-blue-900"
                         />
                     ) : (
                         <>

@@ -16,6 +16,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 
 const countries = [
     { id: 1, name: "India", phone_code: "+91", flag_emoji: "🇮🇳", code: "IN" },
@@ -71,7 +79,7 @@ export function EnquiryEditDialog({ open, onOpenChange, enquiry, onSave }: Enqui
         defaultValues: {
             customer_name: "",
             customer_email: "",
-            customer_phone: "",
+            customer_phone: "+91 ",
             customer_company: "",
             customer_country: "",
             currency_code: "USD",
@@ -119,7 +127,7 @@ export function EnquiryEditDialog({ open, onOpenChange, enquiry, onSave }: Enqui
                 form.reset({
                     customer_name: "",
                     customer_email: "",
-                    customer_phone: "",
+                    customer_phone: "+91 ",
                     customer_company: "",
                     customer_country: "",
                     currency_code: "USD",
@@ -172,36 +180,36 @@ export function EnquiryEditDialog({ open, onOpenChange, enquiry, onSave }: Enqui
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{enquiry ? "Edit Enquiry" : "New Enquiry"}</DialogTitle>
                 </DialogHeader>
 
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
                         {/* Customer Details */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField control={form.control} name="customer_name" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Customer Name <span className="text-destructive">*</span></FormLabel>
-                                    <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                                    <FormControl><Input placeholder="John Doe" {...field} autoComplete="off" data-lpignore="true" /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="customer_company" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Company <span className="text-muted-foreground">(Optional)</span></FormLabel>
-                                    <FormControl><Input placeholder="Acme Corp" {...field} /></FormControl>
+                                    <FormControl><Input placeholder="Acme Corp" {...field} autoComplete="off" data-lpignore="true" /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField control={form.control} name="customer_email" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
-                                    <FormControl><Input placeholder="john@example.com" {...field} /></FormControl>
+                                    <FormControl><Input placeholder="john@example.com" {...field} autoComplete="new-password" data-lpignore="true" /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
@@ -238,9 +246,11 @@ export function EnquiryEditDialog({ open, onOpenChange, enquiry, onSave }: Enqui
                                         <FormControl>
                                             <Input
                                                 placeholder="1234567890"
+                                                autoComplete="off"
+                                                data-lpignore="true"
                                                 value={field.value?.split(' ')[1] || field.value?.replace(/^\+[\d]+\s/, '') || ""}
                                                 onChange={(e) => {
-                                                    const code = field.value?.split(' ')[0] || "";
+                                                    const code = field.value?.split(' ')[0] || "+91";
                                                     field.onChange(`${code} ${e.target.value}`);
                                                 }}
                                             />
@@ -251,7 +261,7 @@ export function EnquiryEditDialog({ open, onOpenChange, enquiry, onSave }: Enqui
                             )} />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField control={form.control} name="source" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Source</FormLabel>
@@ -315,7 +325,7 @@ export function EnquiryEditDialog({ open, onOpenChange, enquiry, onSave }: Enqui
                                                 </Button>
                                             </FormControl>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
+                                        <PopoverContent className="w-auto p-0" align="end">
                                             <Calendar
                                                 mode="single"
                                                 selected={field.value ? new Date(field.value) : undefined}
@@ -362,68 +372,125 @@ export function EnquiryEditDialog({ open, onOpenChange, enquiry, onSave }: Enqui
                                 </Button>
                             </div>
 
-                            {fields.length === 0 && (
-                                <div className="text-center p-4 border border-dashed rounded-md text-muted-foreground text-sm">
-                                    No products added yet.
-                                </div>
-                            )}
-
-                            <div className="space-y-2">
-                                {fields.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-12 gap-2 items-start bg-muted/40 p-2 rounded-md">
-                                        <div className="col-span-12 md:col-span-5">
-                                            <FormLabel className="text-xs">Product <span className="text-destructive">*</span></FormLabel>
-                                            <Select
-                                                onValueChange={(val) => form.setValue(`items.${index}.sku_id`, val)}
-                                                defaultValue={field.sku_id}
-                                                value={form.watch(`items.${index}.sku_id`)}
-                                            >
-                                                <SelectTrigger className="h-8 text-xs">
-                                                    <SelectValue placeholder="Select Product" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {skus.map((sku) => (
-                                                        <SelectItem key={sku.id} value={sku.id}>
-                                                            {sku.sku_code} - {sku.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            {form.formState.errors.items?.[index]?.sku_id && (
-                                                <p className="text-[10px] text-destructive mt-1">Product is required</p>
-                                            )}
-                                        </div>
-                                        <div className="col-span-4 md:col-span-2">
-                                            <FormLabel className="text-xs">Qty <span className="text-destructive">*</span></FormLabel>
-                                            <Input
-                                                type="number"
-                                                className="h-8 text-xs"
-                                                min="1"
-                                                {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
-                                            />
-                                        </div>
-                                        <div className="col-span-4 md:col-span-2">
-                                            <FormLabel className="text-xs">Target Price</FormLabel>
-                                            <Input
-                                                type="number"
-                                                className="h-8 text-xs"
-                                                {...form.register(`items.${index}.target_price`, { valueAsNumber: true })}
-                                            />
-                                        </div>
-                                        <div className="col-span-3 md:col-span-2">
-                                            <FormLabel className="text-xs">Notes</FormLabel>
-                                            <Input
-                                                className="h-8 text-xs"
-                                                {...form.register(`items.${index}.notes`)}
-                                            />
-                                        </div>
-                                        <div className="col-span-1 flex justify-end md:mt-6">
-                                            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(index)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="border rounded-md overflow-hidden">
+                                <Table className="table-fixed">
+                                    <TableHeader className="bg-muted/50">
+                                        <TableRow>
+                                            <TableHead className="w-[35%]">Product <span className="text-destructive">*</span></TableHead>
+                                            <TableHead className="w-[15%]">Qty <span className="text-destructive">*</span></TableHead>
+                                            <TableHead className="w-[20%]">Target Price</TableHead>
+                                            <TableHead className="w-[25%]">Notes</TableHead>
+                                            <TableHead className="w-[5%]"></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {fields.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
+                                                    No products added yet. Click "Add Product" to start.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            fields.map((field, index) => (
+                                                <TableRow key={field.id}>
+                                                    <TableCell>
+                                                        <FormField
+                                                            control={form.control}
+                                                            name={`items.${index}.sku_id`}
+                                                            render={({ field: skuField }) => (
+                                                                <FormItem className="space-y-0">
+                                                                    <Select
+                                                                        onValueChange={skuField.onChange}
+                                                                        defaultValue={skuField.value}
+                                                                        value={skuField.value}
+                                                                    >
+                                                                        <FormControl>
+                                                                            <SelectTrigger className="h-9 w-full [&>span]:truncate">
+                                                                                <SelectValue placeholder="Select Product" />
+                                                                            </SelectTrigger>
+                                                                        </FormControl>
+                                                                        <SelectContent>
+                                                                            {skus.map((sku) => (
+                                                                                <SelectItem key={sku.id} value={sku.id}>
+                                                                                    {sku.name}
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                    <FormMessage />
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <FormField
+                                                            control={form.control}
+                                                            name={`items.${index}.quantity`}
+                                                            render={({ field: qtyField }) => (
+                                                                <FormItem className="space-y-0">
+                                                                    <FormControl>
+                                                                        <Input
+                                                                            type="number"
+                                                                            min="1"
+                                                                            className="h-9"
+                                                                            {...qtyField}
+                                                                            onChange={e => qtyField.onChange(e.target.valueAsNumber)}
+                                                                        />
+                                                                    </FormControl>
+                                                                    <FormMessage />
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <FormField
+                                                            control={form.control}
+                                                            name={`items.${index}.target_price`}
+                                                            render={({ field: priceField }) => (
+                                                                <FormItem className="space-y-0">
+                                                                    <FormControl>
+                                                                        <Input
+                                                                            type="number"
+                                                                            className="h-9"
+                                                                            {...priceField}
+                                                                            onChange={e => priceField.onChange(e.target.valueAsNumber)}
+                                                                        />
+                                                                    </FormControl>
+                                                                    <FormMessage />
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <FormField
+                                                            control={form.control}
+                                                            name={`items.${index}.notes`}
+                                                            render={({ field: notesField }) => (
+                                                                <FormItem className="space-y-0">
+                                                                    <FormControl>
+                                                                        <Input className="h-9" {...notesField} />
+                                                                    </FormControl>
+                                                                    <FormMessage />
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                                            onClick={() => remove(index)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
                             </div>
                         </div>
 

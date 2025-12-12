@@ -36,38 +36,92 @@ export class DocumentService {
         const year = new Date().getFullYear();
         const category = metadata.documentCategory.toLowerCase().replace(/\s+/g, '_');
         const timestamp = Date.now();
+
+        // Get file extension from the original file or use a default based on mime type
+        let fileExtension = '.pdf';
+        if (file instanceof File) {
+            const nameParts = file.name.split('.');
+            if (nameParts.length > 1) {
+                fileExtension = '.' + nameParts[nameParts.length - 1];
+            }
+        } else if (metadata.documentType) {
+            // Map common mime types to extensions
+            const mimeToExt: Record<string, string> = {
+                'application/pdf': '.pdf',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+                'application/vnd.ms-excel': '.xls',
+                'application/msword': '.doc',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+                'image/jpeg': '.jpg',
+                'image/png': '.png',
+                'image/gif': '.gif',
+                'text/csv': '.csv',
+            };
+            fileExtension = mimeToExt[metadata.documentType] || '.pdf';
+        }
+
         const fileName = metadata.documentNumber
-            ? `${metadata.documentNumber}${options.version && options.version > 1 ? `_v${options.version}` : ''}.pdf`
-            : `${timestamp}.pdf`;
+            ? `${metadata.documentNumber}${options.version && options.version > 1 ? `_v${options.version}` : ''}${fileExtension}`
+            : `${timestamp}${fileExtension}`;
         const storagePath = `${companyId}/${category}/${year}/${fileName}`;
 
         // Convert Buffer to File if needed
         const fileToUpload = file instanceof Buffer
-            ? new File([new Uint8Array(file)], fileName, { type: 'application/pdf' })
+            ? new File([new Uint8Array(file)], fileName, { type: metadata.documentType || 'application/octet-stream' })
             : file;
 
-        // Upload to Supabase Storage
+        // Upload to Supabase Storage using session client (respects RLS)
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from('documents')
             .upload(storagePath, fileToUpload, {
                 cacheControl: '3600',
-                upsert: false
+                upsert: true  // Allow overwriting existing files
             });
 
         if (uploadError) throw uploadError;
 
-        // If this is a new version, mark previous version as not latest
-        if (options.parentDocumentId) {
-            await supabase
-                .from('documents')
-                .update({ is_latest_version: false })
-                .eq('id', options.parentDocumentId);
-        }
-
-        // Create database record
-        const { data: document, error: dbError } = await supabase
+        // Check if a document already exists for this reference
+        const { data: existingDoc } = await supabase
             .from('documents')
-            .insert({
+            .select('id')
+            .eq('company_id', companyId)
+            .eq('reference_type', metadata.referenceType || '')
+            .eq('reference_id', metadata.referenceId || '')
+            .eq('version', options.version || 1)
+            .maybeSingle(); // Use maybeSingle instead of single to avoid error if not found
+
+        let document;
+
+        if (existingDoc) {
+            // Update existing document
+            const { data: updatedDoc, error: updateError } = await supabase
+                .from('documents')
+                .update({
+                    file_path: uploadData.path,
+                    file_name: fileToUpload instanceof File ? fileToUpload.name : fileName,
+                    file_size: fileToUpload instanceof File ? fileToUpload.size : (file as Buffer).length,
+                    storage_path: storagePath,
+                    tags: metadata.tags,
+                    notes: metadata.notes,
+                    metadata: metadata.metadata
+                })
+                .eq('id', existingDoc.id)
+                .select()
+                .single();
+
+            if (updateError) throw updateError;
+            document = updatedDoc;
+        } else {
+            // If this is a new version, mark previous version as not latest
+            if (options.parentDocumentId) {
+                await supabase
+                    .from('documents')
+                    .update({ is_latest_version: false })
+                    .eq('id', options.parentDocumentId);
+            }
+
+            // Create new database record
+            const insertData: any = {
                 company_id: companyId,
                 document_type: metadata.documentType,
                 document_category: metadata.documentCategory,
@@ -76,7 +130,7 @@ export class DocumentService {
                 file_path: uploadData.path,
                 file_name: fileToUpload instanceof File ? fileToUpload.name : fileName,
                 file_size: fileToUpload instanceof File ? fileToUpload.size : (file as Buffer).length,
-                mime_type: 'application/pdf',
+                mime_type: metadata.documentType || 'application/octet-stream',
                 document_number: metadata.documentNumber,
                 document_date: metadata.documentDate,
                 uploaded_by: user.id,
@@ -86,13 +140,23 @@ export class DocumentService {
                 storage_path: storagePath,
                 metadata: metadata.metadata,
                 version: options.version || 1,
-                parent_document_id: options.parentDocumentId,
                 is_latest_version: true
-            })
-            .select()
-            .single();
+            };
 
-        if (dbError) throw dbError;
+            // Only include parent_document_id if it's provided
+            if (options.parentDocumentId) {
+                insertData.parent_document_id = options.parentDocumentId;
+            }
+
+            const { data: newDoc, error: dbError } = await supabase
+                .from('documents')
+                .insert(insertData)
+                .select()
+                .single();
+
+            if (dbError) throw dbError;
+            document = newDoc;
+        }
 
         // Log the upload
         await this.logDocumentAccess(document.id, 'upload', companyId);

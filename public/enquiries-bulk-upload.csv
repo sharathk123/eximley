@@ -1,0 +1,11 @@
+Customer Name,Email,Phone,Company,Country,Source,Subject,Description,Priority
+John Smith,john.smith@example.com,+1-555-0101,Tech Solutions Inc,USA,website,Inquiry about Industrial Pumps,Looking for high-capacity industrial pumps for our manufacturing facility,high
+Maria Garcia,maria.garcia@example.com,+34-912-345-678,Industrias Garcia,Spain,email,Request for Valve Quotation,Need quotation for 50 butterfly valves DN100,medium
+Li Wei,li.wei@example.com,+86-10-1234-5678,Beijing Manufacturing,China,trade_show,Bulk Order - Pipe Fittings,Interested in bulk order of stainless steel pipe fittings,urgent
+Sarah Johnson,sarah.j@example.com,+44-20-7123-4567,UK Engineering Ltd,United Kingdom,referral,Custom Fabrication Query,Need custom fabricated parts for offshore project,high
+Ahmed Hassan,ahmed.hassan@example.com,+971-4-123-4567,Dubai Contractors,UAE,website,Pressure Vessel Inquiry,Looking for ASME certified pressure vessels,medium
+Hans Mueller,hans.mueller@example.com,+49-30-1234-5678,Mueller GmbH,Germany,email,Flanges and Gaskets,Need various sizes of flanges and gaskets,low
+Priya Sharma,priya.sharma@example.com,+91-22-1234-5678,Mumbai Industries,India,trade_show,Heat Exchanger Quote,Require quotation for shell and tube heat exchangers,high
+Carlos Rodriguez,carlos.r@example.com,+52-55-1234-5678,Mexico Manufacturing,Mexico,website,Valve Automation Systems,Interested in automated valve control systems,medium
+Yuki Tanaka,yuki.tanaka@example.com,+81-3-1234-5678,Tokyo Engineering,Japan,referral,Precision Machined Parts,Need precision machined components for automotive,urgent
+Emma Wilson,emma.wilson@example.com,+61-2-1234-5678,Sydney Industrial,Australia,email,Pump Maintenance Parts,Looking for spare parts for centrifugal pumps,low

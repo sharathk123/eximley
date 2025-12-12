@@ -19,8 +19,8 @@ export function EmptyState({
     description,
     actionLabel,
     onAction,
-    iconColor = "text-muted-foreground",
-    iconBgColor = "bg-muted"
+    iconColor = "text-primary",
+    iconBgColor = "bg-primary/10"
 }: EmptyStateProps) {
     return (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50">

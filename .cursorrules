@@ -1,0 +1,74 @@
+# Eximley Project Rules
+
+## Tech Stack & Frameworks
+- **Framework**: Next.js 14+ (App Router)
+- **UI Library**: Shadcn UI (Radix Primitives + Tailwind)
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **Database**: Supabase
+- **State**: React Query / Local State (prefer useState for simple UI)
+
+## Code Quality & Architecture (SaaS Standards)
+**Goal**: Build a scalable, maintainable, and modular SaaS application.
+
+1.  **Modularity**: 
+    -   Avoid "God Components". Break down large files into smaller, focused sub-components.
+    -   **Rule of thumb**: If a component exceeds 200 lines, check if parts can be extracted.
+2.  **Reusability**:
+    -   If logic is used in more than one place, extract it into a custom hook (`useLogic.ts`) or utility function.
+    -   If UI is used in more than one place, create a shared component in `@/components/ui`.
+3.  **Refactoring**:
+    -   Do not copy-paste code. Refactor existing code to support new features cleanly.
+    -   Keep `page.tsx` files thin. Move logic to hooks and display to components.
+4.  **Manageability**:
+    -   Use descriptive naming conventions.
+    -   Keep dependencies explicit and clean.
+
+## Security Best Practices
+1.  **Authentication & Authorization**:
+    -   ALWAYS verify user session on the server side (API routes & Server Actions) using `createSessionClient`.
+    -   Ensure User ID checks match the resource owner (Company ID checks).
+2.  **Database**:
+    -   Rely on Supabase RLS (Row Level Security) policies as the primary defense.
+    -   Never bypass RLS (using service role key) unless absolutely necessary for admin tasks.
+3.  **Input Validation**:
+    -   Validate ALL inputs (API bodies, URL params) using **Zod** schemas.
+    -   Sanitize outputs to prevent XSS (React handles most, but be careful with `dangerouslySetInnerHTML`).
+
+## Performance Standards
+1.  **Data Fetching**:
+    -   **Server Components**: Prefer fetching data in Server Components where possible.
+    -   **Select Specific Columns**: Avoid `select('*')` on large tables. Select only fields needed for the UI.
+    -   **Pagination**: Always implement pagination for lists (Infinite scroll or page-based).
+2.  **Frontend Optimization**:
+    -   **Debounce**: All search/filter inputs MUST be debounced (min 300ms).
+    -   **Images**: Use `next/image` with proper sizing and standard aspect ratios.
+    -   **Lazy Loading**: Lazy load heavy components or non-critical UI (Dialogs, Sheets) using `dynamic()`.
+3.  **Database Indexing**:
+    -   Ensure Foreign Keys and frequently searched columns have appropriate indexes in Supabase.
+
+## Testing Strategy
+1.  **Unit & Integration (Vitest)**:
+    -   Use `vitest` for utility functions, hooks, and complex component logic.
+    -   Run `npm run test` before pushing changes.
+2.  **End-to-End (RECOMMENDED)**:
+    -   Use **Playwright** for critical user flows (Login -> Create -> Save -> View).
+    -   This replaces manual regression testing.
+
+## Design System Standards (CRITICAL)
+Always adhere to the patterns defined in `docs/design-system/overview.md`.
+
+1.  **Theme Colors**:
+    -   **Primary**: Purple (`#635bff`). Use utility `text-primary`, `bg-primary`.
+    -   **Empty States**: Default to Primary Purple theme.
+
+2.  **Standard Components**:
+    -   **Top of Page**: ALWAYS use `@/components/ui/page-header.tsx`.
+        -   Usage: `<PageHeader title="..." description="...">...</PageHeader>`
+    -   **Empty Lists**: ALWAYS use `@/components/ui/empty-state.tsx`.
+        -   Usage: `<EmptyState icon={...} title="..." ... />` (Do not override colors).
+
+3.  **UI Patterns**:
+    -   **Buttons**: Use `Button` from `@/components/ui/button`.
+    -   **Cards**: Use `Card` with `shadow-sm` and `border-muted/40`.
+    -   **Forms**: Use `react-hook-form` + `zod` with Shadcn `Form` components.

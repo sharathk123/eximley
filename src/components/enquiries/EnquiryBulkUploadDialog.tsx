@@ -29,28 +29,38 @@ export function EnquiryBulkUploadDialog({ onUploadComplete }: EnquiryBulkUploadD
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-            // TODO: Process and validate data here before sending to API
-            // For now, we simulate a successful upload for the UI standardization task
+            if (jsonData.length === 0) {
+                throw new Error("No data found in file");
+            }
 
-            // In a real implementation, you would:
-            // 1. Validate structure
-            // 2. Map fields to enquiry schema
-            // 3. Call a bulk import API
+            // Call the bulk upload API
+            const response = await fetch('/api/enquiries/bulk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ enquiries: jsonData }),
+            });
 
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to upload enquiries');
+            }
+
+            const result = await response.json();
 
             toast({
                 title: "Upload Successful",
-                description: `Processed ${jsonData.length} records successfully.`,
+                description: `Successfully created ${result.count} enquiries.`,
             });
 
             setIsOpen(false);
             onUploadComplete();
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            console.error('Bulk upload error:', error);
             toast({
                 title: "Upload Failed",
-                description: "Failed to process the file. Please check the format.",
+                description: error.message || "Failed to process the file. Please check the format.",
                 variant: "destructive",
             });
         } finally {
@@ -97,7 +107,7 @@ export function EnquiryBulkUploadDialog({ onUploadComplete }: EnquiryBulkUploadD
                     </div>
                     <div className="text-xs text-muted-foreground space-y-1">
                         <p className="font-medium">Required Columns:</p>
-                        <p>Customer Name, Email, Phone, Product Interest, Description</p>
+                        <p>Customer Name, Email, Phone, Company, Country, Source, Subject, Description, Priority</p>
                     </div>
                     <Button variant="link" className="h-auto p-0 text-xs text-primary flex items-center gap-1">
                         <Download className="h-3 w-3" /> Download Template

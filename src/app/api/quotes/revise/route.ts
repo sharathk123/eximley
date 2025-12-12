@@ -61,12 +61,24 @@ export async function POST(request: Request) {
             .select()
             .single();
 
-        if (newQuoteError) throw newQuoteError;
+        if (newQuoteError) {
+            console.error("Quote cloning error:", newQuoteError);
+            throw newQuoteError;
+        }
 
         // Copy quote items
         if (quote_items && Array.isArray(quote_items) && quote_items.length > 0) {
             const newItems = quote_items.map((item: any) => {
-                const { id, quote_id, created_at, ...itemData } = item;
+                // Exclude generated columns and identifiers
+                const {
+                    id,
+                    quote_id,
+                    created_at,
+                    line_total,
+                    total_price,
+                    ...itemData
+                } = item;
+
                 return {
                     ...itemData,
                     quote_id: newQuote.id,

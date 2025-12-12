@@ -17,16 +17,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { data: companyUser } = await supabase
-            .from("company_users")
-            .select("company_id")
-            .eq("user_id", user.id)
-            .single();
-
-        if (!companyUser) {
-            return NextResponse.json({ error: "No company found" }, { status: 404 });
-        }
-
+        // Fetch quotes (RLS will filter by company automatically)
         let query = supabase
             .from("quotes")
             .select(`
@@ -35,6 +26,8 @@ export async function GET(request: Request) {
                     id,
                     name,
                     email,
+                    phone,
+                    address,
                     country
                 ),
                 enquiries (
@@ -66,7 +59,6 @@ export async function GET(request: Request) {
                     )
                 )
             `)
-            .eq("company_id", companyUser.company_id)
             .order("created_at", { ascending: false });
 
         if (status) query = query.eq("status", status);

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createSessionClient } from "@/lib/supabase/server";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
     try {
         const supabase = await createSessionClient();
@@ -71,12 +74,36 @@ export async function GET() {
             .order("created_at", { ascending: false })
             .limit(5);
 
+        // 7. Enquiry Stats
+        // Total Enquiries
+        const { count: totalEnquiries } = await supabase
+            .from("enquiries")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId);
+
+        // New Enquiries
+        const { count: newEnquiries } = await supabase
+            .from("enquiries")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .eq("status", "new");
+
+        // Won Enquiries
+        const { count: wonEnquiries } = await supabase
+            .from("enquiries")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .eq("status", "won");
+
         return NextResponse.json({
             stats: {
                 total_shipments: totalShipments || 0,
                 active_shipments: activeShipments || 0,
                 active_quotes: activeQuotes || 0,
-                pending_orders: pendingOrders || 0
+                pending_orders: pendingOrders || 0,
+                total_enquiries: totalEnquiries || 0,
+                new_enquiries: newEnquiries || 0,
+                won_enquiries: wonEnquiries || 0
             },
             recent_shipments: recentShipments || [],
             recent_orders: recentOrders || []

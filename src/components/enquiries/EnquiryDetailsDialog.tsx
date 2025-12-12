@@ -115,36 +115,35 @@ export function EnquiryDetailsDialog({ enquiry, open, onOpenChange, onEdit, onCo
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] h-[90vh] flex flex-col p-0 gap-0">
-                <DialogHeader className="px-6 py-4 border-b">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <DialogTitle className="text-xl flex items-center gap-2">
-                                {enquiry.enquiry_number}
-                                <Badge variant="secondary" className="ml-2 font-mono">V{enquiry.version || 1}</Badge>
-                                <Badge variant={getStatusColor(enquiry.status)} className="ml-2 uppercase text-xs">{enquiry.status}</Badge>
+            <DialogContent className="max-w-5xl max-h-[90vh] h-[90vh] flex flex-col p-0 gap-0">
+                <DialogHeader className="px-6 py-4 border-b pr-12">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="min-w-0">
+                            <DialogTitle className="text-xl flex items-center gap-2 whitespace-nowrap">
+                                {enquiry.enquiry_number}-{enquiry.status === 'won' || enquiry.status === 'converted' ? 'FN' : `V${enquiry.version || 1}`}
+                                <Badge variant={getStatusColor(enquiry.status)} className="ml-2 uppercase text-xs hidden sm:inline-flex">{enquiry.status}</Badge>
                             </DialogTitle>
-                            <DialogDescription className="mt-1">
+                            <DialogDescription className="mt-1 truncate">
                                 {enquiry.customer_name} • {new Date(enquiry.created_at).toLocaleDateString()}
                             </DialogDescription>
                         </div>
-                        <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={handleGeneratePDF} disabled={generatingPdf}>
+                        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                            <Button size="sm" variant="outline" onClick={handleGeneratePDF} disabled={generatingPdf} className="flex-1 md:flex-none">
                                 {generatingPdf ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
                                 PDF
                             </Button>
-                            <Button size="sm" variant="outline" onClick={handleRevise} disabled={revising}>
+                            <Button size="sm" variant="outline" onClick={handleRevise} disabled={revising} className="flex-1 md:flex-none">
                                 {revising ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Copy className="h-4 w-4 mr-2" />}
                                 Revise
                             </Button>
 
                             {onConvert && enquiry.status !== 'converted' && enquiry.status !== 'won' && enquiry.status !== 'lost' && (
-                                <Button size="sm" variant="outline" onClick={() => onConvert(enquiry)}>
+                                <Button size="sm" variant="outline" onClick={() => onConvert(enquiry)} className="flex-1 md:flex-none">
                                     <FileText className="h-4 w-4 mr-2" /> Create Quote
                                 </Button>
                             )}
                             {onEdit && (
-                                <Button size="sm" variant="outline" onClick={() => onEdit(enquiry)}>
+                                <Button size="sm" variant="outline" onClick={() => onEdit(enquiry)} className="flex-1 md:flex-none">
                                     <Edit className="h-4 w-4 mr-2" /> Edit
                                 </Button>
                             )}

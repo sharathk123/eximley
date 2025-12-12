@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -18,11 +19,8 @@ import { Search, Plus, Loader2, FileText, BarChart3, LayoutTemplate } from "luci
 
 import { QuoteAnalytics } from "@/components/quotes/QuoteAnalytics";
 import { QuoteTemplateDialog } from "@/components/quotes/QuoteTemplateDialog";
-import { QuoteDetailsDialog } from "@/components/quotes/QuoteDetailsDialog";
-import { QuoteEditDialog } from "@/components/quotes/QuoteEditDialog";
 import { QuoteList } from "@/components/quotes/QuoteList";
 import { QuoteBulkActions } from "@/components/quotes/QuoteBulkActions";
-
 import {
     AlertDialog,
     AlertDialogAction,
@@ -33,122 +31,57 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
 import { useToast } from "@/components/ui/use-toast";
+import { useQuoteManagement } from "@/hooks/use-quote-management";
+import { DocumentFormatter } from "@/lib/utils/documentFormatter";
+
+import { useRouter } from "next/navigation";
 
 export default function QuotesPage() {
-    const [quotes, setQuotes] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [activeTab, setActiveTab] = useState("all");
+    const router = useRouter();
+    const {
+        quotes,
+        loading,
+        searchQuery,
+        activeTab,
+        selectedQuotes,
+        currentPage,
+        totalPages,
+        bulkActionLoading,
+        generatingPdf,
+        setSearchQuery,
+        setActiveTab,
+        setSelectedQuotes,
+        setCurrentPage,
+        setGeneratingPdf,
+        refresh,
+        updateStatus,
+        deleteQuotes,
+        convertToPI,
+        createRevision
+    } = useQuoteManagement();
 
-    // Selection & View State
-    const [selectedQuotes, setSelectedQuotes] = useState<string[]>([]);
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
-    const [currentPage, setCurrentPage] = useState(1);
     const [showAnalytics, setShowAnalytics] = useState(false);
 
-    // Action States
-    const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
-    const [bulkActionLoading, setBulkActionLoading] = useState(false);
-
     // Dialog States
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    // const [isCreateOpen, setIsCreateOpen] = useState(false); // REMOVED
     const [isTemplateOpen, setIsTemplateOpen] = useState(false);
     const [templateSelection, setTemplateSelection] = useState<any>(null);
 
-    const [selectedQuote, setSelectedQuote] = useState<any>(null); // For View Details
-    const [editingQuote, setEditingQuote] = useState<any>(null);
 
+    // const [editingQuote, setEditingQuote] = useState<any>(null); // REMOVED
     const [deletingQuote, setDeletingQuote] = useState<any>(null);
     const [convertingQuote, setConvertingQuote] = useState<any>(null);
     const [revisingQuote, setRevisingQuote] = useState<any>(null);
 
-    const itemsPerPage = 12;
     const { toast } = useToast();
 
-    // -- Data Fetching --
-
-    useEffect(() => {
-        fetchQuotes();
-    }, []);
-
-    useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, [currentPage]);
-
-    async function fetchQuotes() {
-        setLoading(true);
-        try {
-            const res = await fetch("/api/quotes");
-            const data = await res.json();
-            if (data.quotes) setQuotes(data.quotes);
-        } catch (error) {
-            console.error("Failed to fetch quotes:", error);
-            toast({ title: "Error", description: "Failed to fetch quotes", variant: "destructive" });
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    // -- Actions --
-
-    const updateStatus = async (ids: string[], status: string) => {
-        setBulkActionLoading(true);
-        try {
-            await Promise.all(
-                ids.map(id =>
-                    fetch(`/api/quotes/${id}/status`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ status })
-                    })
-                )
-            );
-            toast({ title: "Success", description: `${ids.length} quote(s) updated to ${status}` });
-            setSelectedQuotes([]);
-            await fetchQuotes();
-        } catch (error) {
-            console.error(error);
-            toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
-        } finally {
-            setBulkActionLoading(false);
-        }
-    };
-
-    const handleDelete = async () => {
-        // Single delete via Dialog
-        if (!deletingQuote) return;
-        try {
-            const res = await fetch(`/api/quotes?id=${deletingQuote.id}`, { method: "DELETE" });
-            if (!res.ok) throw new Error("Failed to delete quote");
-            await fetchQuotes();
-            toast({ title: "Success", description: "Quote deleted successfully" });
-        } catch (error) {
-            toast({ title: "Error", description: "Failed to delete quote", variant: "destructive" });
-        } finally {
-            setDeletingQuote(null);
-        }
-    };
-
-    const handleBulkDelete = async () => {
-        if (!confirm(`Delete ${selectedQuotes.length} quotes?`)) return;
-        setBulkActionLoading(true);
-        try {
-            await Promise.all(selectedQuotes.map(id => fetch(`/api/quotes?id=${id}`, { method: 'DELETE' })));
-            toast({ title: "Success", description: `${selectedQuotes.length} quotes deleted` });
-            setSelectedQuotes([]);
-            await fetchQuotes();
-        } catch (error) {
-            toast({ title: "Error", description: "Failed to delete quotes", variant: "destructive" });
-        } finally {
-            setBulkActionLoading(false);
-        }
-    };
-
+    // Handlers (Wrapper to adapt hook to component needs)
     const handleGeneratePdf = async (quoteId: string) => {
         setGeneratingPdf(quoteId);
         try {
+            const quote = quotes.find(q => q.id === quoteId);
             const res = await fetch(`/api/quotes/${quoteId}/generate-pdf`, { method: "POST" });
             if (!res.ok) throw new Error((await res.json()).error || "Failed");
 
@@ -156,11 +89,30 @@ export default function QuotesPage() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Quote-${quoteId}.pdf`;
+
+            // Generate proper filename
+            let fileName = `Quote-${quoteId}.pdf`;
+
+            // 1. Try server header
+            const contentDisposition = res.headers.get('Content-Disposition');
+            if (contentDisposition) {
+                const match = contentDisposition.match(/filename="?([^"]+)"?/);
+                if (match && match[1]) {
+                    fileName = match[1];
+                }
+            } else if (quote) {
+                // 2. Fallback to local formatting
+                fileName = DocumentFormatter.formatDocumentName(quote.quote_number, quote.version || 1, quote.status);
+            }
+
+            a.download = fileName;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
+
+            // Small timeout to ensure download starts before revoking
+            setTimeout(() => window.URL.revokeObjectURL(url), 100);
+
             toast({ title: "Success", description: "PDF downloaded successfully" });
         } catch (error: any) {
             toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -169,73 +121,19 @@ export default function QuotesPage() {
         }
     };
 
-    const handleConvertToPI = async () => {
-        if (!convertingQuote) return;
-        try {
-            const res = await fetch("/api/quotes/convert-to-pi", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ quote_id: convertingQuote.id }),
-            });
-            if (!res.ok) throw new Error("Failed");
-            const data = await res.json();
-            await fetchQuotes();
-            toast({ title: "Success", description: `Quote converted to PI: ${data.pi?.invoice_number || 'Created'}` });
-        } catch (error) {
-            toast({ title: "Error", description: "Failed to convert quote", variant: "destructive" });
-        } finally {
-            setConvertingQuote(null);
-        }
-    };
-
-    const handleCreateRevision = async () => {
-        if (!revisingQuote) return;
-        try {
-            const res = await fetch("/api/quotes/revise", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ quote_id: revisingQuote.id }),
-            });
-            if (!res.ok) throw new Error("Failed");
-            const data = await res.json();
-            await fetchQuotes();
-            toast({ title: "Success", description: `Revision created: ${data.quote?.quote_number} (v${data.quote?.version})` });
-        } catch (error) {
-            toast({ title: "Error", description: "Failed to create revision", variant: "destructive" });
-        } finally {
-            setRevisingQuote(null);
-        }
-    };
-
-    // -- Derived State --
-
-    const filteredQuotes = quotes.filter(quote => {
-        const matchesSearch = quote.quote_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            quote.entities?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesTab = activeTab === "all" || quote.status === activeTab;
-        return matchesSearch && matchesTab;
-    });
-
-    const totalPages = Math.ceil(filteredQuotes.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedQuotes = filteredQuotes.slice(startIndex, startIndex + itemsPerPage);
-
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Quotes</h2>
-                    <p className="text-muted-foreground">Manage quotations and convert to Proforma Invoices.</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setIsTemplateOpen(true)}>
-                        <LayoutTemplate className="h-4 w-4 mr-2" /> Use Template
-                    </Button>
-                    <Button onClick={() => setIsCreateOpen(true)}>
-                        <Plus className="mr-2 h-4 w-4" /> New Quote
-                    </Button>
-                </div>
-            </div>
+            <PageHeader
+                title="Quotes"
+                description="Manage quotations and convert to Proforma Invoices."
+            >
+                <Button variant="outline" onClick={() => setIsTemplateOpen(true)}>
+                    <LayoutTemplate className="h-4 w-4 mr-2" /> Use Template
+                </Button>
+                <Button onClick={() => router.push('/quotes/create')}>
+                    <Plus className="mr-2 h-4 w-4" /> New Quote
+                </Button>
+            </PageHeader>
 
             <div className="flex items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-sm">
@@ -276,27 +174,24 @@ export default function QuotesPage() {
                     <TabsContent value={activeTab} className="mt-4">
                         {loading ? (
                             <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8" /></div>
-                        ) : filteredQuotes.length === 0 ? (
+                        ) : quotes.length === 0 ? (
                             <EmptyState
                                 icon={FileText}
                                 title="No quotes found"
                                 description="Create a quote from an enquiry or manually."
                                 actionLabel="Create Quote"
-                                onAction={() => setIsCreateOpen(true)}
-                                iconColor="text-blue-600 dark:text-blue-200"
-                                iconBgColor="bg-blue-100 dark:bg-blue-900"
+                                onAction={() => router.push('/quotes/create')}
                             />
                         ) : (
                             <>
                                 <QuoteList
-                                    quotes={paginatedQuotes}
+                                    quotes={quotes}
                                     viewMode={viewMode}
                                     selectedQuotes={selectedQuotes}
                                     onSelectQuote={(id) => setSelectedQuotes(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
-                                    onSelectAll={(checked) => setSelectedQuotes(checked ? filteredQuotes.map(q => q.id) : [])}
-                                    onEdit={setEditingQuote}
+                                    onSelectAll={(checked) => setSelectedQuotes(checked ? quotes.map(q => q.id) : [])}
+                                    onEdit={(quote) => router.push(`/quotes/${quote.id}/edit`)}
                                     onDelete={setDeletingQuote}
-                                    onViewDetails={setSelectedQuote}
                                     onGeneratePdf={handleGeneratePdf}
                                     generatingPdfId={generatingPdf}
                                     onConvertToPI={setConvertingQuote}
@@ -333,41 +228,27 @@ export default function QuotesPage() {
                 loading={bulkActionLoading}
                 onApprove={() => updateStatus(selectedQuotes, 'approved')}
                 onSend={() => updateStatus(selectedQuotes, 'sent')}
-                onDelete={handleBulkDelete}
+                onDelete={() => deleteQuotes(selectedQuotes)}
                 onClearSelection={() => setSelectedQuotes([])}
             />
 
             {/* Dialogs */}
-
             <QuoteTemplateDialog
                 open={isTemplateOpen}
                 onOpenChange={setIsTemplateOpen}
-                onSelectTemplate={(data) => { setTemplateSelection(data); setIsCreateOpen(true); setIsTemplateOpen(false); }}
+                onSelectTemplate={(data) => {
+                    setTemplateSelection(data);
+                    // setIsCreateOpen(true); // OLD
+                    // TODO: Implement passing template data to create page
+                    alert("Template selection will be restored in next update. Please create manually for now.");
+                }}
             />
 
-            <QuoteEditDialog
-                quote={editingQuote}
-                open={!!editingQuote}
-                onOpenChange={(open) => !open && setEditingQuote(null)}
-                onSuccess={fetchQuotes}
-            />
-            {/* Create Dialog */}
-            <QuoteEditDialog
-                quote={null}
-                initialValues={templateSelection}
-                open={isCreateOpen}
-                onOpenChange={(open) => { setIsCreateOpen(open); if (!open) setTemplateSelection(null); }}
-                onSuccess={fetchQuotes}
-            />
+            {/* Creade/Edit Dialog REMOVED */}
 
-            <QuoteDetailsDialog
-                quote={selectedQuote}
-                open={!!selectedQuote}
-                onOpenChange={(open) => !open && setSelectedQuote(null)}
-                onRefresh={fetchQuotes}
-            />
 
-            {/* Confirmation Dialogs */}
+
+            {/* Confirmation Dialogs - Kept locally as they are UI specific */}
             <AlertDialog open={!!deletingQuote} onOpenChange={(open) => !open && setDeletingQuote(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -376,7 +257,7 @@ export default function QuotesPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+                        <AlertDialogAction onClick={() => { deleteQuotes([deletingQuote.id]); setDeletingQuote(null); }} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -389,7 +270,7 @@ export default function QuotesPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConvertToPI}>Convert to PI</AlertDialogAction>
+                        <AlertDialogAction onClick={() => { convertToPI(convertingQuote.id); setConvertingQuote(null); }}>Convert to PI</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -402,7 +283,7 @@ export default function QuotesPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCreateRevision}>Create Revision</AlertDialogAction>
+                        <AlertDialogAction onClick={() => { createRevision(revisingQuote.id); setRevisingQuote(null); }}>Create Revision</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

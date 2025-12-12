@@ -71,6 +71,12 @@ export async function GET(request: Request) {
         if (priority) query = query.eq("priority", priority);
         if (assigned_to) query = query.eq("assigned_to", assigned_to);
 
+        // Apply Search
+        const search = searchParams.get("search");
+        if (search) {
+            query = query.or(`enquiry_number.ilike.%${search}%,customer_name.ilike.%${search}%,customer_company.ilike.%${search}%`);
+        }
+
         const { data: enquiries, error } = await query;
 
         if (error) throw error;
@@ -108,6 +114,11 @@ export async function POST(request: Request) {
         const enquiryNumber = await NumberingService.generateNextNumber(companyUser.company_id, 'ENQUIRY');
 
         const { items, currency_code, ...enquiryData } = body;
+
+        // Sanitize date fields - convert empty strings to null
+        if (enquiryData.next_follow_up_date === '' || enquiryData.next_follow_up_date === undefined) {
+            enquiryData.next_follow_up_date = null;
+        }
 
         const { data: enquiry, error } = await supabase
             .from("enquiries")
