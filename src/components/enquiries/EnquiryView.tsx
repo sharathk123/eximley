@@ -16,6 +16,7 @@ import { useEnquiryActions } from '@/hooks/useEnquiryActions';
 import { EnquiryHeader } from './EnquiryHeader';
 import { EnquiryDetailsTab } from './tabs/EnquiryDetailsTab';
 import { EnquiryPreviewTab } from './tabs/EnquiryPreviewTab';
+import { DocumentLineage } from '@/components/shared/DocumentLineage';
 
 interface EnquiryViewProps {
     enquiry: Enquiry;
@@ -90,6 +91,12 @@ export function EnquiryView({ enquiry, onRefresh }: EnquiryViewProps) {
                     >
                         Documents
                     </TabsTrigger>
+                    <TabsTrigger
+                        value="lineage"
+                        className="data-[state=active]:bg-background data-[state=active]:text-foreground px-4"
+                    >
+                        Lineage
+                    </TabsTrigger>
                 </TabsList>
 
                 {/* Details Tab */}
@@ -117,6 +124,22 @@ export function EnquiryView({ enquiry, onRefresh }: EnquiryViewProps) {
                         referenceType="enquiry"
                         referenceId={enquiry.id}
                         category="enquiry"
+                    />
+                </TabsContent>
+
+                {/* Lineage Tab */}
+                <TabsContent value="lineage" className="pt-2 m-0">
+                    <DocumentLineage
+                        documentType="enquiry"
+                        documentId={enquiry.id}
+                        relatedDocuments={{
+                            exportOrders: enquiry.quotes?.map((quote: any) => ({
+                                id: quote.id,
+                                number: quote.quote_number,
+                                status: quote.status,
+                                date: quote.quote_date
+                            })) || []
+                        }}
                     />
                 </TabsContent>
             </Tabs>
