@@ -49,15 +49,19 @@ export async function POST(request: Request) {
 
         if (!buyerId) {
             // Create entity from enquiry customer data
+            // Combine customer_name and customer_company for entity name
+            const entityName = enquiry.customer_company
+                ? `${enquiry.customer_name} (${enquiry.customer_company})`
+                : enquiry.customer_name || 'Unknown Customer';
+
             const { data: newEntity, error: entityError } = await supabase
                 .from("entities")
                 .insert({
                     company_id: companyId,
                     type: 'buyer',
-                    name: enquiry.customer_name || 'Unknown Customer',
+                    name: entityName,
                     email: enquiry.customer_email,
                     phone: enquiry.customer_phone,
-                    company_name: enquiry.customer_company,
                     country: enquiry.customer_country,
                     created_by: user.id,
                 })
