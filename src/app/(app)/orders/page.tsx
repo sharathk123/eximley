@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, ShoppingCart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -29,24 +30,17 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { OrderFormValues } from "@/lib/schemas/order";
 import { OrderList } from "@/components/orders/OrderList";
-import { OrderFormDialog } from "@/components/orders/OrderFormDialog";
 import { PaymentDialog } from "@/components/orders/PaymentDialog";
 import { OrderStats } from "@/components/orders/OrderStats";
 
 export default function OrdersPage() {
+    const router = useRouter();
     const [orders, setOrders] = useState<any[]>([]);
-    const [buyers, setBuyers] = useState<any[]>([]);
-    const [skus, setSkus] = useState<any[]>([]);
-    const [currencies, setCurrencies] = useState<any[]>([]);
-    const [invoices, setInvoices] = useState<any[]>([]);
 
     // UI State
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<any>(null); // For payments
-    const [editingOrder, setEditingOrder] = useState<any>(null); // For editing
     const [deletingOrder, setDeletingOrder] = useState<any>(null); // For deleting
 
     const [searchQuery, setSearchQuery] = useState("");
@@ -59,30 +53,11 @@ export default function OrdersPage() {
 
     useEffect(() => {
         fetchData();
-        fetchFormData();
     }, []);
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentPage]);
-
-    const fetchFormData = async () => {
-        try {
-            const [entRes, skuRes, currRes, piRes] = await Promise.all([
-                fetch("/api/entities?type=buyer"),
-                fetch("/api/skus"),
-                fetch("/api/currencies"),
-                fetch("/api/invoices/proforma")
-            ]);
-
-            if (entRes.ok) setBuyers((await entRes.json()).entities || []);
-            if (skuRes.ok) setSkus((await skuRes.json()).skus || []);
-            if (currRes.ok) setCurrencies((await currRes.json()).currencies || []);
-            if (piRes.ok) setInvoices((await piRes.json()).invoices || []);
-        } catch (err) {
-            console.error(err);
-        }
-    }
 
     const fetchData = async () => {
         try {
@@ -96,37 +71,11 @@ export default function OrdersPage() {
     };
 
     const handleCreate = () => {
-        setEditingOrder(null);
-        setIsCreateOpen(true);
+        router.push('/orders/create');
     };
 
     const handleEdit = (order: any) => {
-        setEditingOrder(order);
-        setIsCreateOpen(true);
-    };
-
-    const onFormSubmit = async (values: OrderFormValues) => {
-        try {
-            const method = editingOrder ? "PUT" : "POST";
-            const res = await fetch("/api/orders", {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(values),
-            });
-
-            if (res.ok) {
-                setIsCreateOpen(false);
-                setEditingOrder(null);
-                fetchData();
-                toast({ title: "Success", description: `Order ${editingOrder ? 'updated' : 'created'} successfully` });
-            } else {
-                const err = await res.json();
-                toast({ title: "Error", description: err.error, variant: "destructive" });
-            }
-        } catch (err) {
-            console.error(err);
-            toast({ title: "Error", description: "Failed to save order", variant: "destructive" });
-        }
+        router.push(`/orders/${order.id}`);
     };
 
     const handleDelete = async () => {
@@ -252,17 +201,6 @@ export default function OrdersPage() {
                     )}
                 </TabsContent>
             </Tabs>
-
-            <OrderFormDialog
-                open={isCreateOpen}
-                onOpenChange={setIsCreateOpen}
-                initialData={editingOrder}
-                buyers={buyers}
-                skus={skus}
-                currencies={currencies}
-                invoices={invoices}
-                onSubmit={onFormSubmit}
-            />
 
             <PaymentDialog
                 open={isPaymentOpen}

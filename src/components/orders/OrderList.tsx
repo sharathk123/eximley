@@ -120,7 +120,11 @@ export function OrderList({
                         <TableBody>
                             {orders.map((ord) => (
                                 <TableRow key={ord.id}>
-                                    <TableCell className="font-medium">{ord.order_number}</TableCell>
+                                    <TableCell className="font-medium">
+                                        <Link href={`/orders/${ord.id}`} className="text-primary hover:underline">
+                                            {ord.order_number}
+                                        </Link>
+                                    </TableCell>
                                     <TableCell>{ord.entities?.name}</TableCell>
                                     <TableCell>{new Date(ord.order_date).toLocaleDateString()}</TableCell>
                                     <TableCell>{ord.currency_code} {Number(ord.total_amount).toFixed(2)}</TableCell>
