@@ -66,7 +66,9 @@ export async function POST(request: Request) {
 
             if (entityError) {
                 console.error("Failed to create entity:", entityError);
-                throw new Error("Failed to create customer entity");
+                return NextResponse.json({
+                    error: `Failed to create customer entity: ${entityError.message || entityError.code}`
+                }, { status: 500 });
             }
 
             buyerId = newEntity.id;
