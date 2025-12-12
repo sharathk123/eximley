@@ -41,15 +41,42 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Enquiry not found" }, { status: 404 });
         }
 
-        // Validate that enquiry has a buyer (entity_id)
-        if (!enquiry.entity_id) {
-            return NextResponse.json({
-                error: "Cannot convert enquiry: Please assign a buyer/customer to the enquiry first"
-            }, { status: 400 });
-        }
-
         // Use company_id from the enquiry itself (guaranteed to be correct)
         const companyId = enquiry.company_id;
+
+        // Handle entity_id: create entity if it doesn't exist
+        let buyerId = enquiry.entity_id;
+
+        if (!buyerId) {
+            // Create entity from enquiry customer data
+            const { data: newEntity, error: entityError } = await supabase
+                .from("entities")
+                .insert({
+                    company_id: companyId,
+                    type: 'buyer',
+                    name: enquiry.customer_name || 'Unknown Customer',
+                    email: enquiry.customer_email,
+                    phone: enquiry.customer_phone,
+                    company_name: enquiry.customer_company,
+                    country: enquiry.customer_country,
+                    created_by: user.id,
+                })
+                .select()
+                .single();
+
+            if (entityError) {
+                console.error("Failed to create entity:", entityError);
+                throw new Error("Failed to create customer entity");
+            }
+
+            buyerId = newEntity.id;
+
+            // Link the entity back to the enquiry
+            await supabase
+                .from("enquiries")
+                .update({ entity_id: buyerId })
+                .eq("id", enquiry_id);
+        }
 
         // Generate Quote number
         const quoteNumber = await NumberingService.generateNextNumber(companyId, 'QUOTE');
@@ -61,7 +88,7 @@ export async function POST(request: Request) {
                 company_id: companyId,
                 quote_number: quoteNumber,
                 enquiry_id: enquiry_id,
-                buyer_id: enquiry.entity_id, // entity_id from enquiry becomes buyer_id in quote
+                buyer_id: buyerId,
                 quote_date: new Date().toISOString().split('T')[0],
                 currency_code: 'USD',
                 status: 'draft',
