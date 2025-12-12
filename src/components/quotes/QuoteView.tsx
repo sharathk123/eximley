@@ -8,6 +8,7 @@ import { QuoteItemsTab } from './tabs/QuoteItemsTab';
 import { QuoteDocumentsTab } from './tabs/QuoteDocumentsTab';
 // import { QuoteEditDialog } from './QuoteEditDialog';
 import { useRouter } from 'next/navigation';
+import { DocumentLineage } from '@/components/shared/DocumentLineage';
 
 import { useEffect } from 'react';
 import { useQuotePdf } from '@/hooks/useQuotePdf';
@@ -91,6 +92,12 @@ export function QuoteView({ quote }: QuoteViewProps) {
                     >
                         Documents
                     </TabsTrigger>
+                    <TabsTrigger
+                        value="lineage"
+                        className="data-[state=active]:bg-background data-[state=active]:text-foreground px-4"
+                    >
+                        Lineage
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="details" className="pt-2 m-0">
@@ -116,6 +123,27 @@ export function QuoteView({ quote }: QuoteViewProps) {
 
                 <TabsContent value="documents" className="space-y-6">
                     <QuoteDocumentsTab quoteId={quote.id} />
+                </TabsContent>
+
+                <TabsContent value="lineage" className="pt-2 m-0">
+                    <DocumentLineage
+                        documentType="quote"
+                        documentId={quote.id}
+                        relatedDocuments={{
+                            sourceEnquiry: quote.enquiries ? {
+                                id: quote.enquiries.id,
+                                number: quote.enquiries.enquiry_number,
+                                status: quote.enquiries.status,
+                                date: quote.enquiries.created_at
+                            } : undefined,
+                            exportOrders: quote.proforma_invoices?.map((pi: any) => ({
+                                id: pi.id,
+                                number: pi.pi_number,
+                                status: pi.status,
+                                date: pi.pi_date
+                            })) || []
+                        }}
+                    />
                 </TabsContent>
             </Tabs>
 

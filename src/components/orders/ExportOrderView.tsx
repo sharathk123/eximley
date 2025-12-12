@@ -16,6 +16,7 @@ import { ExportOrderDocumentsTab } from './tabs/ExportOrderDocumentsTab';
 import { useRouter } from 'next/navigation';
 import { useExportOrderPdf } from '@/hooks/useExportOrderPdf';
 import { useExportOrderActions } from '@/hooks/useExportOrderActions';
+import { DocumentLineage } from '@/components/shared/DocumentLineage';
 
 interface ExportOrderViewProps {
     order: any;
@@ -98,6 +99,12 @@ export function ExportOrderView({ order }: ExportOrderViewProps) {
                     >
                         Documents
                     </TabsTrigger>
+                    <TabsTrigger
+                        value="lineage"
+                        className="data-[state=active]:bg-background data-[state=active]:text-foreground px-4"
+                    >
+                        Lineage
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="details" className="pt-2 m-0">
@@ -126,6 +133,33 @@ export function ExportOrderView({ order }: ExportOrderViewProps) {
 
                 <TabsContent value="documents" className="space-y-6">
                     <ExportOrderDocumentsTab orderId={order.id} />
+                </TabsContent>
+
+                <TabsContent value="lineage" className="pt-2 m-0">
+                    <DocumentLineage
+                        documentType="export_order"
+                        documentId={order.id}
+                        relatedDocuments={{
+                            sourceProforma: order.proforma_invoices ? {
+                                id: order.proforma_invoices.id,
+                                number: order.proforma_invoices.pi_number,
+                                status: order.proforma_invoices.status,
+                                date: order.proforma_invoices.pi_date
+                            } : undefined,
+                            shippingBills: order.shipping_bills?.map((sb: any) => ({
+                                id: sb.id,
+                                number: sb.sb_number,
+                                status: sb.status,
+                                date: sb.sb_date
+                            })) || [],
+                            purchaseOrders: order.purchase_orders?.map((po: any) => ({
+                                id: po.id,
+                                number: po.po_number,
+                                status: po.status,
+                                date: po.order_date
+                            })) || []
+                        }}
+                    />
                 </TabsContent>
             </Tabs>
         </div>
