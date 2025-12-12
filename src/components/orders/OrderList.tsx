@@ -98,69 +98,70 @@ export function OrderList({
                                 </div>
                             </CardContent>
                         </Card>
+                    </Link>
                 ))}
-                    </div>
-                );
+            </div>
+        );
     }
 
-                return (
-                <div className="border rounded-md bg-card">
-                    <Table className="table-fixed">
-                        <TableHeader className="bg-muted/50">
-                            <TableRow>
-                                <TableHead className="w-[140px]">Order #</TableHead>
-                                <TableHead className="w-[200px]">Buyer</TableHead>
-                                <TableHead className="w-[120px]">Date</TableHead>
-                                <TableHead className="w-[150px]">Total</TableHead>
-                                <TableHead className="w-[140px]">Status</TableHead>
-                                <TableHead className="w-[150px]">Reference</TableHead>
-                                <TableHead className="w-[120px] text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {orders.map((ord) => (
-                                <TableRow key={ord.id}>
-                                    <TableCell className="font-medium">
-                                        <Link href={`/orders/${ord.id}`} className="text-primary hover:underline">
-                                            {ord.order_number}
-                                        </Link>
-                                    </TableCell>
-                                    <TableCell>{ord.entities?.name}</TableCell>
-                                    <TableCell>{new Date(ord.order_date).toLocaleDateString()}</TableCell>
-                                    <TableCell>{ord.currency_code} {Number(ord.total_amount).toFixed(2)}</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            <Badge variant={getStatusColor(ord.status)}>{ord.status}</Badge>
-                                            <Badge variant="outline" className="text-xs">{ord.payment_status || 'unpaid'}</Badge>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        {ord.proforma_invoices ? (
-                                            <div className="flex items-center text-muted-foreground text-xs">
-                                                <span className="mr-1">From:</span>
-                                                <a href={`/invoices/proforma/${ord.proforma_invoices.id}`} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:underline font-medium">
-                                                    {ord.proforma_invoices.invoice_number}
-                                                </a>
-                                            </div>
-                                        ) : <span className="text-muted-foreground text-xs">—</span>}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button variant="ghost" size="icon" onClick={() => onPayment(ord)} title="Payments">
-                                                <CreditCard className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => onEdit(ord)}>
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => onDelete(ord)}>
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-                );
+    return (
+        <div className="border rounded-md bg-card">
+            <Table className="table-fixed">
+                <TableHeader className="bg-muted/50">
+                    <TableRow>
+                        <TableHead className="w-[140px]">Order #</TableHead>
+                        <TableHead className="w-[200px]">Buyer</TableHead>
+                        <TableHead className="w-[120px]">Date</TableHead>
+                        <TableHead className="w-[150px]">Total</TableHead>
+                        <TableHead className="w-[140px]">Status</TableHead>
+                        <TableHead className="w-[150px]">Reference</TableHead>
+                        <TableHead className="w-[120px] text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {orders.map((ord) => (
+                        <TableRow key={ord.id}>
+                            <TableCell className="font-medium">
+                                <Link href={`/orders/${ord.id}`} className="text-primary hover:underline">
+                                    {ord.order_number}
+                                </Link>
+                            </TableCell>
+                            <TableCell>{ord.entities?.name}</TableCell>
+                            <TableCell>{new Date(ord.order_date).toLocaleDateString()}</TableCell>
+                            <TableCell>{ord.currency_code} {Number(ord.total_amount).toFixed(2)}</TableCell>
+                            <TableCell>
+                                <div className="flex gap-2">
+                                    <Badge variant={getStatusColor(ord.status)}>{ord.status}</Badge>
+                                    <Badge variant="outline" className="text-xs">{ord.payment_status || 'unpaid'}</Badge>
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                {ord.proforma_invoices ? (
+                                    <div className="flex items-center text-muted-foreground text-xs">
+                                        <span className="mr-1">From:</span>
+                                        <a href={`/invoices/proforma/${ord.proforma_invoices.id}`} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:underline font-medium">
+                                            {ord.proforma_invoices.invoice_number}
+                                        </a>
+                                    </div>
+                                ) : <span className="text-muted-foreground text-xs">—</span>}
+                            </TableCell>
+                            <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                    <Button variant="ghost" size="icon" onClick={() => onPayment(ord)} title="Payments">
+                                        <CreditCard className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" onClick={() => onEdit(ord)}>
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" onClick={() => onDelete(ord)}>
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+    );
 }
