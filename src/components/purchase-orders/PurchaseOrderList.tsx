@@ -115,7 +115,11 @@ export function PurchaseOrderList({
                 <TableBody>
                     {purchaseOrders.map((po) => (
                         <TableRow key={po.id}>
-                            <TableCell className="font-medium">{po.po_number}</TableCell>
+                            <TableCell className="font-medium">
+                                <Link href={`/purchase-orders/${po.id}`} className="text-primary hover:underline">
+                                    {po.po_number}
+                                </Link>
+                            </TableCell>
                             <TableCell>{po.entities?.name}</TableCell>
                             <TableCell>{new Date(po.order_date).toLocaleDateString()}</TableCell>
                             <TableCell>
