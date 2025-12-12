@@ -93,7 +93,10 @@ export function useEnquiryActions(enquiry: Enquiry, onRefresh?: () => void): Use
                 body: JSON.stringify({ enquiry_id: enquiry.id }),
             });
 
-            if (!res.ok) throw new Error("Failed to convert enquiry");
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || "Failed to convert enquiry");
+            }
 
             const data = await res.json();
             toast({
