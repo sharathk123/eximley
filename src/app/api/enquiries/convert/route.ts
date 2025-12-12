@@ -54,7 +54,7 @@ export async function POST(request: Request) {
                 company_id: companyId,
                 quote_number: quoteNumber,
                 enquiry_id: enquiry_id,
-                buyer_id: enquiry.entity_id, // Ensure enquiry has entity_id
+                buyer_id: enquiry.entity_id, // entity_id from enquiry becomes buyer_id in quote
                 quote_date: new Date().toISOString().split('T')[0],
                 currency_code: 'USD',
                 status: 'draft',
