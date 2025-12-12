@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Search, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/ui/view-toggle";
@@ -18,19 +19,13 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 
 import { PurchaseOrderList } from "@/components/purchase-orders/PurchaseOrderList";
-import { PurchaseOrderDialog } from "@/components/purchase-orders/PurchaseOrderDialog";
 import { PurchaseOrderPaymentDialog } from "@/components/purchase-orders/PurchaseOrderPaymentDialog";
 
 export default function PurchaseOrdersPage() {
+    const router = useRouter();
     const [purchaseOrders, setPurchaseOrders] = useState<any[]>([]);
-    const [vendors, setVendors] = useState<any[]>([]);
-    const [exportOrders, setExportOrders] = useState<any[]>([]);
-    const [skus, setSkus] = useState<any[]>([]);
-    const [currencies, setCurrencies] = useState<any[]>([]);
 
     // UI State
-    const [isOpen, setIsOpen] = useState(false);
-    const [editingPO, setEditingPO] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState("all");
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
@@ -44,36 +39,12 @@ export default function PurchaseOrdersPage() {
     const { toast } = useToast();
 
     useEffect(() => {
-        fetchFormData();
         fetchData();
     }, []);
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentPage]);
-
-    const fetchFormData = async () => {
-        try {
-            const [entRes, skuRes, currRes, ordRes] = await Promise.all([
-                fetch("/api/entities?type=supplier"),
-                fetch("/api/skus"),
-                fetch("/api/currencies"),
-                fetch("/api/orders")
-            ]);
-
-            const entData = await entRes.json();
-            const skuData = await skuRes.json();
-            const currData = await currRes.json();
-            const ordData = await ordRes.json();
-
-            if (entData.entities) setVendors(entData.entities);
-            if (skuData.skus) setSkus(skuData.skus);
-            if (currData.currencies) setCurrencies(currData.currencies);
-            if (ordData.orders) setExportOrders(ordData.orders);
-        } catch (err) {
-            console.error(err);
-        }
-    }
 
     const fetchData = async () => {
         try {
@@ -92,13 +63,11 @@ export default function PurchaseOrdersPage() {
     };
 
     const handleCreate = () => {
-        setEditingPO(null);
-        setIsOpen(true);
+        router.push('/purchase-orders/create');
     };
 
     const handleEdit = (po: any) => {
-        setEditingPO(po);
-        setIsOpen(true);
+        router.push(`/purchase-orders/${po.id}`);
     };
 
     const handleDelete = async (po: any) => {
@@ -219,20 +188,6 @@ export default function PurchaseOrdersPage() {
                     )}
                 </TabsContent>
             </Tabs>
-
-            <PurchaseOrderDialog
-                open={isOpen}
-                onOpenChange={setIsOpen}
-                initialData={editingPO}
-                onSuccess={() => {
-                    fetchData();
-                    toast({ title: "Success", description: `Purchase Order ${editingPO ? 'updated' : 'created'} successfully` });
-                }}
-                vendors={vendors}
-                skus={skus}
-                currencies={currencies}
-                exportOrders={exportOrders}
-            />
 
             <PurchaseOrderPaymentDialog
                 open={isPaymentOpen}

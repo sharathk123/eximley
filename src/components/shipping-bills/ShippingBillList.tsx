@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
     Table,
     TableBody,
@@ -53,7 +54,9 @@ export function ShippingBillList({
                     <Card key={sb.id} className="hover:shadow-md hover-lift transition-shadow shadow-sm bg-card border-border">
                         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                             <div className="space-y-1">
-                                <CardTitle className="text-base font-bold text-foreground">{sb.sb_number}</CardTitle>
+                                <Link href={`/shipping-bills/${sb.id}`} className="hover:underline">
+                                    <CardTitle className="text-base font-bold text-foreground">{sb.sb_number}</CardTitle>
+                                </Link>
                                 <p className="text-sm text-muted-foreground">
                                     {new Date(sb.sb_date).toLocaleDateString()}
                                 </p>
@@ -121,7 +124,11 @@ export function ShippingBillList({
                 <TableBody>
                     {shippingBills.map(sb => (
                         <TableRow key={sb.id} className="hover:bg-muted/50">
-                            <TableCell className="font-medium text-foreground">{sb.sb_number}</TableCell>
+                            <TableCell className="font-medium text-foreground">
+                                <Link href={`/shipping-bills/${sb.id}`} className="text-primary hover:underline">
+                                    {sb.sb_number}
+                                </Link>
+                            </TableCell>
                             <TableCell>{new Date(sb.sb_date).toLocaleDateString()}</TableCell>
                             <TableCell>{sb.export_orders?.order_number || '—'}</TableCell>
                             <TableCell>{sb.export_orders?.entities?.name || '—'}</TableCell>

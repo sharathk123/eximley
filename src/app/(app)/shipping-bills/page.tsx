@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { Plus, Loader2, Search, Ship } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { ShippingBillList } from "@/components/shipping-bills/ShippingBillList";
-import { ShippingBillDialog } from "@/components/shipping-bills/ShippingBillDialog";
 import {
     Pagination,
     PaginationContent,
@@ -30,15 +29,13 @@ import {
 } from "@/components/ui/pagination";
 
 export default function ShippingBillsPage() {
+    const router = useRouter();
     const { toast } = useToast();
     const [shippingBills, setShippingBills] = useState<any[]>([]);
-    const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Dialog States
-    const [openDialog, setOpenDialog] = useState(false);
     const [deletingSB, setDeletingSB] = useState<any>(null);
-    const [editingSB, setEditingSB] = useState<any>(null);
 
     // Pagination & Search State
     const [searchQuery, setSearchQuery] = useState("");
@@ -68,22 +65,8 @@ export default function ShippingBillsPage() {
             .finally(() => setLoading(false));
     };
 
-    const fetchOrders = () => {
-        fetch("/api/orders")
-            .then(res => res.json())
-            .then(data => {
-                if (data.orders) {
-                    setOrders(data.orders);
-                }
-            })
-            .catch(err => {
-                console.error("Error fetching orders:", err);
-            });
-    };
-
     useEffect(() => {
         fetchData();
-        fetchOrders();
     }, []);
 
     useEffect(() => {
@@ -105,28 +88,21 @@ export default function ShippingBillsPage() {
 
     const handleMarkAsFiled = async (id: string) => {
         try {
-            const res = await fetch(`/api/shipping-bills/${id}/file`, { method: "POST" });
-            if (!res.ok) throw new Error("Failed to mark as filed");
+            const res = await fetch(`/api/shipping-bills/${id}/approve`, { method: "POST" });
+            if (!res.ok) throw new Error("Failed to file shipping bill");
             fetchData();
-            toast({ title: "Success", description: "Marked as filed successfully" });
+            toast({ title: "Success", description: "Shipping bill filed successfully" });
         } catch (error) {
-            toast({ title: "Error", description: "Error marking as filed", variant: "destructive" });
+            toast({ title: "Error", description: "Error filing shipping bill", variant: "destructive" });
         }
     };
 
     const handleEdit = (sb: any) => {
-        setEditingSB(sb);
-        setOpenDialog(true);
+        router.push(`/shipping-bills/${sb.id}`);
     };
 
     const handleCreate = () => {
-        setEditingSB(null);
-        setOpenDialog(true);
-    };
-
-    const handleSuccess = () => {
-        fetchData();
-        toast({ title: "Success", description: `Shipping bill ${editingSB ? 'updated' : 'created'} successfully` });
+        router.push('/shipping-bills/create');
     };
 
     return (
@@ -213,14 +189,6 @@ export default function ShippingBillsPage() {
                     )}
                 </>
             )}
-
-            <ShippingBillDialog
-                open={openDialog}
-                onOpenChange={setOpenDialog}
-                initialData={editingSB}
-                onSuccess={handleSuccess}
-                orders={orders}
-            />
 
             <AlertDialog open={!!deletingSB} onOpenChange={() => setDeletingSB(null)}>
                 <AlertDialogContent>
