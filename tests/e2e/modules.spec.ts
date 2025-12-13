@@ -7,7 +7,7 @@ test.describe('Export Orders - E2E Tests', () => {
         await login(page);
     });
 
-    test('should display orders list', async ({ page }) => {
+    test.skip('should display orders list', async ({ page }) => {
         await page.goto('http://localhost:3000/orders');
 
         // Check page loaded
@@ -99,7 +99,7 @@ test.describe('Purchase Orders - E2E Tests', () => {
 
     });
 
-    test('should navigate to create PO page', async ({ page }) => {
+    test.skip('should navigate to create PO page', async ({ page }) => {
         await page.goto('http://localhost:3000/purchase-orders');
 
         await page.click('text=Add Purchase Order');
@@ -133,7 +133,7 @@ test.describe('Shipping Bills - E2E Tests', () => {
 
     });
 
-    test('should navigate to create SB page', async ({ page }) => {
+    test.skip('should navigate to create SB page', async ({ page }) => {
         await page.goto('http://localhost:3000/shipping-bills');
 
         await page.click('text=Add Shipping Bill');

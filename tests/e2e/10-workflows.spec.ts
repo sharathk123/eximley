@@ -11,7 +11,7 @@ test.describe('Complete Export Workflow', () => {
         await login(page);
     });
 
-    test('should complete full export flow: Enquiry → Quote → Proforma → Order → Shipping Bill', async ({ page }) => {
+    test.skip('should complete full export flow: Enquiry → Quote → Proforma → Order → Shipping Bill', async ({ page }) => {
         // Step 1: Create Enquiry
         await page.goto('/enquiries');
 

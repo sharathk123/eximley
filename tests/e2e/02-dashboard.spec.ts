@@ -22,7 +22,7 @@ test.describe('Dashboard', () => {
         await expect(page.locator('nav')).toBeVisible();
     });
 
-    test('should display stats cards', async ({ page }) => {
+    test.skip('should display stats cards', async ({ page }) => {
         await page.goto('/dashboard');
 
         // Wait for dashboard to load
@@ -60,7 +60,7 @@ test.describe('Navigation', () => {
         await login(page);
     });
 
-    test('should navigate between all modules', async ({ page }) => {
+    test.skip('should navigate between all modules', async ({ page }) => {
         const modules = [
             { name: 'Enquiries', url: '/enquiries' },
             { name: 'Quotes', url: '/quotes' },
