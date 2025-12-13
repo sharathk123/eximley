@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - generic [ref=e2]:
     - complementary [ref=e3]:
       - heading "Eximley" [level=1] [ref=e5]
@@ -102,233 +102,67 @@
           - generic [ref=e144]:
             - img [ref=e145]
             - textbox "Search invoices..." [ref=e148]
-          - generic [ref=e149]:
-            - button "Toggle Analytics Dashboard" [ref=e150]:
-              - img
-            - generic [ref=e151]:
-              - button "Card View" [ref=e152]:
-                - img
-              - button "List View" [ref=e153]:
-                - img
-        - generic [ref=e154]:
-          - tablist [ref=e155]:
-            - tab "All" [selected] [ref=e156]
-            - tab "Draft" [ref=e157]
-            - tab "Sent" [ref=e158]
-            - tab "Approved" [ref=e159]
-            - tab "Revised" [ref=e160]
-            - tab "Rejected" [ref=e161]
-            - tab "Converted" [ref=e162]
-          - tabpanel "All" [ref=e163]:
-            - table "Data table" [ref=e168]:
-              - rowgroup [ref=e169]:
-                - 'row "Sort by Invoice # Sort by Buyer Sort by Date Sort by Total Sort by Status Reference Actions" [ref=e170]':
-                  - 'button "Sort by Invoice #" [ref=e171] [cursor=pointer]':
-                    - generic [ref=e172]:
-                      - text: "Invoice #"
-                      - img [ref=e173]
-                  - button "Sort by Buyer" [ref=e176] [cursor=pointer]:
-                    - generic [ref=e177]:
-                      - text: Buyer
-                      - img [ref=e178]
-                  - button "Sort by Date" [ref=e181] [cursor=pointer]:
-                    - generic [ref=e182]:
-                      - text: Date
-                      - img [ref=e183]
-                  - button "Sort by Total" [ref=e186] [cursor=pointer]:
-                    - generic [ref=e187]:
-                      - text: Total
-                      - img [ref=e188]
-                  - button "Sort by Status" [ref=e191] [cursor=pointer]:
-                    - generic [ref=e192]:
-                      - text: Status
-                      - img [ref=e193]
-                  - columnheader "Reference" [ref=e196]:
-                    - generic [ref=e197]: Reference
-                  - columnheader "Actions" [ref=e198]
-              - rowgroup [ref=e199]:
-                - row "PI-2025-001 Emma Wilson (Australian Style) 12 Dec 2025 USD 0.00 approved — Convert proforma undefined Edit proforma Delete proforma" [ref=e200] [cursor=pointer]:
-                  - cell "PI-2025-001" [ref=e201]:
-                    - generic [ref=e202]: PI-2025-001
-                  - cell "Emma Wilson (Australian Style)" [ref=e203]:
-                    - generic [ref=e204]: Emma Wilson (Australian Style)
-                  - cell "12 Dec 2025" [ref=e205]:
-                    - generic [ref=e206]: 12 Dec 2025
-                  - cell "USD 0.00" [ref=e207]:
-                    - generic [ref=e208]: USD 0.00
-                  - cell "approved" [ref=e209]:
-                    - generic [ref=e211]: approved
-                  - cell "—" [ref=e212]:
-                    - generic [ref=e214]: —
-                  - cell "Convert proforma undefined Edit proforma Delete proforma" [ref=e215]:
-                    - generic [ref=e216]:
-                      - button "Convert proforma undefined" [ref=e217]: To Order
-                      - button "Edit proforma" [ref=e218]:
-                        - img
-                      - button "Delete proforma" [ref=e219]:
-                        - img
-                - row "PI-2025-002 Test Buyer 1 12 Dec 2025 USD 1,251.00 draft — Convert proforma undefined Edit proforma Delete proforma" [ref=e220] [cursor=pointer]:
-                  - cell "PI-2025-002" [ref=e221]:
-                    - generic [ref=e222]: PI-2025-002
-                  - cell "Test Buyer 1" [ref=e223]:
-                    - generic [ref=e224]: Test Buyer 1
-                  - cell "12 Dec 2025" [ref=e225]:
-                    - generic [ref=e226]: 12 Dec 2025
-                  - cell "USD 1,251.00" [ref=e227]:
-                    - generic [ref=e228]: USD 1,251.00
-                  - cell "draft" [ref=e229]:
-                    - generic [ref=e231]: draft
-                  - cell "—" [ref=e232]:
-                    - generic [ref=e234]: —
-                  - cell "Convert proforma undefined Edit proforma Delete proforma" [ref=e235]:
-                    - generic [ref=e236]:
-                      - button "Convert proforma undefined" [ref=e237]: To Order
-                      - button "Edit proforma" [ref=e238]:
-                        - img
-                      - button "Delete proforma" [ref=e239]:
-                        - img
-                - row "PI-1765527264646-01 Test Buyer 1 12 Dec 2025 USD 1,500.00 draft — Convert proforma undefined Edit proforma Delete proforma" [ref=e240] [cursor=pointer]:
-                  - cell "PI-1765527264646-01" [ref=e241]:
-                    - generic [ref=e242]: PI-1765527264646-01
-                  - cell "Test Buyer 1" [ref=e243]:
-                    - generic [ref=e244]: Test Buyer 1
-                  - cell "12 Dec 2025" [ref=e245]:
-                    - generic [ref=e246]: 12 Dec 2025
-                  - cell "USD 1,500.00" [ref=e247]:
-                    - generic [ref=e248]: USD 1,500.00
-                  - cell "draft" [ref=e249]:
-                    - generic [ref=e251]: draft
-                  - cell "—" [ref=e252]:
-                    - generic [ref=e254]: —
-                  - cell "Convert proforma undefined Edit proforma Delete proforma" [ref=e255]:
-                    - generic [ref=e256]:
-                      - button "Convert proforma undefined" [ref=e257]: To Order
-                      - button "Edit proforma" [ref=e258]:
-                        - img
-                      - button "Delete proforma" [ref=e259]:
-                        - img
-                - row "PI-1765527264647-02 Test Buyer 1 12 Dec 2025 EUR 2,500.00 sent — Convert proforma undefined Edit proforma Delete proforma" [ref=e260] [cursor=pointer]:
-                  - cell "PI-1765527264647-02" [ref=e261]:
-                    - generic [ref=e262]: PI-1765527264647-02
-                  - cell "Test Buyer 1" [ref=e263]:
-                    - generic [ref=e264]: Test Buyer 1
-                  - cell "12 Dec 2025" [ref=e265]:
-                    - generic [ref=e266]: 12 Dec 2025
-                  - cell "EUR 2,500.00" [ref=e267]:
-                    - generic [ref=e268]: EUR 2,500.00
-                  - cell "sent" [ref=e269]:
-                    - generic [ref=e271]: sent
-                  - cell "—" [ref=e272]:
-                    - generic [ref=e274]: —
-                  - cell "Convert proforma undefined Edit proforma Delete proforma" [ref=e275]:
-                    - generic [ref=e276]:
-                      - button "Convert proforma undefined" [ref=e277]: To Order
-                      - button "Edit proforma" [ref=e278]:
-                        - img
-                      - button "Delete proforma" [ref=e279]:
-                        - img
-                - row "PI-2025-005 Test Buyer 1 12 Dec 2025 USD 194.00 draft — Convert proforma undefined Edit proforma Delete proforma" [ref=e280] [cursor=pointer]:
-                  - cell "PI-2025-005" [ref=e281]:
-                    - generic [ref=e282]: PI-2025-005
-                  - cell "Test Buyer 1" [ref=e283]:
-                    - generic [ref=e284]: Test Buyer 1
-                  - cell "12 Dec 2025" [ref=e285]:
-                    - generic [ref=e286]: 12 Dec 2025
-                  - cell "USD 194.00" [ref=e287]:
-                    - generic [ref=e288]: USD 194.00
-                  - cell "draft" [ref=e289]:
-                    - generic [ref=e291]: draft
-                  - cell "—" [ref=e292]:
-                    - generic [ref=e294]: —
-                  - cell "Convert proforma undefined Edit proforma Delete proforma" [ref=e295]:
-                    - generic [ref=e296]:
-                      - button "Convert proforma undefined" [ref=e297]: To Order
-                      - button "Edit proforma" [ref=e298]:
-                        - img
-                      - button "Delete proforma" [ref=e299]:
-                        - img
-                - row "PI-2025-004 Test Buyer 1 12 Dec 2025 USD 455.00 converted — Edit proforma Delete proforma" [ref=e300] [cursor=pointer]:
-                  - cell "PI-2025-004" [ref=e301]:
-                    - generic [ref=e302]: PI-2025-004
-                  - cell "Test Buyer 1" [ref=e303]:
-                    - generic [ref=e304]: Test Buyer 1
-                  - cell "12 Dec 2025" [ref=e305]:
-                    - generic [ref=e306]: 12 Dec 2025
-                  - cell "USD 455.00" [ref=e307]:
-                    - generic [ref=e308]: USD 455.00
-                  - cell "converted" [ref=e309]:
-                    - generic [ref=e311]: converted
-                  - cell "—" [ref=e312]:
-                    - generic [ref=e314]: —
-                  - cell "Edit proforma Delete proforma" [ref=e315]:
-                    - generic [ref=e316]:
-                      - button "Edit proforma" [ref=e317]:
-                        - img
-                      - button "Delete proforma" [ref=e318]:
-                        - img
-                - row "PI-2025-003 Test Buyer 1 12 Dec 2025 USD 910.00 approved — Convert proforma undefined Edit proforma Delete proforma" [ref=e319] [cursor=pointer]:
-                  - cell "PI-2025-003" [ref=e320]:
-                    - generic [ref=e321]: PI-2025-003
-                  - cell "Test Buyer 1" [ref=e322]:
-                    - generic [ref=e323]: Test Buyer 1
-                  - cell "12 Dec 2025" [ref=e324]:
-                    - generic [ref=e325]: 12 Dec 2025
-                  - cell "USD 910.00" [ref=e326]:
-                    - generic [ref=e327]: USD 910.00
-                  - cell "approved" [ref=e328]:
-                    - generic [ref=e330]: approved
-                  - cell "—" [ref=e331]:
-                    - generic [ref=e333]: —
-                  - cell "Convert proforma undefined Edit proforma Delete proforma" [ref=e334]:
-                    - generic [ref=e335]:
-                      - button "Convert proforma undefined" [ref=e336]: To Order
-                      - button "Edit proforma" [ref=e337]:
-                        - img
-                      - button "Delete proforma" [ref=e338]:
-                        - img
-                - row "PI-2025-002 Test Buyer 1 12 Dec 2025 USD 1,251.00 revised — Convert proforma undefined Edit proforma Delete proforma" [ref=e339] [cursor=pointer]:
-                  - cell "PI-2025-002" [ref=e340]:
-                    - generic [ref=e341]: PI-2025-002
-                  - cell "Test Buyer 1" [ref=e342]:
-                    - generic [ref=e343]: Test Buyer 1
-                  - cell "12 Dec 2025" [ref=e344]:
-                    - generic [ref=e345]: 12 Dec 2025
-                  - cell "USD 1,251.00" [ref=e346]:
-                    - generic [ref=e347]: USD 1,251.00
-                  - cell "revised" [ref=e348]:
-                    - generic [ref=e350]: revised
-                  - cell "—" [ref=e351]:
-                    - generic [ref=e353]: —
-                  - cell "Convert proforma undefined Edit proforma Delete proforma" [ref=e354]:
-                    - generic [ref=e355]:
-                      - button "Convert proforma undefined" [ref=e356]: To Order
-                      - button "Edit proforma" [ref=e357]:
-                        - img
-                      - button "Delete proforma" [ref=e358]:
-                        - img
-                - row "PI-2025-001 Test Buyer 1 12 Dec 2025 USD 980.00 rejected — Convert proforma undefined Edit proforma Delete proforma" [ref=e359] [cursor=pointer]:
-                  - cell "PI-2025-001" [ref=e360]:
-                    - generic [ref=e361]: PI-2025-001
-                  - cell "Test Buyer 1" [ref=e362]:
-                    - generic [ref=e363]: Test Buyer 1
-                  - cell "12 Dec 2025" [ref=e364]:
-                    - generic [ref=e365]: 12 Dec 2025
-                  - cell "USD 980.00" [ref=e366]:
-                    - generic [ref=e367]: USD 980.00
-                  - cell "rejected" [ref=e368]:
-                    - generic [ref=e370]: rejected
-                  - cell "—" [ref=e371]:
-                    - generic [ref=e373]: —
-                  - cell "Convert proforma undefined Edit proforma Delete proforma" [ref=e374]:
-                    - generic [ref=e375]:
-                      - button "Convert proforma undefined" [ref=e376]: To Order
-                      - button "Edit proforma" [ref=e377]:
-                        - img
-                      - button "Delete proforma" [ref=e378]:
-                        - img
+          - button "Toggle Analytics Dashboard" [active] [ref=e150]:
+            - img
+        - generic [ref=e151]:
+          - generic [ref=e152]:
+            - generic [ref=e153]:
+              - generic [ref=e154]:
+                - generic [ref=e155]: Total Invoices
+                - img [ref=e156]
+              - generic [ref=e159]:
+                - generic [ref=e160]: "9"
+                - paragraph [ref=e161]: Lifetime proforma invoices
+            - generic [ref=e162]:
+              - generic [ref=e163]:
+                - generic [ref=e164]: Total Value
+                - img [ref=e165]
+              - generic [ref=e167]:
+                - generic [ref=e168]: $9,041
+                - paragraph [ref=e169]: All-time value
+            - generic [ref=e170]:
+              - generic [ref=e171]:
+                - generic [ref=e172]: Pending Approval
+                - img [ref=e173]
+              - generic [ref=e176]:
+                - generic [ref=e177]: "1"
+                - paragraph [ref=e178]: Awaiting approval
+            - generic [ref=e179]:
+              - generic [ref=e180]:
+                - generic [ref=e181]: Conversion Rate
+                - img [ref=e182]
+              - generic [ref=e185]:
+                - generic [ref=e186]: 11.1%
+                - paragraph [ref=e187]: To confirmed orders
+          - generic [ref=e188]:
+            - generic [ref=e189]:
+              - generic [ref=e191]: Invoice Value Trend
+              - application [ref=e196]:
+                - generic [ref=e204]: Dec 12
+            - generic [ref=e205]:
+              - generic [ref=e207]: Status Distribution
+              - generic [ref=e211]:
+                - list [ref=e213]:
+                  - listitem [ref=e214]:
+                    - img "Approved legend icon" [ref=e215]
+                    - text: Approved
+                  - listitem [ref=e217]:
+                    - img "Converted legend icon" [ref=e218]
+                    - text: Converted
+                  - listitem [ref=e220]:
+                    - img "Draft legend icon" [ref=e221]
+                    - text: Draft
+                  - listitem [ref=e223]:
+                    - img "Rejected legend icon" [ref=e224]
+                    - text: Rejected
+                  - listitem [ref=e226]:
+                    - img "Sent legend icon" [ref=e227]
+                    - text: Sent
+                - application [ref=e229]
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e384] [cursor=pointer]:
-    - img [ref=e385]
-  - alert [ref=e388]
+  - button "Open Next.js Dev Tools" [ref=e248] [cursor=pointer]:
+    - img [ref=e249]
+  - alert [ref=e252]
+  - generic [ref=e253]: Dec 12
 ```

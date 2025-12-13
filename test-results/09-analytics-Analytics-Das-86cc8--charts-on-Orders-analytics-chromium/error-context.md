@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - generic [ref=e2]:
     - complementary [ref=e3]:
       - heading "Eximley" [level=1] [ref=e5]
@@ -113,80 +113,62 @@
           - generic [ref=e161]:
             - img [ref=e162]
             - textbox "Search orders..." [ref=e165]
-          - generic [ref=e166]:
-            - button "Toggle Analytics Dashboard" [ref=e167]:
-              - img
-            - generic [ref=e168]:
-              - button "Card View" [ref=e169]:
-                - img
-              - button "List View" [ref=e170]:
-                - img
-        - generic [ref=e171]:
-          - tablist [ref=e172]:
-            - tab "All" [selected] [ref=e173]
-            - tab "Pending" [ref=e174]
-            - tab "Confirmed" [ref=e175]
-            - tab "Shipped" [ref=e176]
-            - tab "Completed" [ref=e177]
-            - tab "Cancelled" [ref=e178]
-          - tabpanel "All" [ref=e179]:
-            - table "Data table" [ref=e184]:
-              - rowgroup [ref=e185]:
-                - 'row "Sort by Order # Sort by Buyer Sort by Date Sort by Total Sort by Status Reference Actions" [ref=e186]':
-                  - 'button "Sort by Order #" [ref=e187] [cursor=pointer]':
-                    - generic [ref=e188]:
-                      - text: "Order #"
-                      - img [ref=e189]
-                  - button "Sort by Buyer" [ref=e192] [cursor=pointer]:
-                    - generic [ref=e193]:
-                      - text: Buyer
-                      - img [ref=e194]
-                  - button "Sort by Date" [ref=e197] [cursor=pointer]:
-                    - generic [ref=e198]:
-                      - text: Date
-                      - img [ref=e199]
-                  - button "Sort by Total" [ref=e202] [cursor=pointer]:
-                    - generic [ref=e203]:
-                      - text: Total
-                      - img [ref=e204]
-                  - button "Sort by Status" [ref=e207] [cursor=pointer]:
-                    - generic [ref=e208]:
-                      - text: Status
-                      - img [ref=e209]
-                  - columnheader "Reference" [ref=e212]:
-                    - generic [ref=e213]: Reference
-                  - columnheader "Actions" [ref=e214]
-              - rowgroup [ref=e215]:
-                - 'row "ORD-2025-001 Test Buyer 1 12/12/2025 USD 455.00 confirmed unpaid From: PI-2025-004 Manage payments Edit order Delete order" [ref=e216]':
-                  - cell "ORD-2025-001" [ref=e217]:
-                    - link "ORD-2025-001" [ref=e219] [cursor=pointer]:
-                      - /url: /orders/840e2fdd-18a3-4749-b70b-38029a172237
-                  - cell "Test Buyer 1" [ref=e220]:
-                    - generic [ref=e221]: Test Buyer 1
-                  - cell "12/12/2025" [ref=e222]:
-                    - generic [ref=e223]: 12/12/2025
-                  - cell "USD 455.00" [ref=e224]:
-                    - generic [ref=e225]: USD 455.00
-                  - cell "confirmed unpaid" [ref=e226]:
-                    - generic [ref=e228]:
-                      - generic [ref=e229]: confirmed
-                      - generic [ref=e230]: unpaid
-                  - 'cell "From: PI-2025-004" [ref=e231]':
-                    - generic [ref=e233]:
-                      - generic [ref=e234]: "From:"
-                      - link "PI-2025-004" [ref=e235] [cursor=pointer]:
-                        - /url: /invoices/proforma/c88e23ee-b2bd-4031-b14c-19a1e6d4a501
-                  - cell "Manage payments Edit order Delete order" [ref=e236]:
-                    - generic [ref=e237]:
-                      - button "Manage payments" [ref=e238]:
-                        - img
-                      - button "Edit order" [ref=e239]:
-                        - img
-                      - button "Delete order" [ref=e240]:
-                        - img
+          - button "Toggle Analytics Dashboard" [active] [ref=e167]:
+            - img
+        - generic [ref=e168]:
+          - generic [ref=e169]:
+            - generic [ref=e170]:
+              - generic [ref=e171]:
+                - generic [ref=e172]: Total Orders
+                - img [ref=e173]
+              - generic [ref=e177]:
+                - generic [ref=e178]: "1"
+                - paragraph [ref=e179]: Lifetime orders
+            - generic [ref=e180]:
+              - generic [ref=e181]:
+                - generic [ref=e182]: Total Revenue
+                - img [ref=e183]
+              - generic [ref=e185]:
+                - generic [ref=e186]: $455
+                - paragraph [ref=e187]: All-time revenue
+            - generic [ref=e188]:
+              - generic [ref=e189]:
+                - generic [ref=e190]: Avg Order Value
+                - img [ref=e191]
+              - generic [ref=e194]:
+                - generic [ref=e195]: $455
+                - paragraph [ref=e196]: Per order
+            - generic [ref=e197]:
+              - generic [ref=e198]:
+                - generic [ref=e199]: Delivered
+                - img [ref=e200]
+              - generic [ref=e203]:
+                - generic [ref=e204]: "0"
+                - paragraph [ref=e205]: Successfully completed
+          - generic [ref=e206]:
+            - generic [ref=e207]:
+              - generic [ref=e209]: Revenue Trend
+              - application [ref=e214]:
+                - generic [ref=e222]:
+                  - generic [ref=e225]: Dec 12
+                  - generic [ref=e226]:
+                    - generic [ref=e228]: $0.00
+                    - generic [ref=e230]: $150.00
+                    - generic [ref=e232]: $300.00
+                    - generic [ref=e234]: $450.00
+                    - generic [ref=e236]: $600.00
+            - generic [ref=e237]:
+              - generic [ref=e239]: Status Distribution
+              - generic [ref=e243]:
+                - list [ref=e245]:
+                  - listitem [ref=e246]:
+                    - img "Confirmed legend icon" [ref=e247]
+                    - text: Confirmed
+                - application [ref=e249]
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e246] [cursor=pointer]:
-    - img [ref=e247]
-  - alert [ref=e250]
+  - button "Open Next.js Dev Tools" [ref=e260] [cursor=pointer]:
+    - img [ref=e261]
+  - alert [ref=e264]
+  - generic [ref=e265]: $0.00
 ```

@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - generic [ref=e2]:
     - complementary [ref=e3]:
       - heading "Eximley" [level=1] [ref=e5]
@@ -102,28 +102,21 @@
           - generic [ref=e144]:
             - img [ref=e145]
             - textbox "Search shipping bills..." [ref=e148]
-          - generic [ref=e149]:
-            - button "Toggle Analytics Dashboard" [ref=e150]:
-              - img
-            - generic [ref=e151]:
-              - button "Card View" [ref=e152]:
-                - img
-              - button "List View" [ref=e153]:
-                - img
-        - tablist [ref=e155]:
-          - tab "all" [selected] [ref=e156]
-          - tab "drafted" [ref=e157]
-          - tab "filed" [ref=e158]
-          - tab "cleared" [ref=e159]
-          - tab "shipped" [ref=e160]
-        - 'status "No shipping bills found: Create your first shipping bill to track customs export declarations." [ref=e161]':
-          - img [ref=e163]
-          - heading "No shipping bills found" [level=3] [ref=e167]
-          - paragraph [ref=e168]: Create your first shipping bill to track customs export declarations.
-          - button "Add Shipping Bill" [ref=e169]
+          - button "Toggle Analytics Dashboard" [active] [ref=e150]:
+            - img
+        - generic [ref=e151]: Failed to load analytics
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e175] [cursor=pointer]:
-    - img [ref=e176]
-  - alert [ref=e179]
+  - generic [ref=e156] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e157]:
+      - img [ref=e158]
+    - generic [ref=e161]:
+      - button "Open issues overlay" [ref=e162]:
+        - generic [ref=e163]:
+          - generic [ref=e164]: "0"
+          - generic [ref=e165]: "1"
+        - generic [ref=e166]: Issue
+      - button "Collapse issues badge" [ref=e167]:
+        - img [ref=e168]
+  - alert [ref=e170]
 ```

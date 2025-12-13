@@ -1,482 +1,179 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
-  - generic [ref=e2]:
-    - complementary [ref=e3]:
-      - heading "Eximley" [level=1] [ref=e5]
-      - navigation [ref=e6]:
-        - link "Dashboard" [ref=e7] [cursor=pointer]:
+- generic [ref=e1]:
+  - generic [ref=e6] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e7]:
+      - img [ref=e8]
+    - generic [ref=e11]:
+      - button "Open issues overlay" [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: "0"
+          - generic [ref=e15]: "1"
+        - generic [ref=e16]: Issue
+      - button "Collapse issues badge" [ref=e17]:
+        - img [ref=e18]
+  - generic [ref=e20]:
+    - complementary [ref=e21]:
+      - heading "Eximley" [level=1] [ref=e23]
+      - navigation [ref=e24]:
+        - link "Dashboard" [ref=e25] [cursor=pointer]:
           - /url: /dashboard
-          - img [ref=e9]
-          - generic [ref=e14]: Dashboard
-        - link "Enquiries" [ref=e15] [cursor=pointer]:
+          - img [ref=e27]
+          - generic [ref=e32]: Dashboard
+        - link "Enquiries" [ref=e33] [cursor=pointer]:
           - /url: /enquiries
-          - img [ref=e17]
-          - generic [ref=e20]: Enquiries
-        - link "Quotes" [ref=e21] [cursor=pointer]:
+          - img [ref=e35]
+          - generic [ref=e38]: Enquiries
+        - link "Quotes" [ref=e39] [cursor=pointer]:
           - /url: /quotes
-          - img [ref=e23]
-          - generic [ref=e27]: Quotes
-        - link "Proforma Invoices" [ref=e28] [cursor=pointer]:
+          - img [ref=e41]
+          - generic [ref=e45]: Quotes
+        - link "Proforma Invoices" [ref=e46] [cursor=pointer]:
           - /url: /invoices/proforma
-          - img [ref=e30]
-          - generic [ref=e33]: Proforma Invoices
-        - link "Export Orders" [ref=e34] [cursor=pointer]:
+          - img [ref=e48]
+          - generic [ref=e51]: Proforma Invoices
+        - link "Export Orders" [ref=e52] [cursor=pointer]:
           - /url: /orders
-          - img [ref=e36]
-          - generic [ref=e39]: Export Orders
-        - link "Purchase Orders" [ref=e40] [cursor=pointer]:
+          - img [ref=e54]
+          - generic [ref=e57]: Export Orders
+        - link "Purchase Orders" [ref=e58] [cursor=pointer]:
           - /url: /purchase-orders
-          - img [ref=e42]
-          - generic [ref=e46]: Purchase Orders
-        - link "Shipments" [ref=e47] [cursor=pointer]:
+          - img [ref=e60]
+          - generic [ref=e64]: Purchase Orders
+        - link "Shipments" [ref=e65] [cursor=pointer]:
           - /url: /shipments
-          - img [ref=e49]
-          - generic [ref=e53]: Shipments
-        - link "Shipping Bills" [ref=e54] [cursor=pointer]:
+          - img [ref=e67]
+          - generic [ref=e71]: Shipments
+        - link "Shipping Bills" [ref=e72] [cursor=pointer]:
           - /url: /shipping-bills
-          - img [ref=e56]
-          - generic [ref=e60]: Shipping Bills
-        - link "e-BRC" [ref=e61] [cursor=pointer]:
+          - img [ref=e74]
+          - generic [ref=e78]: Shipping Bills
+        - link "e-BRC" [ref=e79] [cursor=pointer]:
           - /url: /brcs
-          - img [ref=e63]
-          - generic [ref=e66]: e-BRC
-        - link "Incentives" [ref=e67] [cursor=pointer]:
+          - img [ref=e81]
+          - generic [ref=e84]: e-BRC
+        - link "Incentives" [ref=e85] [cursor=pointer]:
           - /url: /incentives
-          - img [ref=e69]
-          - generic [ref=e72]: Incentives
-        - link "LUT Management" [ref=e73] [cursor=pointer]:
+          - img [ref=e87]
+          - generic [ref=e90]: Incentives
+        - link "LUT Management" [ref=e91] [cursor=pointer]:
           - /url: /compliance/lut
-          - img [ref=e75]
-          - generic [ref=e79]: LUT Management
-        - generic [ref=e80]: Documents
-        - link "Document Library" [ref=e81] [cursor=pointer]:
+          - img [ref=e93]
+          - generic [ref=e97]: LUT Management
+        - generic [ref=e98]: Documents
+        - link "Document Library" [ref=e99] [cursor=pointer]:
           - /url: /documents
-          - img [ref=e83]
-          - generic [ref=e85]: Document Library
-        - generic [ref=e86]: Masters
-        - link "Products" [ref=e87] [cursor=pointer]:
+          - img [ref=e101]
+          - generic [ref=e103]: Document Library
+        - generic [ref=e104]: Masters
+        - link "Products" [ref=e105] [cursor=pointer]:
           - /url: /products
-          - img [ref=e89]
-          - generic [ref=e92]: Products
-        - link "Entities" [ref=e93] [cursor=pointer]:
+          - img [ref=e107]
+          - generic [ref=e110]: Products
+        - link "Entities" [ref=e111] [cursor=pointer]:
           - /url: /entities
-          - img [ref=e95]
-          - generic [ref=e100]: Entities
-        - link "SKU Management" [ref=e101] [cursor=pointer]:
+          - img [ref=e113]
+          - generic [ref=e118]: Entities
+        - link "SKU Management" [ref=e119] [cursor=pointer]:
           - /url: /skus
-          - img [ref=e103]
-          - generic [ref=e107]: SKU Management
-        - generic [ref=e108]: System
-        - link "ITC-HSN Lookup" [ref=e109] [cursor=pointer]:
+          - img [ref=e121]
+          - generic [ref=e125]: SKU Management
+        - generic [ref=e126]: System
+        - link "ITC-HSN Lookup" [ref=e127] [cursor=pointer]:
           - /url: /hsn
-          - img [ref=e111]
-          - generic [ref=e114]: ITC-HSN Lookup
-        - link "Settings" [ref=e115] [cursor=pointer]:
+          - img [ref=e129]
+          - generic [ref=e132]: ITC-HSN Lookup
+        - link "Settings" [ref=e133] [cursor=pointer]:
           - /url: /settings/company
-          - img [ref=e117]
-          - generic [ref=e120]: Settings
-      - generic [ref=e121]:
-        - generic [ref=e122]:
-          - button "Notifications" [ref=e123]:
+          - img [ref=e135]
+          - generic [ref=e138]: Settings
+      - generic [ref=e139]:
+        - generic [ref=e140]:
+          - button "Notifications" [ref=e141]:
             - img
-          - button "Log out" [ref=e124]:
-            - img [ref=e125]
-            - generic [ref=e128]: Log out
-        - generic [ref=e129]:
-          - generic [ref=e130]: T
-          - generic [ref=e131]:
-            - paragraph [ref=e132]: Test User
-            - paragraph [ref=e133]: testuser_v1@example.com
-    - main [ref=e134]:
-      - generic [ref=e136]:
-        - generic [ref=e137]:
-          - generic [ref=e138]:
-            - heading "Enquiries" [level=2] [ref=e139]
-            - paragraph [ref=e140]: Manage customer enquiries and convert to orders.
-          - generic [ref=e141]:
-            - button "Bulk Upload" [ref=e142]:
+          - button "Log out" [ref=e142]:
+            - img [ref=e143]
+            - generic [ref=e146]: Log out
+        - generic [ref=e147]:
+          - generic [ref=e148]: T
+          - generic [ref=e149]:
+            - paragraph [ref=e150]: Test User
+            - paragraph [ref=e151]: testuser_v1@example.com
+    - main [ref=e152]:
+      - generic [ref=e154]:
+        - generic [ref=e155]:
+          - generic [ref=e156]:
+            - heading "Enquiries" [level=2] [ref=e157]
+            - paragraph [ref=e158]: Manage customer enquiries and convert to orders.
+          - generic [ref=e159]:
+            - button "Bulk Upload" [ref=e160]:
               - img
               - text: Bulk Upload
-            - button "Add Enquiry" [ref=e143]:
+            - button "Add Enquiry" [ref=e161]:
               - img
               - text: Add Enquiry
-        - generic [ref=e144]:
-          - generic [ref=e145]:
-            - img [ref=e146]
-            - textbox "Search enquiries..." [ref=e149]
-          - generic [ref=e150]:
-            - button "Toggle Analytics Dashboard" [ref=e151]:
-              - img
-            - generic [ref=e152]:
-              - button "Card View" [ref=e153]:
-                - img
-              - button "List View" [ref=e154]:
-                - img
-        - generic [ref=e155]:
-          - tablist [ref=e156]:
-            - tab "All" [selected] [ref=e157]
-            - tab "New" [ref=e158]
-            - tab "Contacted" [ref=e159]
-            - tab "Quoted" [ref=e160]
-            - tab "Won" [ref=e161]
-            - tab "Lost" [ref=e162]
-            - tab "Converted" [ref=e163]
-          - tabpanel "All" [ref=e164]:
-            - table "Data table" [ref=e169]:
-              - rowgroup [ref=e170]:
-                - 'row "Sort by Enquiry # Sort by Customer Sort by Date Company Interested Products Source Sort by Status Sort by Priority Reference Actions" [ref=e171]':
-                  - 'button "Sort by Enquiry #" [ref=e172] [cursor=pointer]':
-                    - generic [ref=e173]:
-                      - text: "Enquiry #"
-                      - img [ref=e174]
-                  - button "Sort by Customer" [ref=e177] [cursor=pointer]:
-                    - generic [ref=e178]:
-                      - text: Customer
-                      - img [ref=e179]
-                  - button "Sort by Date" [ref=e182] [cursor=pointer]:
-                    - generic [ref=e183]:
-                      - text: Date
-                      - img [ref=e184]
-                  - columnheader "Company" [ref=e187]:
-                    - generic [ref=e188]: Company
-                  - columnheader "Interested Products" [ref=e189]:
-                    - generic [ref=e190]: Interested Products
-                  - columnheader "Source" [ref=e191]:
-                    - generic [ref=e192]: Source
-                  - button "Sort by Status" [ref=e193] [cursor=pointer]:
-                    - generic [ref=e194]:
-                      - text: Status
-                      - img [ref=e195]
-                  - button "Sort by Priority" [ref=e198] [cursor=pointer]:
-                    - generic [ref=e199]:
-                      - text: Priority
-                      - img [ref=e200]
-                  - columnheader "Reference" [ref=e203]:
-                    - generic [ref=e204]: Reference
-                  - columnheader "Actions" [ref=e205]
-              - rowgroup [ref=e206]:
-                - row "ENQ-2025-010-V2 Pierre Dubois Invalid Date France Textile SA — referral new high — Edit enquiry View details" [ref=e207] [cursor=pointer]:
-                  - cell "ENQ-2025-010-V2" [ref=e208]:
-                    - generic [ref=e209]: ENQ-2025-010-V2
-                  - cell "Pierre Dubois" [ref=e210]:
-                    - generic [ref=e211]: Pierre Dubois
-                  - cell "Invalid Date" [ref=e212]:
-                    - generic [ref=e213]: Invalid Date
-                  - cell "France Textile SA" [ref=e214]:
-                    - generic [ref=e215]: France Textile SA
-                  - cell "—" [ref=e216]:
-                    - generic [ref=e217]: —
-                  - cell "referral" [ref=e218]:
-                    - generic [ref=e219]: referral
-                  - cell "new" [ref=e220]:
-                    - generic [ref=e222]: new
-                  - cell "high" [ref=e223]:
-                    - generic [ref=e225]: high
-                  - cell "—" [ref=e226]:
-                    - generic [ref=e227]: —
-                  - cell "Edit enquiry View details" [ref=e228]:
-                    - generic [ref=e229]:
-                      - button "Edit enquiry" [ref=e230]:
-                        - img
-                      - button "View details" [ref=e231]:
-                        - img
-                - row "ENQ-2025-001-V1 John Smith Invalid Date Acme Corporation — website new high — Edit enquiry View details" [ref=e232] [cursor=pointer]:
-                  - cell "ENQ-2025-001-V1" [ref=e233]:
-                    - generic [ref=e234]: ENQ-2025-001-V1
-                  - cell "John Smith" [ref=e235]:
-                    - generic [ref=e236]: John Smith
-                  - cell "Invalid Date" [ref=e237]:
-                    - generic [ref=e238]: Invalid Date
-                  - cell "Acme Corporation" [ref=e239]:
-                    - generic [ref=e240]: Acme Corporation
-                  - cell "—" [ref=e241]:
-                    - generic [ref=e242]: —
-                  - cell "website" [ref=e243]:
-                    - generic [ref=e244]: website
-                  - cell "new" [ref=e245]:
-                    - generic [ref=e247]: new
-                  - cell "high" [ref=e248]:
-                    - generic [ref=e250]: high
-                  - cell "—" [ref=e251]:
-                    - generic [ref=e252]: —
-                  - cell "Edit enquiry View details" [ref=e253]:
-                    - generic [ref=e254]:
-                      - button "Edit enquiry" [ref=e255]:
-                        - img
-                      - button "View details" [ref=e256]:
-                        - img
-                - row "ENQ-2025-003-V1 Li Wei Invalid Date China Textiles Ltd — email new medium — Edit enquiry View details" [ref=e257] [cursor=pointer]:
-                  - cell "ENQ-2025-003-V1" [ref=e258]:
-                    - generic [ref=e259]: ENQ-2025-003-V1
-                  - cell "Li Wei" [ref=e260]:
-                    - generic [ref=e261]: Li Wei
-                  - cell "Invalid Date" [ref=e262]:
-                    - generic [ref=e263]: Invalid Date
-                  - cell "China Textiles Ltd" [ref=e264]:
-                    - generic [ref=e265]: China Textiles Ltd
-                  - cell "—" [ref=e266]:
-                    - generic [ref=e267]: —
-                  - cell "email" [ref=e268]:
-                    - generic [ref=e269]: email
-                  - cell "new" [ref=e270]:
-                    - generic [ref=e272]: new
-                  - cell "medium" [ref=e273]:
-                    - generic [ref=e275]: medium
-                  - cell "—" [ref=e276]:
-                    - generic [ref=e277]: —
-                  - cell "Edit enquiry View details" [ref=e278]:
-                    - generic [ref=e279]:
-                      - button "Edit enquiry" [ref=e280]:
-                        - img
-                      - button "View details" [ref=e281]:
-                        - img
-                - row "ENQ-2025-004-V1 Sarah Johnson Invalid Date Fashion House UK — referral new high — Edit enquiry View details" [ref=e282] [cursor=pointer]:
-                  - cell "ENQ-2025-004-V1" [ref=e283]:
-                    - generic [ref=e284]: ENQ-2025-004-V1
-                  - cell "Sarah Johnson" [ref=e285]:
-                    - generic [ref=e286]: Sarah Johnson
-                  - cell "Invalid Date" [ref=e287]:
-                    - generic [ref=e288]: Invalid Date
-                  - cell "Fashion House UK" [ref=e289]:
-                    - generic [ref=e290]: Fashion House UK
-                  - cell "—" [ref=e291]:
-                    - generic [ref=e292]: —
-                  - cell "referral" [ref=e293]:
-                    - generic [ref=e294]: referral
-                  - cell "new" [ref=e295]:
-                    - generic [ref=e297]: new
-                  - cell "high" [ref=e298]:
-                    - generic [ref=e300]: high
-                  - cell "—" [ref=e301]:
-                    - generic [ref=e302]: —
-                  - cell "Edit enquiry View details" [ref=e303]:
-                    - generic [ref=e304]:
-                      - button "Edit enquiry" [ref=e305]:
-                        - img
-                      - button "View details" [ref=e306]:
-                        - img
-                - row "ENQ-2025-005-V1 Ahmed Hassan Invalid Date Dubai Imports LLC — phone new medium — Edit enquiry View details" [ref=e307] [cursor=pointer]:
-                  - cell "ENQ-2025-005-V1" [ref=e308]:
-                    - generic [ref=e309]: ENQ-2025-005-V1
-                  - cell "Ahmed Hassan" [ref=e310]:
-                    - generic [ref=e311]: Ahmed Hassan
-                  - cell "Invalid Date" [ref=e312]:
-                    - generic [ref=e313]: Invalid Date
-                  - cell "Dubai Imports LLC" [ref=e314]:
-                    - generic [ref=e315]: Dubai Imports LLC
-                  - cell "—" [ref=e316]:
-                    - generic [ref=e317]: —
-                  - cell "phone" [ref=e318]:
-                    - generic [ref=e319]: phone
-                  - cell "new" [ref=e320]:
-                    - generic [ref=e322]: new
-                  - cell "medium" [ref=e323]:
-                    - generic [ref=e325]: medium
-                  - cell "—" [ref=e326]:
-                    - generic [ref=e327]: —
-                  - cell "Edit enquiry View details" [ref=e328]:
-                    - generic [ref=e329]:
-                      - button "Edit enquiry" [ref=e330]:
-                        - img
-                      - button "View details" [ref=e331]:
-                        - img
-                - row "ENQ-2025-006-V1 Anna Kowalski Invalid Date Polish Retail Group — website new high — Edit enquiry View details" [ref=e332] [cursor=pointer]:
-                  - cell "ENQ-2025-006-V1" [ref=e333]:
-                    - generic [ref=e334]: ENQ-2025-006-V1
-                  - cell "Anna Kowalski" [ref=e335]:
-                    - generic [ref=e336]: Anna Kowalski
-                  - cell "Invalid Date" [ref=e337]:
-                    - generic [ref=e338]: Invalid Date
-                  - cell "Polish Retail Group" [ref=e339]:
-                    - generic [ref=e340]: Polish Retail Group
-                  - cell "—" [ref=e341]:
-                    - generic [ref=e342]: —
-                  - cell "website" [ref=e343]:
-                    - generic [ref=e344]: website
-                  - cell "new" [ref=e345]:
-                    - generic [ref=e347]: new
-                  - cell "high" [ref=e348]:
-                    - generic [ref=e350]: high
-                  - cell "—" [ref=e351]:
-                    - generic [ref=e352]: —
-                  - cell "Edit enquiry View details" [ref=e353]:
-                    - generic [ref=e354]:
-                      - button "Edit enquiry" [ref=e355]:
-                        - img
-                      - button "View details" [ref=e356]:
-                        - img
-                - row "ENQ-2025-007-V1 Carlos Rodriguez Invalid Date Mexico Textiles — email new low — Edit enquiry View details" [ref=e357] [cursor=pointer]:
-                  - cell "ENQ-2025-007-V1" [ref=e358]:
-                    - generic [ref=e359]: ENQ-2025-007-V1
-                  - cell "Carlos Rodriguez" [ref=e360]:
-                    - generic [ref=e361]: Carlos Rodriguez
-                  - cell "Invalid Date" [ref=e362]:
-                    - generic [ref=e363]: Invalid Date
-                  - cell "Mexico Textiles" [ref=e364]:
-                    - generic [ref=e365]: Mexico Textiles
-                  - cell "—" [ref=e366]:
-                    - generic [ref=e367]: —
-                  - cell "email" [ref=e368]:
-                    - generic [ref=e369]: email
-                  - cell "new" [ref=e370]:
-                    - generic [ref=e372]: new
-                  - cell "low" [ref=e373]:
-                    - generic [ref=e375]: low
-                  - cell "—" [ref=e376]:
-                    - generic [ref=e377]: —
-                  - cell "Edit enquiry View details" [ref=e378]:
-                    - generic [ref=e379]:
-                      - button "Edit enquiry" [ref=e380]:
-                        - img
-                      - button "View details" [ref=e381]:
-                        - img
-                - row "ENQ-2025-008-V1 Yuki Tanaka Invalid Date Japan Fashion Co — trade show new medium — Edit enquiry View details" [ref=e382] [cursor=pointer]:
-                  - cell "ENQ-2025-008-V1" [ref=e383]:
-                    - generic [ref=e384]: ENQ-2025-008-V1
-                  - cell "Yuki Tanaka" [ref=e385]:
-                    - generic [ref=e386]: Yuki Tanaka
-                  - cell "Invalid Date" [ref=e387]:
-                    - generic [ref=e388]: Invalid Date
-                  - cell "Japan Fashion Co" [ref=e389]:
-                    - generic [ref=e390]: Japan Fashion Co
-                  - cell "—" [ref=e391]:
-                    - generic [ref=e392]: —
-                  - cell "trade show" [ref=e393]:
-                    - generic [ref=e394]: trade show
-                  - cell "new" [ref=e395]:
-                    - generic [ref=e397]: new
-                  - cell "medium" [ref=e398]:
-                    - generic [ref=e400]: medium
-                  - cell "—" [ref=e401]:
-                    - generic [ref=e402]: —
-                  - cell "Edit enquiry View details" [ref=e403]:
-                    - generic [ref=e404]:
-                      - button "Edit enquiry" [ref=e405]:
-                        - img
-                      - button "View details" [ref=e406]:
-                        - img
-                - row "ENQ-2025-010-V1 Pierre Dubois Invalid Date France Textile SA — referral new high — Edit enquiry View details" [ref=e407] [cursor=pointer]:
-                  - cell "ENQ-2025-010-V1" [ref=e408]:
-                    - generic [ref=e409]: ENQ-2025-010-V1
-                  - cell "Pierre Dubois" [ref=e410]:
-                    - generic [ref=e411]: Pierre Dubois
-                  - cell "Invalid Date" [ref=e412]:
-                    - generic [ref=e413]: Invalid Date
-                  - cell "France Textile SA" [ref=e414]:
-                    - generic [ref=e415]: France Textile SA
-                  - cell "—" [ref=e416]:
-                    - generic [ref=e417]: —
-                  - cell "referral" [ref=e418]:
-                    - generic [ref=e419]: referral
-                  - cell "new" [ref=e420]:
-                    - generic [ref=e422]: new
-                  - cell "high" [ref=e423]:
-                    - generic [ref=e425]: high
-                  - cell "—" [ref=e426]:
-                    - generic [ref=e427]: —
-                  - cell "Edit enquiry View details" [ref=e428]:
-                    - generic [ref=e429]:
-                      - button "Edit enquiry" [ref=e430]:
-                        - img
-                      - button "View details" [ref=e431]:
-                        - img
-                - 'row "ENQ-2025-009-V1 Emma Wilson Invalid Date Australian Style Jute Shopping Bag website quoted urgent To: QT-2025-12-12-005 Edit enquiry View details" [ref=e432] [cursor=pointer]':
-                  - cell "ENQ-2025-009-V1" [ref=e433]:
-                    - generic [ref=e434]: ENQ-2025-009-V1
-                  - cell "Emma Wilson" [ref=e435]:
-                    - generic [ref=e436]: Emma Wilson
-                  - cell "Invalid Date" [ref=e437]:
-                    - generic [ref=e438]: Invalid Date
-                  - cell "Australian Style" [ref=e439]:
-                    - generic [ref=e440]: Australian Style
-                  - cell "Jute Shopping Bag" [ref=e441]:
-                    - generic [ref=e444]: Jute Shopping Bag
-                  - cell "website" [ref=e445]:
-                    - generic [ref=e446]: website
-                  - cell "quoted" [ref=e447]:
-                    - generic [ref=e449]: quoted
-                  - cell "urgent" [ref=e450]:
-                    - generic [ref=e452]: urgent
-                  - 'cell "To: QT-2025-12-12-005" [ref=e453]':
-                    - generic [ref=e455]:
-                      - generic [ref=e456]: "To:"
-                      - link "QT-2025-12-12-005" [ref=e457]:
-                        - /url: /quotes/c4786e32-361e-4122-8c08-9ed178d570a5
-                  - cell "Edit enquiry View details" [ref=e458]:
-                    - generic [ref=e459]:
-                      - button "Edit enquiry" [ref=e460]:
-                        - img
-                      - button "View details" [ref=e461]:
-                        - img
-                - row "ENQ-2025-002-FN Maria Garcia Invalid Date Global Traders — trade show won urgent — Edit enquiry View details" [ref=e462] [cursor=pointer]:
-                  - cell "ENQ-2025-002-FN" [ref=e463]:
-                    - generic [ref=e464]: ENQ-2025-002-FN
-                  - cell "Maria Garcia" [ref=e465]:
-                    - generic [ref=e466]: Maria Garcia
-                  - cell "Invalid Date" [ref=e467]:
-                    - generic [ref=e468]: Invalid Date
-                  - cell "Global Traders" [ref=e469]:
-                    - generic [ref=e470]: Global Traders
-                  - cell "—" [ref=e471]:
-                    - generic [ref=e472]: —
-                  - cell "trade show" [ref=e473]:
-                    - generic [ref=e474]: trade show
-                  - cell "won" [ref=e475]:
-                    - generic [ref=e477]: won
-                  - cell "urgent" [ref=e478]:
-                    - generic [ref=e480]: urgent
-                  - cell "—" [ref=e481]:
-                    - generic [ref=e482]: —
-                  - cell "Edit enquiry View details" [ref=e483]:
-                    - generic [ref=e484]:
-                      - button "Edit enquiry" [ref=e485]:
-                        - img
-                      - button "View details" [ref=e486]:
-                        - img
-                - row "ENQ-2025-12-11-001-V2 Kurva Sharath Babu Invalid Date xzxZx Woolen Carpet website quoted medium — Edit enquiry View details" [ref=e487] [cursor=pointer]:
-                  - cell "ENQ-2025-12-11-001-V2" [ref=e488]:
-                    - generic [ref=e489]: ENQ-2025-12-11-001-V2
-                  - cell "Kurva Sharath Babu" [ref=e490]:
-                    - generic [ref=e491]: Kurva Sharath Babu
-                  - cell "Invalid Date" [ref=e492]:
-                    - generic [ref=e493]: Invalid Date
-                  - cell "xzxZx" [ref=e494]:
-                    - generic [ref=e495]: xzxZx
-                  - cell "Woolen Carpet" [ref=e496]:
-                    - generic [ref=e499]: Woolen Carpet
-                  - cell "website" [ref=e500]:
-                    - generic [ref=e501]: website
-                  - cell "quoted" [ref=e502]:
-                    - generic [ref=e504]: quoted
-                  - cell "medium" [ref=e505]:
-                    - generic [ref=e507]: medium
-                  - cell "—" [ref=e508]:
-                    - generic [ref=e509]: —
-                  - cell "Edit enquiry View details" [ref=e510]:
-                    - generic [ref=e511]:
-                      - button "Edit enquiry" [ref=e512]:
-                        - img
-                      - button "View details" [ref=e513]:
-                        - img
-            - navigation "pagination" [ref=e514]:
-              - list [ref=e515]:
-                - listitem [ref=e516]:
-                  - generic "Go to previous page":
-                    - img
-                    - generic: Previous
-                - listitem [ref=e517]:
-                  - generic [ref=e518] [cursor=pointer]: "1"
-                - listitem [ref=e519]:
-                  - generic [ref=e520] [cursor=pointer]: "2"
-                - listitem [ref=e521]:
-                  - generic "Go to next page" [ref=e522] [cursor=pointer]:
-                    - generic [ref=e523]: Next
-                    - img
+        - generic [ref=e162]:
+          - generic [ref=e163]:
+            - img [ref=e164]
+            - textbox "Search enquiries..." [ref=e167]
+          - button "Toggle Analytics Dashboard" [active] [ref=e169]:
+            - img
+        - generic [ref=e170]:
+          - generic [ref=e171]:
+            - generic [ref=e172]:
+              - generic [ref=e173]:
+                - generic [ref=e174]: Total Enquiries
+                - img [ref=e175]
+              - generic [ref=e177]:
+                - generic [ref=e178]: "13"
+                - paragraph [ref=e179]: Lifetime enquiries received
+            - generic [ref=e180]:
+              - generic [ref=e181]:
+                - generic [ref=e182]: Active Enquiries
+                - img [ref=e183]
+              - generic [ref=e188]:
+                - generic [ref=e189]: "11"
+                - paragraph [ref=e190]: In progress
+            - generic [ref=e191]:
+              - generic [ref=e192]:
+                - generic [ref=e193]: Conversion Rate
+                - img [ref=e194]
+              - generic [ref=e197]:
+                - generic [ref=e198]: 0.0%
+                - paragraph [ref=e199]: Enquiries to Quotes
+            - generic [ref=e200]:
+              - generic [ref=e201]:
+                - generic [ref=e202]: Won Deals
+                - img [ref=e203]
+              - generic [ref=e206]:
+                - generic [ref=e207]: "2"
+                - paragraph [ref=e208]: Successfully closed
+          - generic [ref=e209]:
+            - generic [ref=e210]:
+              - generic [ref=e212]: Enquiry Activity Trend
+              - application [ref=e217]:
+                - generic [ref=e225]:
+                  - generic [ref=e228]: Dec 11
+                  - generic [ref=e229]:
+                    - generic [ref=e231]: "0"
+                    - generic [ref=e233]: "4"
+                    - generic [ref=e235]: "8"
+                    - generic [ref=e237]: "12"
+                    - generic [ref=e239]: "16"
+            - generic [ref=e240]:
+              - generic [ref=e242]: Status Distribution
+              - generic [ref=e246]:
+                - list [ref=e248]:
+                  - listitem [ref=e249]:
+                    - img "New legend icon" [ref=e250]
+                    - text: New
+                  - listitem [ref=e252]:
+                    - img "Won legend icon" [ref=e253]
+                    - text: Won
+                - application [ref=e255]
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e529] [cursor=pointer]:
-    - img [ref=e530]
-  - alert [ref=e533]
+  - alert [ref=e263]
+  - generic [ref=e264]: "0"
 ```

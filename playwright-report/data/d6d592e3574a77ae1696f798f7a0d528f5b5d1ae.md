@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e1]:
+- generic [active] [ref=e1]:
   - generic [ref=e2]:
     - complementary [ref=e3]:
       - heading "Eximley" [level=1] [ref=e5]
@@ -106,12 +106,27 @@
           - generic [ref=e145]:
             - img [ref=e146]
             - textbox "Search enquiries..." [ref=e149]
-          - button "Toggle Analytics Dashboard" [active] [ref=e151]:
-            - img
-        - img [ref=e153]
+          - generic [ref=e150]:
+            - button "Toggle Analytics Dashboard" [ref=e151]:
+              - img
+            - generic [ref=e152]:
+              - button "Card View" [ref=e153]:
+                - img
+              - button "List View" [ref=e154]:
+                - img
+        - generic [ref=e155]:
+          - tablist [ref=e156]:
+            - tab "All" [selected] [ref=e157]
+            - tab "New" [ref=e158]
+            - tab "Contacted" [ref=e159]
+            - tab "Quoted" [ref=e160]
+            - tab "Won" [ref=e161]
+            - tab "Lost" [ref=e162]
+            - tab "Converted" [ref=e163]
+          - tabpanel "All" [ref=e164]:
+            - generic [ref=e165]:
+              - img [ref=e166]
+              - paragraph [ref=e168]: Loading enquiries...
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e160] [cursor=pointer]:
-    - img [ref=e161]
-  - alert [ref=e164]
 ```
