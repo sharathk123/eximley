@@ -164,48 +164,33 @@ export default function OrdersPage() {
                 </div>
             </div>
 
-                    <TabsTrigger value="completed">Completed</TabsTrigger>
-                    <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-                </TabsList>
+            {showAnalytics ? (
+                <OrderAnalytics />
+            ) : (
+                <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
+                    setActiveTab(value);
+                    setCurrentPage(1);
+                }}>
+                    <TabsList>
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="pending">Pending</TabsTrigger>
+                        <TabsTrigger value="confirmed">Confirmed</TabsTrigger>
+                        <TabsTrigger value="shipped">Shipped</TabsTrigger>
+                        <TabsTrigger value="completed">Completed</TabsTrigger>
+                        <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value={activeTab} className="mt-4">
-                    {loading ? (
-                        <LoadingState message="Loading orders..." size="sm" />
-                    ) : paginatedOrders.length === 0 ? (
-                        <EmptyState
-                            icon={ShoppingCart}
-                            title="No orders found"
-                            description="Create a new export order to start processing a sale."
-                            actionLabel="Create Order"
-                            onAction={handleCreate}
-                        />
-                    ) : (
-                        <>
-                            <OrderList
-                                orders={paginatedOrders}
-                                viewMode={viewMode}
-                                onEdit={handleEdit}
-                                onDelete={setDeletingOrder}
-                                onPayment={openPaymentDialog}
+                    <TabsContent value={activeTab} className="mt-4">
+                        {loading ? (
+                            <LoadingState message="Loading orders..." size="sm" />
+                        ) : paginatedOrders.length === 0 ? (
+                            <EmptyState
+                                icon={ShoppingCart}
+                                title="No orders found"
+                                description="Create a new export order to start processing a sale."
+                                actionLabel="Create Order"
+                                onAction={handleCreate}
                             />
-
-                            {totalPages > 1 && (
-                                <Pagination className="mt-4">
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
-                                        </PaginationItem>
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                            <PaginationItem key={page}>
-                                                <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer">
-                                                    {page}
-                                                </PaginationLink>
-                                            </PaginationItem>
-                                        ))}
-                                        <PaginationItem>
-                                            <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
-                                        </PaginationItem>
-                                    </PaginationContent>
                         ) : (
                             <>
                                 <OrderList

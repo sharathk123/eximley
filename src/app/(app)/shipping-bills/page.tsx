@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { SearchInput } from "@/components/ui/search-input";
-import { Plus, Loader2, Ship } from "lucide-react";
+import { Plus, Loader2, Ship, BarChart3 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     AlertDialog,
@@ -22,6 +22,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PageContainer } from "@/components/ui/page-container";
 import { useToast } from "@/components/ui/use-toast";
 import { ShippingBillList } from "@/components/shipping-bills/ShippingBillList";
+import { ShippingBillAnalytics } from "@/components/shipping-bills/ShippingBillAnalytics";
 import { LoadingState } from "@/components/ui/loading-state";
 import {
     Pagination,
@@ -44,6 +45,7 @@ export default function ShippingBillsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
+    const [showAnalytics, setShowAnalytics] = useState(false);
     const [activeTab, setActiveTab] = useState("all");
     const itemsPerPage = 12;
 
@@ -128,63 +130,79 @@ export default function ShippingBillsPage() {
                     }}
                     placeholder="Search shipping bills..."
                 />
-                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant={showAnalytics ? "default" : "outline"}
+                        size="icon"
+                        onClick={() => setShowAnalytics(!showAnalytics)}
+                        title="Toggle Analytics Dashboard"
+                    >
+                        <BarChart3 className="h-4 w-4" />
+                    </Button>
+                    {!showAnalytics && <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />}
+                </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }}>
-                <TabsList>
-                    {['all', 'drafted', 'filed', 'cleared', 'shipped'].map(tab => (
-                        <TabsTrigger key={tab} value={tab} className="capitalize">
-                            {tab}
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-            </Tabs>
-
-            {loading ? (
-                <LoadingState message="Loading shipping bills..." size="sm" />
-            ) : filteredBills.length === 0 ? (
-                <EmptyState
-                    icon={Ship}
-                    title="No shipping bills found"
-                    description="Create your first shipping bill to track customs export declarations."
-                    actionLabel="Add Shipping Bill"
-                    onAction={handleCreate}
-                    iconColor="text-primary"
-                    iconBgColor="bg-primary/10"
-                />
+            {showAnalytics ? (
+                <ShippingBillAnalytics />
             ) : (
                 <>
-                    <ShippingBillList
-                        shippingBills={paginatedBills}
-                        viewMode={viewMode}
-                        onEdit={handleEdit}
-                        onDelete={setDeletingSB}
-                        onFile={handleMarkAsFiled}
-                    />
+                    <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }}>
+                        <TabsList>
+                            {['all', 'drafted', 'filed', 'cleared', 'shipped'].map(tab => (
+                                <TabsTrigger key={tab} value={tab} className="capitalize">
+                                    {tab}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
 
-                    {totalPages > 1 && (
-                        <Pagination className="mt-4">
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                                <PaginationItem>
-                                    <span className="px-4 text-sm text-muted-foreground">
-                                        Page {currentPage} of {totalPages}
-                                    </span>
-                                </PaginationItem>
-                                <PaginationItem>
-                                    <PaginationNext
-                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
+                    {loading ? (
+                        <LoadingState message="Loading shipping bills..." size="sm" />
+                    ) : filteredBills.length === 0 ? (
+                        <EmptyState
+                            icon={Ship}
+                            title="No shipping bills found"
+                            description="Create your first shipping bill to track customs export declarations."
+                            actionLabel="Add Shipping Bill"
+                            onAction={handleCreate}
+                            iconColor="text-primary"
+                            iconBgColor="bg-primary/10"
+                        />
+                    ) : (
+                        <>
+                            <ShippingBillList
+                                shippingBills={paginatedBills}
+                                viewMode={viewMode}
+                                onEdit={handleEdit}
+                                onDelete={setDeletingSB}
+                                onFile={handleMarkAsFiled}
+                            />
+
+                            {totalPages > 1 && (
+                                <Pagination className="mt-4">
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious
+                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                        <PaginationItem>
+                                            <span className="px-4 text-sm text-muted-foreground">
+                                                Page {currentPage} of {totalPages}
+                                            </span>
+                                        </PaginationItem>
+                                        <PaginationItem>
+                                            <PaginationNext
+                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                            )}
+                        </>
                     )}
                 </>
             )}

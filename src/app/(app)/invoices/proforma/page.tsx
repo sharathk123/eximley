@@ -68,9 +68,6 @@ export default function ProformaPage() {
         router.push('/invoices/proforma/create');
     };
 
-    // Pagination logic is now handled in the hook, but we need to pass these to UI
-    // Hook already returns paginated invoices.
-
     return (
         <PageContainer>
             <PageHeader
@@ -104,92 +101,111 @@ export default function ProformaPage() {
                 </div>
             </div>
 
-                    <TabsTrigger value="approved">Approved</TabsTrigger>
-                    <TabsTrigger value="revised">Revised</TabsTrigger>
-                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                    <TabsTrigger value="converted">Converted</TabsTrigger>
-                </TabsList>
+            {showAnalytics ? (
+                <ProformaAnalytics />
+            ) : (
+                <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList>
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="draft">Draft</TabsTrigger>
+                        <TabsTrigger value="sent">Sent</TabsTrigger>
+                        <TabsTrigger value="approved">Approved</TabsTrigger>
+                        <TabsTrigger value="revised">Revised</TabsTrigger>
+                        <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                        <TabsTrigger value="converted">Converted</TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value={activeTab} className="mt-4">
-                    {loading ? (
-                        <LoadingState message="Loading invoices..." size="sm" />
-                    ) : invoices.length === 0 ? (
-                        <EmptyState
-                            icon={FileText}
-                            title="No proforma invoices found"
-                            description="Create one manually or convert from a Quote."
-                            actionLabel="Create Proforma"
-                            onAction={handleCreate}
-
-                        />
-                    ) : (
-                        <>
-                            <ProformaList
-                                invoices={invoices}
-                                viewMode={viewMode}
-                                onEdit={handleEdit}
-                                onDelete={setDeletingPI}
-                                onConvert={setConvertingPI}
+                    <TabsContent value={activeTab} className="mt-4">
+                        {loading ? (
+                            <LoadingState message="Loading invoices..." size="sm" />
+                        ) : invoices.length === 0 ? (
+                            <EmptyState
+                                icon={FileText}
+                                title="No proforma invoices found"
+                                description="Create one manually or convert from a Quote."
+                                actionLabel="Create Proforma"
+                                onAction={handleCreate}
                             />
+                        ) : (
+                            <>
+                                <ProformaList
+                                    invoices={invoices}
+                                    viewMode={viewMode}
+                                    onEdit={handleEdit}
+                                    onDelete={setDeletingPI}
+                                    onConvert={setConvertingPI}
+                                />
 
-                            {totalPages > 1 && (
-                                <Pagination className="mt-4">
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious
-                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                            <PaginationItem key={page}>
-                                                <PaginationLink
-                                                    onClick={() => setCurrentPage(page)}
-                                                    isActive={currentPage === page}
-                                                    className="cursor-pointer"
-                                                >
-                                                    {page}
-                                                </PaginationLink>
+                                {totalPages > 1 && (
+                                    <Pagination className="mt-4">
+                                        <PaginationContent>
+                                            <PaginationItem>
+                                                <PaginationPrevious
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                />
                                             </PaginationItem>
-                                        ))}
-                                        <PaginationItem>
-                                            <PaginationNext
-                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-        <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-                This will permanently delete invoice "{deletingPI?.invoice_number}". This action cannot be undone.
-            </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleDelete(deletingPI)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Delete
-            </AlertDialogAction>
-        </AlertDialogFooter>
-    </AlertDialogContent>
-            </AlertDialog >
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                                <PaginationItem key={page}>
+                                                    <PaginationLink
+                                                        onClick={() => setCurrentPage(page)}
+                                                        isActive={currentPage === page}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        {page}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            ))}
+                                            <PaginationItem>
+                                                <PaginationNext
+                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                />
+                                            </PaginationItem>
+                                        </PaginationContent>
+                                    </Pagination>
+                                )}
+                            </>
+                        )}
+                    </TabsContent>
+                </Tabs>
+            )}
 
-    {/* Convert to Order Confirmation Dialog */ }
-    < AlertDialog open = {!!convertingPI} onOpenChange = {(open) => !open && setConvertingPI(null)}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Convert into Order?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    This will create a confirmed Export Order from PI "{convertingPI?.invoice_number}" and mark the PI as converted.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleConvertToOrder(convertingPI)}>
-                    Convert to Order
-                </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-            </AlertDialog >
-        </PageContainer >
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={!!deletingPI} onOpenChange={(open) => !open && setDeletingPI(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete invoice "{deletingPI?.invoice_number}". This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(deletingPI)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Convert to Order Confirmation Dialog */}
+            <AlertDialog open={!!convertingPI} onOpenChange={(open) => !open && setConvertingPI(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Convert into Order?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will create a confirmed Export Order from PI "{convertingPI?.invoice_number}" and mark the PI as converted.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleConvertToOrder(convertingPI)}>
+                            Convert to Order
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </PageContainer>
     );
 }
