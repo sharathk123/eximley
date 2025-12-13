@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ShoppingCart } from "lucide-react";
+import { Plus, ShoppingCart, BarChart3 } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/ui/view-toggle";
@@ -22,6 +22,7 @@ import { PageContainer } from "@/components/ui/page-container";
 import { useToast } from "@/components/ui/use-toast";
 
 import { PurchaseOrderList } from "@/components/purchase-orders/PurchaseOrderList";
+import { PurchaseOrderAnalytics } from "@/components/purchase-orders/PurchaseOrderAnalytics";
 import { PurchaseOrderPaymentDialog } from "@/components/purchase-orders/PurchaseOrderPaymentDialog";
 import { LoadingState } from "@/components/ui/loading-state";
 
@@ -33,6 +34,7 @@ export default function PurchaseOrdersPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState("all");
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+    const [showAnalytics, setShowAnalytics] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
 
@@ -130,66 +132,80 @@ export default function PurchaseOrdersPage() {
                     }}
                     placeholder="Search POs..."
                 />
-                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant={showAnalytics ? "default" : "outline"}
+                        size="icon"
+                        onClick={() => setShowAnalytics(!showAnalytics)}
+                        title="Toggle Analytics Dashboard"
+                    >
+                        <BarChart3 className="h-4 w-4" />
+                    </Button>
+                    {!showAnalytics && <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />}
+                </div>
             </div>
 
-            <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
-                setActiveTab(value);
-                setCurrentPage(1);
-            }}>
-                <TabsList>
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="draft">Draft</TabsTrigger>
-                    <TabsTrigger value="issued">Issued</TabsTrigger>
-                    <TabsTrigger value="received">Received</TabsTrigger>
-                    <TabsTrigger value="completed">Completed</TabsTrigger>
-                </TabsList>
+            {showAnalytics ? (
+                <PurchaseOrderAnalytics />
+            ) : (
+                <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
+                    setActiveTab(value);
+                    setCurrentPage(1);
+                }}>
+                    <TabsList>
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="draft">Draft</TabsTrigger>
+                        <TabsTrigger value="issued">Issued</TabsTrigger>
+                        <TabsTrigger value="received">Received</TabsTrigger>
+                        <TabsTrigger value="completed">Completed</TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value={activeTab} className="mt-4">
-                    {loading ? (
-                        <LoadingState message="Loading purchase orders..." size="sm" />
-                    ) : paginatedPOs.length === 0 ? (
-                        <EmptyState
-                            icon={ShoppingCart}
-                            title="No Purchase Orders found"
-                            description="Manage procurement from suppliers."
-                            actionLabel="New PO"
-                            onAction={handleCreate}
+                    <TabsContent value={activeTab} className="mt-4">
+                        {loading ? (
+                            <LoadingState message="Loading purchase orders..." size="sm" />
+                        ) : paginatedPOs.length === 0 ? (
+                            <EmptyState
+                                icon={ShoppingCart}
+                                title="No Purchase Orders found"
+                                description="Manage procurement from suppliers."
+                                actionLabel="New PO"
+                                onAction={handleCreate}
 
-                        />
-                    ) : (
-                        <>
-                            <PurchaseOrderList
-                                purchaseOrders={paginatedPOs}
-                                viewMode={viewMode}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                                onPayments={handleOpenPayments}
                             />
+                        ) : (
+                            <>
+                                <PurchaseOrderList
+                                    purchaseOrders={paginatedPOs}
+                                    viewMode={viewMode}
+                                    onEdit={handleEdit}
+                                    onDelete={handleDelete}
+                                    onPayments={handleOpenPayments}
+                                />
 
-                            {totalPages > 1 && (
-                                <Pagination className="mt-4">
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="cursor-pointer" />
-                                        </PaginationItem>
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                            <PaginationItem key={page}>
-                                                <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer">
-                                                    {page}
-                                                </PaginationLink>
+                                {totalPages > 1 && (
+                                    <Pagination className="mt-4">
+                                        <PaginationContent>
+                                            <PaginationItem>
+                                                <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="cursor-pointer" />
                                             </PaginationItem>
-                                        ))}
-                                        <PaginationItem>
-                                            <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="cursor-pointer" />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
-                            )}
-                        </>
-                    )}
-                </TabsContent>
-            </Tabs>
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                                <PaginationItem key={page}>
+                                                    <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer">
+                                                        {page}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            ))}
+                                            <PaginationItem>
+                                                <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="cursor-pointer" />
+                                            </PaginationItem>
+                                        </PaginationContent>
+                                    </Pagination>
+                                )}
+                            </>
+                        )}
+                    </TabsContent>
+                </Tabs>
+            )}
 
             <PurchaseOrderPaymentDialog
                 open={isPaymentOpen}
