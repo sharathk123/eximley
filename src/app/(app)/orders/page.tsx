@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, ShoppingCart } from "lucide-react";
+import { Plus, ShoppingCart, BarChart3 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { OrderList } from "@/components/orders/OrderList";
+import { OrderAnalytics } from "@/components/orders/OrderAnalytics";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageContainer } from "@/components/ui/page-container";
 import { PaymentDialog } from "@/components/orders/PaymentDialog";
@@ -50,6 +51,7 @@ export default function OrdersPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState("all");
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+    const [showAnalytics, setShowAnalytics] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
     const [loading, setLoading] = useState(true);
@@ -149,18 +151,19 @@ export default function OrdersPage() {
                     }}
                     placeholder="Search orders..."
                 />
-                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant={showAnalytics ? "default" : "outline"}
+                        size="icon"
+                        onClick={() => setShowAnalytics(!showAnalytics)}
+                        title="Toggle Analytics Dashboard"
+                    >
+                        <BarChart3 className="h-4 w-4" />
+                    </Button>
+                    {!showAnalytics && <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />}
+                </div>
             </div>
 
-            <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
-                setActiveTab(value);
-                setCurrentPage(1);
-            }}>
-                <TabsList>
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="pending">Pending</TabsTrigger>
-                    <TabsTrigger value="confirmed">Confirmed</TabsTrigger>
-                    <TabsTrigger value="shipped">Shipped</TabsTrigger>
                     <TabsTrigger value="completed">Completed</TabsTrigger>
                     <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
                 </TabsList>
@@ -203,12 +206,40 @@ export default function OrdersPage() {
                                             <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
                                         </PaginationItem>
                                     </PaginationContent>
-                                </Pagination>
-                            )}
-                        </>
-                    )}
-                </TabsContent>
-            </Tabs>
+                        ) : (
+                            <>
+                                <OrderList
+                                    orders={paginatedOrders}
+                                    viewMode={viewMode}
+                                    onEdit={handleEdit}
+                                    onDelete={setDeletingOrder}
+                                    onPayment={openPaymentDialog}
+                                />
+
+                                {totalPages > 1 && (
+                                    <Pagination className="mt-4">
+                                        <PaginationContent>
+                                            <PaginationItem>
+                                                <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                                            </PaginationItem>
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                                <PaginationItem key={page}>
+                                                    <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer">
+                                                        {page}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            ))}
+                                            <PaginationItem>
+                                                <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                                            </PaginationItem>
+                                        </PaginationContent>
+                                    </Pagination>
+                                )}
+                            </>
+                        )}
+                    </TabsContent>
+                </Tabs>
+            )}
 
             <PaymentDialog
                 open={isPaymentOpen}
@@ -233,6 +264,6 @@ export default function OrdersPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </PageContainer>
+        </PageContainer >
     );
 }
