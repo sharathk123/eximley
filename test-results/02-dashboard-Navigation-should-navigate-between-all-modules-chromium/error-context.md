@@ -91,11 +91,37 @@
             - paragraph [ref=e133]: testuser_v1@example.com
     - main [ref=e134]:
       - generic [ref=e136]:
-        - img [ref=e137]
-        - paragraph [ref=e139]: Loading dashboard...
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - heading "Shipping Bills" [level=2] [ref=e139]
+            - paragraph [ref=e140]: Manage customs export declarations and compliance documents.
+          - button "Add Shipping Bill" [ref=e142]:
+            - img
+            - text: Add Shipping Bill
+        - generic [ref=e143]:
+          - generic [ref=e144]:
+            - img [ref=e145]
+            - textbox "Search shipping bills..." [ref=e148]
+          - generic [ref=e149]:
+            - button "Toggle Analytics Dashboard" [ref=e150]:
+              - img
+            - generic [ref=e151]:
+              - button "Card View" [ref=e152]:
+                - img
+              - button "List View" [ref=e153]:
+                - img
+        - tablist [ref=e155]:
+          - tab "all" [selected] [ref=e156]
+          - tab "drafted" [ref=e157]
+          - tab "filed" [ref=e158]
+          - tab "cleared" [ref=e159]
+          - tab "shipped" [ref=e160]
+        - generic [ref=e161]:
+          - img [ref=e162]
+          - paragraph [ref=e164]: Loading shipping bills...
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e145] [cursor=pointer]:
-    - img [ref=e146]
-  - alert [ref=e149]
+  - button "Open Next.js Dev Tools" [ref=e170] [cursor=pointer]:
+    - img [ref=e171]
+  - alert [ref=e174]
 ```

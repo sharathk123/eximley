@@ -90,12 +90,79 @@
             - paragraph [ref=e132]: Test User
             - paragraph [ref=e133]: testuser_v1@example.com
     - main [ref=e134]:
-      - generic [ref=e136]:
-        - img [ref=e137]
-        - paragraph [ref=e139]: Loading dashboard...
+      - generic [ref=e137]:
+        - generic [ref=e138]:
+          - button "Go back" [ref=e139]:
+            - img
+          - heading "Create Shipping Bill" [level=1] [ref=e140]
+        - generic [ref=e141]:
+          - generic [ref=e143]: Shipping Bill Information
+          - generic [ref=e144]:
+            - generic [ref=e145]:
+              - generic [ref=e146]:
+                - generic [ref=e147]: SB Number *
+                - textbox "SB Number *" [ref=e148]
+              - generic [ref=e149]:
+                - generic [ref=e150]: SB Date *
+                - textbox "SB Date *" [ref=e151]: 2025-12-13
+              - generic [ref=e152]:
+                - generic [ref=e153]: Port Code *
+                - textbox "Port Code *" [ref=e154]
+              - generic [ref=e155]:
+                - generic [ref=e156]: Customs House
+                - textbox "Customs House" [ref=e157]
+              - generic [ref=e158]:
+                - generic [ref=e159]: Vessel Name
+                - textbox "Vessel Name" [ref=e160]
+              - generic [ref=e161]:
+                - generic [ref=e162]: Consignee Name
+                - textbox "Consignee Name" [ref=e163]
+            - generic [ref=e164]:
+              - generic [ref=e165]: Notes
+              - textbox "Notes" [ref=e166]
+        - generic [ref=e167]:
+          - generic [ref=e168]:
+            - generic [ref=e169]: Items
+            - button "Add Item" [ref=e170]:
+              - img
+              - text: Add Item
+          - generic [ref=e171]:
+            - generic [ref=e172]:
+              - generic [ref=e173]:
+                - generic [ref=e174]: HSN Code
+                - textbox [ref=e175]
+              - generic [ref=e176]:
+                - generic [ref=e177]: Description
+                - textbox [ref=e178]
+              - generic [ref=e179]:
+                - generic [ref=e180]: Quantity
+                - spinbutton [ref=e181]: "1"
+              - generic [ref=e182]:
+                - generic [ref=e183]: Unit Price
+                - spinbutton [ref=e184]: "0"
+              - generic [ref=e185]:
+                - generic [ref=e186]: FOB Value
+                - spinbutton [disabled]: "0.00"
+              - button "Remove package 1" [disabled]:
+                - img
+            - generic [ref=e188]:
+              - paragraph [ref=e189]: Total FOB
+              - paragraph [ref=e190]: USD 0.00
+        - generic [ref=e191]:
+          - button "Cancel" [ref=e192]
+          - button "Create SB" [ref=e193]
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e145] [cursor=pointer]:
-    - img [ref=e146]
-  - alert [ref=e149]
+  - generic [ref=e198] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e199]:
+      - img [ref=e200]
+    - generic [ref=e203]:
+      - button "Open issues overlay" [ref=e204]:
+        - generic [ref=e205]:
+          - generic [ref=e206]: "0"
+          - generic [ref=e207]: "1"
+        - generic [ref=e208]: Issue
+      - button "Collapse issues badge" [ref=e209]:
+        - img [ref=e210]
+  - alert [ref=e212]
 ```
