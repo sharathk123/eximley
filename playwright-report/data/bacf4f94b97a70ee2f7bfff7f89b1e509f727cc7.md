@@ -104,33 +104,41 @@
       - generic [ref=e154]:
         - generic [ref=e155]:
           - generic [ref=e156]:
-            - heading "Shipping Bills" [level=2] [ref=e157]
-            - paragraph [ref=e158]: Manage customs export declarations and compliance documents.
-          - button "Add Shipping Bill" [ref=e160]:
-            - img
-            - text: Add Shipping Bill
-        - generic [ref=e161]:
-          - generic [ref=e162]:
-            - img [ref=e163]
-            - textbox "Search shipping bills..." [ref=e166]
-          - generic [ref=e167]:
-            - button "Toggle Analytics Dashboard" [ref=e168]:
+            - heading "Enquiries" [level=2] [ref=e157]
+            - paragraph [ref=e158]: Manage customer enquiries and convert to orders.
+          - generic [ref=e159]:
+            - button "Bulk Upload" [ref=e160]:
               - img
-            - generic [ref=e169]:
-              - button "Card View" [ref=e170]:
+              - text: Bulk Upload
+            - button "Add Enquiry" [ref=e161]:
+              - img
+              - text: Add Enquiry
+        - generic [ref=e162]:
+          - generic [ref=e163]:
+            - img [ref=e164]
+            - textbox "Search enquiries..." [ref=e167]
+          - generic [ref=e168]:
+            - button "Toggle Analytics Dashboard" [ref=e169]:
+              - img
+            - generic [ref=e170]:
+              - button "Card View" [ref=e171]:
                 - img
-              - button "List View" [ref=e171]:
+              - button "List View" [ref=e172]:
                 - img
-        - tablist [ref=e173]:
-          - tab "all" [selected] [ref=e174]
-          - tab "drafted" [ref=e175]
-          - tab "filed" [ref=e176]
-          - tab "cleared" [ref=e177]
-          - tab "shipped" [ref=e178]
-        - generic [ref=e179]:
-          - img [ref=e180]
-          - paragraph [ref=e182]: Loading shipping bills...
+        - generic [ref=e173]:
+          - tablist [ref=e174]:
+            - tab "All" [selected] [ref=e175]
+            - tab "New" [ref=e176]
+            - tab "Contacted" [ref=e177]
+            - tab "Quoted" [ref=e178]
+            - tab "Won" [ref=e179]
+            - tab "Lost" [ref=e180]
+            - tab "Converted" [ref=e181]
+          - tabpanel "All" [ref=e182]:
+            - generic [ref=e183]:
+              - img [ref=e184]
+              - paragraph [ref=e186]: Loading enquiries...
   - region "Notifications (F8)":
     - list
-  - alert [ref=e183]
+  - alert [ref=e187]
 ```

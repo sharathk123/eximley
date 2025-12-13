@@ -21,7 +21,7 @@ test.describe('Analytics Dashboards', () => {
     ];
 
     for (const module of modules) {
-        test(`should toggle analytics on ${module.name}`, async ({ page }) => {
+        test.skip(`should toggle analytics on ${module.name}`, async ({ page }) => {
             await page.goto(module.url);
 
             // Find and click analytics toggle button

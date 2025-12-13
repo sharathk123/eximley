@@ -23,11 +23,13 @@ test.describe('Dashboard', () => {
     });
 
     test('should display stats cards', async ({ page }) => {
-        // Wait for dashboard to load
-        await page.waitForTimeout(1000);
+        await page.goto('/dashboard');
 
-        // Should have at least some stat cards
-        const cards = await page.locator('.shadow-stripe').count();
+        // Wait for dashboard to load
+        await page.waitForTimeout(2000);
+
+        // Should have at least some stat cards (using Card component or link wrappers)
+        const cards = await page.locator('a .shadow-stripe, .shadow-stripe').count();
         expect(cards).toBeGreaterThan(0);
     });
 
