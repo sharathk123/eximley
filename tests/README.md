@@ -1,126 +1,85 @@
-# Test Environment Setup
+# E2E Test Suite
 
-Create a `.env.test` file with:
+Comprehensive Playwright E2E tests covering the entire application from signup to shipping bills.
 
-```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_ANON_KEY=your-anon-key
+## Test Structure
 
-# Test Credentials
-TEST_EMAIL=test@example.com
-TEST_PASSWORD=testpassword123
-TEST_AUTH_TOKEN=your-test-user-jwt-token
+### Test Helpers (`tests/helpers/`)
+- `auth.ts` - Authentication utilities (login, logout, signup)
+- `data-factory.ts` - Test data creation functions
+- `assertions.ts` - Reusable assertion helpers
 
-# Base URL
-BASE_URL=http://localhost:3000
-```
+### Test Suites (`tests/e2e/`)
+1. **01-auth.spec.ts** - Authentication & onboarding
+2. **02-dashboard.spec.ts** - Dashboard & navigation
+3. **09-analytics.spec.ts** - Analytics dashboards (all modules)
+4. **10-workflows.spec.ts** - Complete workflows & UI/UX
+5. **modules.spec.ts** - Individual module tests (existing)
 
 ## Running Tests
 
-### Database Tests
 ```bash
-# Connect to your Supabase database
-psql -h db.your-project.supabase.co -U postgres -d postgres -f scripts/test-db.sql
-```
-
-### API Tests (curl)
-```bash
-# Set your auth token
-export SUPABASE_ANON_KEY="your-anon-key"
-
-# Run tests
-./scripts/test-api.sh
-```
-
-### API Tests (Vitest)
-```bash
-# Install dependencies
-npm install -D vitest @vitejs/plugin-react jsdom
-
-# Run tests
-npm run test
-```
-
-### E2E Tests (Playwright)
-```bash
-# Install Playwright
-npm install -D @playwright/test
-npx playwright install
-
-# Run tests
+# Run all E2E tests
 npm run test:e2e
 
-# Run with UI
-npx playwright test --ui
+# Run with UI mode (recommended for development)
+npm run test:e2e:ui
 
-# Run specific browser
-npx playwright test --project=chromium
+# Run in debug mode
+npm run test:e2e:debug
+
+# Run in headed mode (see browser)
+npm run test:e2e:headed
+
+# View test report
+npm run test:e2e:report
 ```
 
-### Manual Tests
-Follow checklists in:
-- `tests/manual/ui-checklist.md`
-- `tests/integration/export-lifecycle.md`
+## Test Coverage
 
-## Test Data Setup
+### ✅ Implemented
+- Authentication (login, logout, validation)
+- Dashboard display and navigation
+- Analytics dashboards (all 6 modules)
+- UI/UX consistency checks
+- Module navigation
+- View toggles
+- Search functionality
 
-Create test fixtures:
+### 📋 Existing Tests
+- Module-specific tests (enquiries, quotes, proforma, orders, shipping bills, purchase orders)
+- CRUD operations
+- Tab navigation
+- Detail views
 
-```sql
--- Create test org
-INSERT INTO organizations (id, name) 
-VALUES ('test-org-123', 'Test Company Ltd');
+## Environment Variables
 
--- Create test user  
--- (Use Supabase Auth dashboard or API)
+Create a `.env.test` file with:
 
--- Create test buyer
-INSERT INTO entities (org_id, entity_type, name, country)
-VALUES ('test-org-123', 'buyer', 'Test Buyer Inc', 'USA');
-
--- Create test supplier
-INSERT INTO entities (org_id, entity_type, name, country)
-VALUES ('test-org-123', 'supplier', 'Test Supplier Co', 'India');
-
--- Create test SKUs
-INSERT INTO skus (org_id, sku_code, name, unit_price)
-VALUES 
-  ('test-org-123', 'SKU-001', 'Widget Alpha', 100),
-  ('test-org-123', 'SKU-002', 'Widget Beta', 200);
+```env
+TEST_EMAIL=test@example.com
+TEST_PASSWORD=your_test_password
 ```
 
-## Continuous Integration
+## Best Practices
 
-Add to `.github/workflows/test.yml`:
+1. **Use test helpers** - Reuse auth, data-factory, and assertion helpers
+2. **Descriptive test names** - Clearly describe what is being tested
+3. **Wait for elements** - Use `waitForSelector` for dynamic content
+4. **Clean up** - Tests should be independent
+5. **Screenshots on failure** - Automatically captured by Playwright
 
-```yaml
-name: Tests
+## Adding New Tests
 
-on: [push, pull_request]
+1. Create test file in `tests/e2e/`
+2. Import helpers from `tests/helpers/`
+3. Use `test.describe()` to group related tests
+4. Use `test.beforeEach()` for common setup (e.g., login)
+5. Write descriptive test names
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v3
-      
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          
-      - run: npm ci
-      
-      - name: Run API Tests
-        run: npm run test
-        env:
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          
-      - name: Run E2E Tests
-        run: npm run test:e2e
-        env:
-          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
-          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-```
+## Troubleshooting
+
+- **Tests timing out**: Increase timeout in `playwright.config.ts`
+- **Element not found**: Check selectors, use `data-testid` attributes
+- **Flaky tests**: Add proper waits, avoid hard-coded delays
+- **Authentication issues**: Verify test credentials in `.env.test`
