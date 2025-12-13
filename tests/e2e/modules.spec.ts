@@ -1,19 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { login } from '../helpers/auth';
 
-// Helper to login before each test
-async function login(page: Page) {
-    await page.goto('http://localhost:3000/login');
-
-    // Fill in credentials (update with your test credentials)
-    await page.fill('input[name="email"]', process.env.TEST_EMAIL || 'test@example.com');
-    await page.fill('input[name="password"]', process.env.TEST_PASSWORD || 'password');
-
-    // Submit form
-    await page.click('button[type="submit"]');
-
-    // Wait for redirect to dashboard
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
-}
 
 test.describe('Export Orders - E2E Tests', () => {
     test.beforeEach(async ({ page }) => {
