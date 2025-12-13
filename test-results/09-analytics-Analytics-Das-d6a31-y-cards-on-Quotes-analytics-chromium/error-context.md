@@ -2,33 +2,215 @@
 
 ```yaml
 - generic [active] [ref=e1]:
-  - generic [ref=e3]:
-    - generic [ref=e4]:
-      - generic [ref=e5]: Welcome back
-      - generic [ref=e6]: Sign in to your Eximley account
-    - generic [ref=e8]:
-      - generic [ref=e9]:
-        - generic [ref=e10]: Email
-        - textbox "Email" [ref=e11]:
-          - /placeholder: john@company.com
-          - text: test@example.com
-      - generic [ref=e12]:
-        - generic [ref=e13]: Password
-        - textbox "Password" [ref=e14]:
-          - /placeholder: ••••••••
-          - text: password
-      - alert [ref=e15]:
-        - img [ref=e16]
-        - generic [ref=e18]: Error
-        - generic [ref=e19]: Invalid login credentials
-      - button "Sign In" [ref=e20]
-    - paragraph [ref=e22]:
-      - text: Don't have an account?
-      - link "Sign up" [ref=e23] [cursor=pointer]:
-        - /url: /signup
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - heading "Eximley" [level=1] [ref=e5]
+      - navigation [ref=e6]:
+        - link "Dashboard" [ref=e7] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e9]
+          - generic [ref=e14]: Dashboard
+        - link "Enquiries" [ref=e15] [cursor=pointer]:
+          - /url: /enquiries
+          - img [ref=e17]
+          - generic [ref=e20]: Enquiries
+        - link "Quotes" [ref=e21] [cursor=pointer]:
+          - /url: /quotes
+          - img [ref=e23]
+          - generic [ref=e27]: Quotes
+        - link "Proforma Invoices" [ref=e28] [cursor=pointer]:
+          - /url: /invoices/proforma
+          - img [ref=e30]
+          - generic [ref=e33]: Proforma Invoices
+        - link "Export Orders" [ref=e34] [cursor=pointer]:
+          - /url: /orders
+          - img [ref=e36]
+          - generic [ref=e39]: Export Orders
+        - link "Purchase Orders" [ref=e40] [cursor=pointer]:
+          - /url: /purchase-orders
+          - img [ref=e42]
+          - generic [ref=e46]: Purchase Orders
+        - link "Shipments" [ref=e47] [cursor=pointer]:
+          - /url: /shipments
+          - img [ref=e49]
+          - generic [ref=e53]: Shipments
+        - link "Shipping Bills" [ref=e54] [cursor=pointer]:
+          - /url: /shipping-bills
+          - img [ref=e56]
+          - generic [ref=e60]: Shipping Bills
+        - link "e-BRC" [ref=e61] [cursor=pointer]:
+          - /url: /brcs
+          - img [ref=e63]
+          - generic [ref=e66]: e-BRC
+        - link "Incentives" [ref=e67] [cursor=pointer]:
+          - /url: /incentives
+          - img [ref=e69]
+          - generic [ref=e72]: Incentives
+        - link "LUT Management" [ref=e73] [cursor=pointer]:
+          - /url: /compliance/lut
+          - img [ref=e75]
+          - generic [ref=e79]: LUT Management
+        - generic [ref=e80]: Documents
+        - link "Document Library" [ref=e81] [cursor=pointer]:
+          - /url: /documents
+          - img [ref=e83]
+          - generic [ref=e85]: Document Library
+        - generic [ref=e86]: Masters
+        - link "Products" [ref=e87] [cursor=pointer]:
+          - /url: /products
+          - img [ref=e89]
+          - generic [ref=e92]: Products
+        - link "Entities" [ref=e93] [cursor=pointer]:
+          - /url: /entities
+          - img [ref=e95]
+          - generic [ref=e100]: Entities
+        - link "SKU Management" [ref=e101] [cursor=pointer]:
+          - /url: /skus
+          - img [ref=e103]
+          - generic [ref=e107]: SKU Management
+        - generic [ref=e108]: System
+        - link "ITC-HSN Lookup" [ref=e109] [cursor=pointer]:
+          - /url: /hsn
+          - img [ref=e111]
+          - generic [ref=e114]: ITC-HSN Lookup
+        - link "Settings" [ref=e115] [cursor=pointer]:
+          - /url: /settings/company
+          - img [ref=e117]
+          - generic [ref=e120]: Settings
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - button "Notifications" [ref=e123]:
+            - img
+          - button "Log out" [ref=e124]:
+            - img [ref=e125]
+            - generic [ref=e128]: Log out
+        - generic [ref=e129]:
+          - generic [ref=e130]: T
+          - generic [ref=e131]:
+            - paragraph [ref=e132]: Test User
+            - paragraph [ref=e133]: testuser_v1@example.com
+    - main [ref=e134]:
+      - generic [ref=e136]:
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - heading "Quotes" [level=2] [ref=e139]
+            - paragraph [ref=e140]: Manage quotations and convert to Proforma Invoices.
+          - generic [ref=e141]:
+            - button "Use Template" [ref=e142]:
+              - img
+              - text: Use Template
+            - button "New Quote" [ref=e143]:
+              - img
+              - text: New Quote
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - img [ref=e146]
+            - textbox "Search quotes..." [ref=e149]
+          - generic [ref=e150]:
+            - button "Toggle Analytics Dashboard" [ref=e151]:
+              - img
+            - generic [ref=e152]:
+              - button "Card View" [ref=e153]:
+                - img
+              - button "List View" [ref=e154]:
+                - img
+        - generic [ref=e155]:
+          - tablist [ref=e156]:
+            - tab "All" [selected] [ref=e157]
+            - tab "Draft" [ref=e158]
+            - tab "Sent" [ref=e159]
+            - tab "Approved" [ref=e160]
+            - tab "Rejected" [ref=e161]
+            - tab "Converted" [ref=e162]
+          - tabpanel "All" [ref=e163]:
+            - table "Data table" [ref=e168]:
+              - rowgroup [ref=e169]:
+                - 'row "Sort by Quote # Sort by Buyer Sort by Date Sort by Amount Sort by Status Reference Actions" [ref=e170]':
+                  - columnheader [ref=e171]
+                  - 'button "Sort by Quote #" [ref=e172] [cursor=pointer]':
+                    - generic [ref=e173]:
+                      - text: "Quote #"
+                      - img [ref=e174]
+                  - button "Sort by Buyer" [ref=e177] [cursor=pointer]:
+                    - generic [ref=e178]:
+                      - text: Buyer
+                      - img [ref=e179]
+                  - button "Sort by Date" [ref=e182] [cursor=pointer]:
+                    - generic [ref=e183]:
+                      - text: Date
+                      - img [ref=e184]
+                  - button "Sort by Amount" [ref=e187] [cursor=pointer]:
+                    - generic [ref=e188]:
+                      - text: Amount
+                      - img [ref=e189]
+                  - button "Sort by Status" [ref=e192] [cursor=pointer]:
+                    - generic [ref=e193]:
+                      - text: Status
+                      - img [ref=e194]
+                  - columnheader "Reference" [ref=e197]:
+                    - generic [ref=e198]: Reference
+                  - columnheader "Actions" [ref=e199]
+              - rowgroup [ref=e200]:
+                - 'row "Select quote QT-2025-12-12-005 QT-2025-12-12-005-FN Emma Wilson (Australian Style) 12/12/2025 USD 0.00 converted From: ENQ-2025-009 To: PI-2025-001 Edit quote Download PDF View details" [ref=e201] [cursor=pointer]':
+                  - cell "Select quote QT-2025-12-12-005" [ref=e202]:
+                    - checkbox "Select quote QT-2025-12-12-005" [ref=e204]
+                  - cell "QT-2025-12-12-005-FN" [ref=e205]:
+                    - generic [ref=e206]: QT-2025-12-12-005-FN
+                  - cell "Emma Wilson (Australian Style)" [ref=e207]:
+                    - generic [ref=e208]: Emma Wilson (Australian Style)
+                  - cell "12/12/2025" [ref=e209]:
+                    - generic [ref=e210]: 12/12/2025
+                  - cell "USD 0.00" [ref=e211]:
+                    - generic [ref=e212]: USD 0.00
+                  - cell "converted" [ref=e213]:
+                    - generic [ref=e215]: converted
+                  - 'cell "From: ENQ-2025-009 To: PI-2025-001" [ref=e216]':
+                    - generic [ref=e218]:
+                      - generic [ref=e219]:
+                        - generic [ref=e220]: "From:"
+                        - link "ENQ-2025-009" [ref=e221]:
+                          - /url: /enquiries/bbe15aaf-3877-4b76-8e83-3e59514a39c4
+                      - generic [ref=e222]:
+                        - generic [ref=e223]: "To:"
+                        - link "PI-2025-001" [ref=e224]:
+                          - /url: /invoices/proforma/a966dd29-fa0c-45af-9311-0394de920a2f
+                  - cell "Edit quote Download PDF View details" [ref=e225]:
+                    - generic [ref=e226]:
+                      - button "Edit quote" [ref=e227]:
+                        - img
+                      - button "Download PDF" [ref=e228]:
+                        - img
+                      - button "View details" [ref=e229]:
+                        - img
+                - 'row "Select quote QT-2025-12-12-005 QT-2025-12-12-005-V1 Emma Wilson (Australian Style) 12/12/2025 USD 0.00 revised From: ENQ-2025-009 Edit quote Download PDF View details" [ref=e230] [cursor=pointer]':
+                  - cell "Select quote QT-2025-12-12-005" [ref=e231]:
+                    - checkbox "Select quote QT-2025-12-12-005" [ref=e233]
+                  - cell "QT-2025-12-12-005-V1" [ref=e234]:
+                    - generic [ref=e235]: QT-2025-12-12-005-V1
+                  - cell "Emma Wilson (Australian Style)" [ref=e236]:
+                    - generic [ref=e237]: Emma Wilson (Australian Style)
+                  - cell "12/12/2025" [ref=e238]:
+                    - generic [ref=e239]: 12/12/2025
+                  - cell "USD 0.00" [ref=e240]:
+                    - generic [ref=e241]: USD 0.00
+                  - cell "revised" [ref=e242]:
+                    - generic [ref=e244]: revised
+                  - 'cell "From: ENQ-2025-009" [ref=e245]':
+                    - generic [ref=e248]:
+                      - generic [ref=e249]: "From:"
+                      - link "ENQ-2025-009" [ref=e250]:
+                        - /url: /enquiries/bbe15aaf-3877-4b76-8e83-3e59514a39c4
+                  - cell "Edit quote Download PDF View details" [ref=e251]:
+                    - generic [ref=e252]:
+                      - button "Edit quote" [ref=e253]:
+                        - img
+                      - button "Download PDF" [ref=e254]:
+                        - img
+                      - button "View details" [ref=e255]:
+                        - img
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e29] [cursor=pointer]:
-    - img [ref=e30]
-  - alert [ref=e33]
+  - button "Open Next.js Dev Tools" [ref=e261] [cursor=pointer]:
+    - img [ref=e262]
+  - alert [ref=e265]
 ```

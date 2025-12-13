@@ -2,33 +2,191 @@
 
 ```yaml
 - generic [active] [ref=e1]:
-  - generic [ref=e3]:
-    - generic [ref=e4]:
-      - generic [ref=e5]: Welcome back
-      - generic [ref=e6]: Sign in to your Eximley account
-    - generic [ref=e8]:
-      - generic [ref=e9]:
-        - generic [ref=e10]: Email
-        - textbox "Email" [ref=e11]:
-          - /placeholder: john@company.com
-          - text: test@example.com
-      - generic [ref=e12]:
-        - generic [ref=e13]: Password
-        - textbox "Password" [ref=e14]:
-          - /placeholder: ••••••••
-          - text: password
-      - alert [ref=e15]:
-        - img [ref=e16]
-        - generic [ref=e18]: Error
-        - generic [ref=e19]: Invalid login credentials
-      - button "Sign In" [ref=e20]
-    - paragraph [ref=e22]:
-      - text: Don't have an account?
-      - link "Sign up" [ref=e23] [cursor=pointer]:
-        - /url: /signup
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - heading "Eximley" [level=1] [ref=e5]
+      - navigation [ref=e6]:
+        - link "Dashboard" [ref=e7] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e9]
+          - generic [ref=e14]: Dashboard
+        - link "Enquiries" [ref=e15] [cursor=pointer]:
+          - /url: /enquiries
+          - img [ref=e17]
+          - generic [ref=e20]: Enquiries
+        - link "Quotes" [ref=e21] [cursor=pointer]:
+          - /url: /quotes
+          - img [ref=e23]
+          - generic [ref=e27]: Quotes
+        - link "Proforma Invoices" [ref=e28] [cursor=pointer]:
+          - /url: /invoices/proforma
+          - img [ref=e30]
+          - generic [ref=e33]: Proforma Invoices
+        - link "Export Orders" [ref=e34] [cursor=pointer]:
+          - /url: /orders
+          - img [ref=e36]
+          - generic [ref=e39]: Export Orders
+        - link "Purchase Orders" [ref=e40] [cursor=pointer]:
+          - /url: /purchase-orders
+          - img [ref=e42]
+          - generic [ref=e46]: Purchase Orders
+        - link "Shipments" [ref=e47] [cursor=pointer]:
+          - /url: /shipments
+          - img [ref=e49]
+          - generic [ref=e53]: Shipments
+        - link "Shipping Bills" [ref=e54] [cursor=pointer]:
+          - /url: /shipping-bills
+          - img [ref=e56]
+          - generic [ref=e60]: Shipping Bills
+        - link "e-BRC" [ref=e61] [cursor=pointer]:
+          - /url: /brcs
+          - img [ref=e63]
+          - generic [ref=e66]: e-BRC
+        - link "Incentives" [ref=e67] [cursor=pointer]:
+          - /url: /incentives
+          - img [ref=e69]
+          - generic [ref=e72]: Incentives
+        - link "LUT Management" [ref=e73] [cursor=pointer]:
+          - /url: /compliance/lut
+          - img [ref=e75]
+          - generic [ref=e79]: LUT Management
+        - generic [ref=e80]: Documents
+        - link "Document Library" [ref=e81] [cursor=pointer]:
+          - /url: /documents
+          - img [ref=e83]
+          - generic [ref=e85]: Document Library
+        - generic [ref=e86]: Masters
+        - link "Products" [ref=e87] [cursor=pointer]:
+          - /url: /products
+          - img [ref=e89]
+          - generic [ref=e92]: Products
+        - link "Entities" [ref=e93] [cursor=pointer]:
+          - /url: /entities
+          - img [ref=e95]
+          - generic [ref=e100]: Entities
+        - link "SKU Management" [ref=e101] [cursor=pointer]:
+          - /url: /skus
+          - img [ref=e103]
+          - generic [ref=e107]: SKU Management
+        - generic [ref=e108]: System
+        - link "ITC-HSN Lookup" [ref=e109] [cursor=pointer]:
+          - /url: /hsn
+          - img [ref=e111]
+          - generic [ref=e114]: ITC-HSN Lookup
+        - link "Settings" [ref=e115] [cursor=pointer]:
+          - /url: /settings/company
+          - img [ref=e117]
+          - generic [ref=e120]: Settings
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - button "Notifications" [ref=e123]:
+            - img
+          - button "Log out" [ref=e124]:
+            - img [ref=e125]
+            - generic [ref=e128]: Log out
+        - generic [ref=e129]:
+          - generic [ref=e130]: T
+          - generic [ref=e131]:
+            - paragraph [ref=e132]: Test User
+            - paragraph [ref=e133]: testuser_v1@example.com
+    - main [ref=e134]:
+      - generic [ref=e136]:
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - heading "Export Orders" [level=2] [ref=e139]
+            - paragraph [ref=e140]: Manage confirmed Sales Orders and track status.
+          - button "New Order" [ref=e142]:
+            - img
+            - text: New Order
+        - generic [ref=e143]:
+          - generic [ref=e144]:
+            - img [ref=e146]
+            - generic [ref=e149]:
+              - generic [ref=e150]: Total Orders
+              - generic [ref=e151]: "1"
+          - generic [ref=e152]:
+            - img [ref=e154]
+            - generic [ref=e157]:
+              - generic [ref=e158]: Confirmed Revenue
+              - generic [ref=e159]: $455
+        - generic [ref=e160]:
+          - generic [ref=e161]:
+            - img [ref=e162]
+            - textbox "Search orders..." [ref=e165]
+          - generic [ref=e166]:
+            - button "Toggle Analytics Dashboard" [ref=e167]:
+              - img
+            - generic [ref=e168]:
+              - button "Card View" [ref=e169]:
+                - img
+              - button "List View" [ref=e170]:
+                - img
+        - generic [ref=e171]:
+          - tablist [ref=e172]:
+            - tab "All" [selected] [ref=e173]
+            - tab "Pending" [ref=e174]
+            - tab "Confirmed" [ref=e175]
+            - tab "Shipped" [ref=e176]
+            - tab "Completed" [ref=e177]
+            - tab "Cancelled" [ref=e178]
+          - tabpanel "All" [ref=e179]:
+            - table "Data table" [ref=e184]:
+              - rowgroup [ref=e185]:
+                - 'row "Sort by Order # Sort by Buyer Sort by Date Sort by Total Sort by Status Reference Actions" [ref=e186]':
+                  - 'button "Sort by Order #" [ref=e187] [cursor=pointer]':
+                    - generic [ref=e188]:
+                      - text: "Order #"
+                      - img [ref=e189]
+                  - button "Sort by Buyer" [ref=e192] [cursor=pointer]:
+                    - generic [ref=e193]:
+                      - text: Buyer
+                      - img [ref=e194]
+                  - button "Sort by Date" [ref=e197] [cursor=pointer]:
+                    - generic [ref=e198]:
+                      - text: Date
+                      - img [ref=e199]
+                  - button "Sort by Total" [ref=e202] [cursor=pointer]:
+                    - generic [ref=e203]:
+                      - text: Total
+                      - img [ref=e204]
+                  - button "Sort by Status" [ref=e207] [cursor=pointer]:
+                    - generic [ref=e208]:
+                      - text: Status
+                      - img [ref=e209]
+                  - columnheader "Reference" [ref=e212]:
+                    - generic [ref=e213]: Reference
+                  - columnheader "Actions" [ref=e214]
+              - rowgroup [ref=e215]:
+                - 'row "ORD-2025-001 Test Buyer 1 12/12/2025 USD 455.00 confirmed unpaid From: PI-2025-004 Manage payments Edit order Delete order" [ref=e216]':
+                  - cell "ORD-2025-001" [ref=e217]:
+                    - link "ORD-2025-001" [ref=e219] [cursor=pointer]:
+                      - /url: /orders/840e2fdd-18a3-4749-b70b-38029a172237
+                  - cell "Test Buyer 1" [ref=e220]:
+                    - generic [ref=e221]: Test Buyer 1
+                  - cell "12/12/2025" [ref=e222]:
+                    - generic [ref=e223]: 12/12/2025
+                  - cell "USD 455.00" [ref=e224]:
+                    - generic [ref=e225]: USD 455.00
+                  - cell "confirmed unpaid" [ref=e226]:
+                    - generic [ref=e228]:
+                      - generic [ref=e229]: confirmed
+                      - generic [ref=e230]: unpaid
+                  - 'cell "From: PI-2025-004" [ref=e231]':
+                    - generic [ref=e233]:
+                      - generic [ref=e234]: "From:"
+                      - link "PI-2025-004" [ref=e235] [cursor=pointer]:
+                        - /url: /invoices/proforma/c88e23ee-b2bd-4031-b14c-19a1e6d4a501
+                  - cell "Manage payments Edit order Delete order" [ref=e236]:
+                    - generic [ref=e237]:
+                      - button "Manage payments" [ref=e238]:
+                        - img
+                      - button "Edit order" [ref=e239]:
+                        - img
+                      - button "Delete order" [ref=e240]:
+                        - img
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e29] [cursor=pointer]:
-    - img [ref=e30]
-  - alert [ref=e33]
+  - button "Open Next.js Dev Tools" [ref=e246] [cursor=pointer]:
+    - img [ref=e247]
+  - alert [ref=e250]
 ```
