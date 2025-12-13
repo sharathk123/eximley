@@ -92,7 +92,7 @@ export function QuoteList({
                 {quotes.map((quote) => (
                     <Card
                         key={quote.id}
-                        className={`shadow-sm hover:shadow-md hover-lift transition-shadow relative cursor-pointer border-l-4 border-l-primary ${selectedQuotes.includes(quote.id) ? 'bg-primary/5' : ''}`}
+                        className={`shadow-sm hover:shadow-md hover-lift transition-shadow relative cursor-pointer ${selectedQuotes.includes(quote.id) ? 'card-primary-border-selected' : 'card-primary-border'}`}
                         onClick={() => router.push(`/quotes/${quote.id}`)}
                     >
                         <div className="absolute top-3 right-3 z-10" onClick={handleActionClick}>

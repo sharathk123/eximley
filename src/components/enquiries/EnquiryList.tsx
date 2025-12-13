@@ -77,7 +77,7 @@ export function EnquiryList({
                 {enquiries.map((enquiry) => (
                     <Card
                         key={enquiry.id}
-                        className="shadow-sm hover:shadow-md hover-lift transition-shadow cursor-pointer border-l-4 border-l-primary"
+                        className="shadow-sm hover:shadow-md hover-lift transition-shadow relative cursor-pointer card-primary-border"
                         onClick={() => router.push(`/enquiries/${enquiry.id}`)}
                     >
                         <CardContent className="p-5 space-y-3">

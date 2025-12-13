@@ -28,7 +28,7 @@ export function ProformaCardView({
             {invoices.map((inv) => (
                 <Card
                     key={inv.id}
-                    className="shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    className="shadow-sm hover:shadow-md hover-lift transition-shadow cursor-pointer card-primary-border"
                     onClick={() => onRowClick(inv.id)}
                 >
                     <CardContent className="p-5 space-y-3">

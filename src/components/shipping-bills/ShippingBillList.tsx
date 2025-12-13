@@ -106,7 +106,7 @@ export function ShippingBillList({
         return (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {shippingBills.map((sb) => (
-                    <Card key={sb.id} className="hover:shadow-md hover-lift transition-shadow shadow-sm bg-card border-border">
+                    <Card key={sb.id} className="hover:shadow-md hover-lift transition-shadow shadow-sm bg-card border-border card-primary-border">
                         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                             <div className="space-y-1">
                                 <Link href={`/shipping-bills/${sb.id}`} className="hover:underline">
