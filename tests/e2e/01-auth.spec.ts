@@ -80,7 +80,7 @@ test.describe('Authentication', () => {
 });
 
 test.describe('Sign Up', () => {
-    test.skip('should display signup page', async ({ page }) => {
+    test('should display signup page', async ({ page }) => {
         await page.goto('/signup');
 
         await expect(page.locator('h1, h2')).toContainText(/sign up|register/i);
@@ -88,7 +88,7 @@ test.describe('Sign Up', () => {
         await expect(page.locator('input[name="password"]')).toBeVisible();
     });
 
-    test.skip('should validate email format', async ({ page }) => {
+    test('should validate email format', async ({ page }) => {
         await page.goto('/signup');
 
         await page.fill('input[name="email"]', 'invalid-email');
@@ -99,7 +99,7 @@ test.describe('Sign Up', () => {
         await expect(page.locator('text=/valid email|email format/i')).toBeVisible();
     });
 
-    test.skip('should validate password requirements', async ({ page }) => {
+    test('should validate password requirements', async ({ page }) => {
         await page.goto('/signup');
 
         await page.fill('input[name="email"]', 'test@example.com');
