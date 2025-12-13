@@ -32,8 +32,8 @@ export function ShippingBillList({
         const styles: Record<string, string> = {
             drafted: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
             filed: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground hover:bg-primary/20',
-            cleared: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-100/80',
-            shipped: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 hover:bg-purple-100/80',
+            cleared: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-100/80 bg-opacity-90',
+            shipped: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 hover:bg-purple-100/80 bg-opacity-90',
             cancelled: 'bg-destructive/10 text-destructive hover:bg-destructive/20'
         };
 

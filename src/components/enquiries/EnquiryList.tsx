@@ -207,8 +207,8 @@ export function EnquiryList({
                 <Badge
                     variant={getStatusColor(enq.status) as any}
                     className={
-                        enq.status === 'won' || enq.status === 'converted' ? 'bg-green-600 hover:bg-green-700 border-transparent text-white' :
-                            enq.status === 'new' ? 'bg-purple-600 hover:bg-purple-700 border-transparent text-white' : ''
+                        enq.status === 'won' || enq.status === 'converted' ? 'bg-green-600 hover:bg-green-700 bg-opacity-90 border-transparent text-white' :
+                            enq.status === 'new' ? 'bg-primary/10 text-primary hover:bg-primary/20 border-primary/20' : ''
                     }
                 >
                     {enq.status}

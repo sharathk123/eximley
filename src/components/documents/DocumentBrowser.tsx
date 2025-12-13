@@ -251,10 +251,10 @@ export function DocumentBrowser({ referenceType, referenceId, category, title, d
     return (
         <div className="space-y-6 h-full flex flex-col">
             {/* Explanatory Note */}
-            <Alert className="bg-blue-50/50 border-blue-200 text-blue-900">
-                <Info className="h-4 w-4 text-blue-600" />
-                <AlertTitle className="text-blue-900 font-semibold mb-1">{title || "Digital Filing Cabinet"}</AlertTitle>
-                <AlertDescription className="text-blue-700/90 leading-relaxed">
+            <Alert className="bg-primary/5 border-primary/20">
+                <Info className="h-4 w-4 text-primary" />
+                <AlertTitle className="font-semibold mb-1">{title || "Digital Filing Cabinet"}</AlertTitle>
+                <AlertDescription className="text-muted-foreground leading-relaxed">
                     {description || "Upload relevant files to keep them organized. Examples: Customer RFQs (PDF/Excel), Technical Drawings, or Vendor Quotes."}
                 </AlertDescription>
             </Alert>
@@ -318,7 +318,7 @@ export function DocumentBrowser({ referenceType, referenceId, category, title, d
                         >
                             <div className="p-4 flex gap-4">
                                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                                    <FileText className="h-6 w-6 text-blue-600" />
+                                    <FileText className="h-6 w-6 text-primary" />
                                 </div>
                                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                                     <div className="font-semibold truncate text-sm text-foreground/90 mb-1" title={doc.file_name}>

@@ -125,8 +125,8 @@ export function QuoteList({
                                 <Badge
                                     variant={getStatusColor(quote.status)}
                                     className={
-                                        quote.status === 'approved' || quote.status === 'converted' ? 'bg-green-600 hover:bg-green-700' :
-                                            quote.status === 'sent' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''
+                                        quote.status === 'approved' || quote.status === 'converted' ? 'bg-green-600 hover:bg-green-700 bg-opacity-90' :
+                                            quote.status === 'sent' ? 'bg-primary/10 text-primary hover:bg-primary/20 border-primary/20' : ''
                                     }
                                 >
                                     {quote.status}

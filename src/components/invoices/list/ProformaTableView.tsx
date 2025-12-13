@@ -61,7 +61,7 @@ export function ProformaTableView({
             cell: (inv) => (
                 <Badge
                     variant={getStatusColor(inv.status) as any}
-                    className={inv.status === 'approved' ? 'bg-green-600 hover:bg-green-700 border-transparent' : ''}
+                    className={inv.status === 'approved' ? 'bg-green-600 hover:bg-green-700 bg-opacity-90 border-transparent' : ''}
                 >
                     {inv.status}
                 </Badge>

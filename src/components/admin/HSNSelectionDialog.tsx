@@ -88,9 +88,9 @@ export function HSNSelectionDialog({ open, onOpenChange, candidates, product, on
                                 badgeClass = "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-emerald-200";
                                 label = "Excellent Match";
                             } else if (score >= 60) {
-                                tierClass = "bg-blue-50/30 border-blue-100";
-                                textClass = "text-blue-700";
-                                badgeClass = "bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200";
+                                tierClass = "bg-primary/5 border-primary/10";
+                                textClass = "text-primary";
+                                badgeClass = "bg-primary/10 text-primary hover:bg-primary/20 border-primary/20";
                                 label = "Good Match";
                             } else if (score >= 40) {
                                 tierClass = "bg-amber-50/30 border-amber-100";
