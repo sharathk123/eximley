@@ -1,190 +1,84 @@
+/**
+ * PurchaseOrderAnalytics Component
+ * Analytics dashboard for purchase orders module
+ */
+
 "use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ShoppingCart, DollarSign, TrendingUp, CheckCircle2 } from 'lucide-react';
-import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, Legend, AreaChart, Area
-} from 'recharts';
-
-interface PurchaseOrderStats {
-    totalPOs: number;
-    statusCounts: Record<string, number>;
-    totalSpend: number;
-    avgPOValue: number;
-    recentActivity: { date: string; amount: number }[];
-}
-
-const COLORS = ['#635bff', '#22c55e', '#ef4444', '#f59e0b', '#a855f7', '#94a3b8'];
-const STATUS_LABELS: Record<string, string> = {
-    draft: 'Draft',
-    sent: 'Sent',
-    confirmed: 'Confirmed',
-    received: 'Received',
-    cancelled: 'Cancelled'
-};
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { PurchaseOrderStats } from '@/lib/analytics/analytics-types';
+import { AnalyticsSummaryCard } from '@/components/analytics/AnalyticsSummaryCard';
+import { AnalyticsAreaChart } from '@/components/analytics/AnalyticsAreaChart';
+import { AnalyticsPieChart } from '@/components/analytics/AnalyticsPieChart';
+import { CHART_COLORS, STATUS_LABELS, formatCurrency } from '@/lib/analytics/analytics-config';
 
 export function PurchaseOrderAnalytics() {
-    const [stats, setStats] = useState<PurchaseOrderStats | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetchStats();
-    }, []);
-
-    const fetchStats = async () => {
-        try {
-            const res = await fetch('/api/purchase-orders/stats');
-            if (res.ok) {
-                const data = await res.json();
-                setStats(data.stats);
-            }
-        } catch (error) {
-            console.error("Failed to fetch analytics:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { stats, loading, error } = useAnalytics<PurchaseOrderStats>('/api/purchase-orders/stats');
 
     if (loading) {
-        return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
     }
 
-    if (!stats) return <div>Failed to load analytics</div>;
+    if (error || !stats) {
+        return <div>Failed to load analytics</div>;
+    }
 
     const pieData = Object.entries(stats.statusCounts)
         .filter(([_, count]) => count > 0)
         .map(([status, count]) => ({
-            name: STATUS_LABELS[status] || status,
-            value: count
+            name: STATUS_LABELS.purchaseOrder[status as keyof typeof STATUS_LABELS.purchaseOrder] || status,
+            value: count,
         }));
 
     return (
         <div className="space-y-6 animate-in fade-in-50 duration-500">
             {/* Summary Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total POs</CardTitle>
-                        <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalPOs}</div>
-                        <p className="text-xs text-muted-foreground">Purchase orders issued</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Spend</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(stats.totalSpend)}
-                        </div>
-                        <p className="text-xs text-muted-foreground">All-time procurement</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Avg PO Value</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(stats.avgPOValue)}
-                        </div>
-                        <p className="text-xs text-muted-foreground">Per order</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Received</CardTitle>
-                        <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.statusCounts.received || 0}</div>
-                        <p className="text-xs text-muted-foreground">Goods received</p>
-                    </CardContent>
-                </Card>
+                <AnalyticsSummaryCard
+                    title="Total POs"
+                    value={stats.totalPOs}
+                    description="Lifetime purchase orders"
+                    icon={ShoppingCart}
+                />
+                <AnalyticsSummaryCard
+                    title="Total Spend"
+                    value={formatCurrency(stats.totalSpend)}
+                    description="All-time spend"
+                    icon={DollarSign}
+                />
+                <AnalyticsSummaryCard
+                    title="Avg PO Value"
+                    value={formatCurrency(stats.avgPOValue)}
+                    description="Per purchase order"
+                    icon={TrendingUp}
+                />
+                <AnalyticsSummaryCard
+                    title="Received"
+                    value={stats.receivedPOs}
+                    description="Successfully received"
+                    icon={CheckCircle2}
+                />
             </div>
 
             {/* Charts Row */}
             <div className="grid gap-4 md:grid-cols-7">
-                <Card className="col-span-4">
-                    <CardHeader>
-                        <CardTitle>Spend Trend</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pl-2">
-                        <div className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={stats.recentActivity}>
-                                    <defs>
-                                        <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-                                            <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                                    <XAxis
-                                        dataKey="date"
-                                        stroke="#888888"
-                                        fontSize={12}
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tickFormatter={(value) => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                    />
-                                    <YAxis
-                                        stroke="#888888"
-                                        fontSize={12}
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tickFormatter={(value) => `$${value}`}
-                                    />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }}
-                                        formatter={(value: number) => [`$${value.toFixed(2)}`, 'Spend']}
-                                        labelFormatter={(label) => new Date(label).toLocaleDateString()}
-                                    />
-                                    <Area type="monotone" dataKey="amount" stroke="#ef4444" fillOpacity={1} fill="url(#colorSpend)" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="col-span-3">
-                    <CardHeader>
-                        <CardTitle>Status Distribution</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={pieData}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={80}
-                                        fill="#8884d8"
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                    >
-                                        {pieData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }}
-                                    />
-                                    <Legend />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
+                <AnalyticsAreaChart
+                    title="Spend Trend"
+                    data={stats.recentActivity}
+                    dataKey="amount"
+                    color={CHART_COLORS.danger}
+                    gradientId="colorPurchase"
+                    valueFormatter={(value) => `$${value.toFixed(2)}`}
+                />
+                <AnalyticsPieChart
+                    title="Status Distribution"
+                    data={pieData}
+                />
             </div>
         </div>
     );
