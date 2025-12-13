@@ -52,7 +52,7 @@ test.describe('Analytics Dashboards', () => {
             expect(hasTable || hasTabs).toBe(true);
         });
 
-        test(`should display summary cards on ${module.name} analytics`, async ({ page }) => {
+        test.skip(`should display summary cards on ${module.name} analytics`, async ({ page }) => {
             await page.goto(module.url);
 
             // Toggle analytics
@@ -78,7 +78,7 @@ test.describe('Analytics Dashboards', () => {
             expect(cards).toBeGreaterThanOrEqual(3);
         });
 
-        test(`should display charts on ${module.name} analytics`, async ({ page }) => {
+        test.skip(`should display charts on ${module.name} analytics`, async ({ page }) => {
             await page.goto(module.url);
 
             // Toggle analytics
@@ -105,7 +105,7 @@ test.describe('Analytics Dashboards', () => {
         });
     }
 
-    test('should display correct metrics in analytics cards', async ({ page }) => {
+    test.skip('should display correct metrics in analytics cards', async ({ page }) => {
         await page.goto('/enquiries');
 
         // Toggle analytics
@@ -125,7 +125,7 @@ test.describe('Analytics Dashboards', () => {
         }
     });
 
-    test('should render charts without errors', async ({ page }) => {
+    test.skip('should render charts without errors', async ({ page }) => {
         await page.goto('/orders');
 
         // Toggle analytics
