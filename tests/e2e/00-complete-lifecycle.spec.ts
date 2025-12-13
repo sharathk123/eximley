@@ -62,7 +62,7 @@ test.describe('Complete Export Lifecycle', () => {
         console.log('Step 3: Creating enquiry...');
 
         await page.goto('/enquiries');
-        await page.click('text=New Enquiry');
+        await page.click('text=Add Enquiry');
 
         // Fill enquiry form
         await page.fill('input[name="customer_name"], input[placeholder*="Customer"]', 'ABC Trading Co');

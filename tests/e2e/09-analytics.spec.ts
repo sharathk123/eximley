@@ -40,8 +40,8 @@ test.describe('Analytics Dashboards', () => {
 
             await analyticsButton.click();
 
-            // Analytics dashboard should be visible
-            await expect(page.locator('.recharts-wrapper')).toBeVisible({ timeout: 5000 });
+            // Analytics dashboard should be visible (use first() to avoid strict mode)
+            await expect(page.locator('.recharts-wrapper').first()).toBeVisible({ timeout: 5000 });
 
             // Toggle back to list view
             await analyticsButton.click();

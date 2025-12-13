@@ -14,7 +14,7 @@ test.describe('Complete Export Workflow', () => {
     test('should complete full export flow: Enquiry → Quote → Proforma → Order → Shipping Bill', async ({ page }) => {
         // Step 1: Create Enquiry
         await page.goto('/enquiries');
-        await page.click('text=New Enquiry');
+        await page.click('text=Add Enquiry');
 
         // Fill enquiry form (adjust selectors based on actual form)
         await page.fill('input[name="customer_name"]', 'Test Customer Ltd');

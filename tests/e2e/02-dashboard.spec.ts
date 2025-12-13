@@ -26,7 +26,7 @@ test.describe('Dashboard', () => {
         await page.goto('/dashboard');
 
         // Should have at least some stat cards
-        const cards = await page.locator('[data-testid="stat-card"], .card').count();
+        const cards = await page.locator('.shadow-stripe').count();
         expect(cards).toBeGreaterThan(0);
     });
 
