@@ -90,19 +90,12 @@
             - paragraph [ref=e132]: Test User
             - paragraph [ref=e133]: testuser_v1@example.com
     - main [ref=e134]:
-      - generic [ref=e136]: Failed to load dashboard data.
+      - generic [ref=e136]:
+        - img [ref=e137]
+        - paragraph [ref=e139]: Loading dashboard...
   - region "Notifications (F8)":
     - list
-  - generic [ref=e141] [cursor=pointer]:
-    - button "Open Next.js Dev Tools" [ref=e142]:
-      - img [ref=e143]
-    - generic [ref=e146]:
-      - button "Open issues overlay" [ref=e147]:
-        - generic [ref=e148]:
-          - generic [ref=e149]: "0"
-          - generic [ref=e150]: "1"
-        - generic [ref=e151]: Issue
-      - button "Collapse issues badge" [ref=e152]:
-        - img [ref=e153]
-  - alert [ref=e155]
+  - button "Open Next.js Dev Tools" [ref=e145] [cursor=pointer]:
+    - img [ref=e146]
+  - alert [ref=e149]
 ```
