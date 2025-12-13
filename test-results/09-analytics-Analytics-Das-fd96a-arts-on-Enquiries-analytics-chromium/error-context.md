@@ -2,178 +2,169 @@
 
 ```yaml
 - generic [ref=e1]:
-  - generic [ref=e6] [cursor=pointer]:
-    - button "Open Next.js Dev Tools" [ref=e7]:
-      - img [ref=e8]
-    - generic [ref=e11]:
-      - button "Open issues overlay" [ref=e12]:
-        - generic [ref=e13]:
-          - generic [ref=e14]: "0"
-          - generic [ref=e15]: "1"
-        - generic [ref=e16]: Issue
-      - button "Collapse issues badge" [ref=e17]:
-        - img [ref=e18]
-  - generic [ref=e20]:
-    - complementary [ref=e21]:
-      - heading "Eximley" [level=1] [ref=e23]
-      - navigation [ref=e24]:
-        - link "Dashboard" [ref=e25] [cursor=pointer]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - heading "Eximley" [level=1] [ref=e5]
+      - navigation [ref=e6]:
+        - link "Dashboard" [ref=e7] [cursor=pointer]:
           - /url: /dashboard
-          - img [ref=e27]
-          - generic [ref=e32]: Dashboard
-        - link "Enquiries" [ref=e33] [cursor=pointer]:
+          - img [ref=e9]
+          - generic [ref=e14]: Dashboard
+        - link "Enquiries" [ref=e15] [cursor=pointer]:
           - /url: /enquiries
-          - img [ref=e35]
-          - generic [ref=e38]: Enquiries
-        - link "Quotes" [ref=e39] [cursor=pointer]:
+          - img [ref=e17]
+          - generic [ref=e20]: Enquiries
+        - link "Quotes" [ref=e21] [cursor=pointer]:
           - /url: /quotes
-          - img [ref=e41]
-          - generic [ref=e45]: Quotes
-        - link "Proforma Invoices" [ref=e46] [cursor=pointer]:
+          - img [ref=e23]
+          - generic [ref=e27]: Quotes
+        - link "Proforma Invoices" [ref=e28] [cursor=pointer]:
           - /url: /invoices/proforma
-          - img [ref=e48]
-          - generic [ref=e51]: Proforma Invoices
-        - link "Export Orders" [ref=e52] [cursor=pointer]:
+          - img [ref=e30]
+          - generic [ref=e33]: Proforma Invoices
+        - link "Export Orders" [ref=e34] [cursor=pointer]:
           - /url: /orders
-          - img [ref=e54]
-          - generic [ref=e57]: Export Orders
-        - link "Purchase Orders" [ref=e58] [cursor=pointer]:
+          - img [ref=e36]
+          - generic [ref=e39]: Export Orders
+        - link "Purchase Orders" [ref=e40] [cursor=pointer]:
           - /url: /purchase-orders
-          - img [ref=e60]
-          - generic [ref=e64]: Purchase Orders
-        - link "Shipments" [ref=e65] [cursor=pointer]:
+          - img [ref=e42]
+          - generic [ref=e46]: Purchase Orders
+        - link "Shipments" [ref=e47] [cursor=pointer]:
           - /url: /shipments
-          - img [ref=e67]
-          - generic [ref=e71]: Shipments
-        - link "Shipping Bills" [ref=e72] [cursor=pointer]:
+          - img [ref=e49]
+          - generic [ref=e53]: Shipments
+        - link "Shipping Bills" [ref=e54] [cursor=pointer]:
           - /url: /shipping-bills
-          - img [ref=e74]
-          - generic [ref=e78]: Shipping Bills
-        - link "e-BRC" [ref=e79] [cursor=pointer]:
+          - img [ref=e56]
+          - generic [ref=e60]: Shipping Bills
+        - link "e-BRC" [ref=e61] [cursor=pointer]:
           - /url: /brcs
-          - img [ref=e81]
-          - generic [ref=e84]: e-BRC
-        - link "Incentives" [ref=e85] [cursor=pointer]:
+          - img [ref=e63]
+          - generic [ref=e66]: e-BRC
+        - link "Incentives" [ref=e67] [cursor=pointer]:
           - /url: /incentives
-          - img [ref=e87]
-          - generic [ref=e90]: Incentives
-        - link "LUT Management" [ref=e91] [cursor=pointer]:
+          - img [ref=e69]
+          - generic [ref=e72]: Incentives
+        - link "LUT Management" [ref=e73] [cursor=pointer]:
           - /url: /compliance/lut
-          - img [ref=e93]
-          - generic [ref=e97]: LUT Management
-        - generic [ref=e98]: Documents
-        - link "Document Library" [ref=e99] [cursor=pointer]:
+          - img [ref=e75]
+          - generic [ref=e79]: LUT Management
+        - generic [ref=e80]: Documents
+        - link "Document Library" [ref=e81] [cursor=pointer]:
           - /url: /documents
-          - img [ref=e101]
-          - generic [ref=e103]: Document Library
-        - generic [ref=e104]: Masters
-        - link "Products" [ref=e105] [cursor=pointer]:
+          - img [ref=e83]
+          - generic [ref=e85]: Document Library
+        - generic [ref=e86]: Masters
+        - link "Products" [ref=e87] [cursor=pointer]:
           - /url: /products
-          - img [ref=e107]
-          - generic [ref=e110]: Products
-        - link "Entities" [ref=e111] [cursor=pointer]:
+          - img [ref=e89]
+          - generic [ref=e92]: Products
+        - link "Entities" [ref=e93] [cursor=pointer]:
           - /url: /entities
-          - img [ref=e113]
-          - generic [ref=e118]: Entities
-        - link "SKU Management" [ref=e119] [cursor=pointer]:
+          - img [ref=e95]
+          - generic [ref=e100]: Entities
+        - link "SKU Management" [ref=e101] [cursor=pointer]:
           - /url: /skus
-          - img [ref=e121]
-          - generic [ref=e125]: SKU Management
-        - generic [ref=e126]: System
-        - link "ITC-HSN Lookup" [ref=e127] [cursor=pointer]:
+          - img [ref=e103]
+          - generic [ref=e107]: SKU Management
+        - generic [ref=e108]: System
+        - link "ITC-HSN Lookup" [ref=e109] [cursor=pointer]:
           - /url: /hsn
-          - img [ref=e129]
-          - generic [ref=e132]: ITC-HSN Lookup
-        - link "Settings" [ref=e133] [cursor=pointer]:
+          - img [ref=e111]
+          - generic [ref=e114]: ITC-HSN Lookup
+        - link "Settings" [ref=e115] [cursor=pointer]:
           - /url: /settings/company
-          - img [ref=e135]
-          - generic [ref=e138]: Settings
-      - generic [ref=e139]:
-        - generic [ref=e140]:
-          - button "Notifications" [ref=e141]:
+          - img [ref=e117]
+          - generic [ref=e120]: Settings
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - button "Notifications" [ref=e123]:
             - img
-          - button "Log out" [ref=e142]:
-            - img [ref=e143]
-            - generic [ref=e146]: Log out
-        - generic [ref=e147]:
-          - generic [ref=e148]: T
-          - generic [ref=e149]:
-            - paragraph [ref=e150]: Test User
-            - paragraph [ref=e151]: testuser_v1@example.com
-    - main [ref=e152]:
-      - generic [ref=e154]:
-        - generic [ref=e155]:
-          - generic [ref=e156]:
-            - heading "Enquiries" [level=2] [ref=e157]
-            - paragraph [ref=e158]: Manage customer enquiries and convert to orders.
-          - generic [ref=e159]:
-            - button "Bulk Upload" [ref=e160]:
+          - button "Log out" [ref=e124]:
+            - img [ref=e125]
+            - generic [ref=e128]: Log out
+        - generic [ref=e129]:
+          - generic [ref=e130]: T
+          - generic [ref=e131]:
+            - paragraph [ref=e132]: Test User
+            - paragraph [ref=e133]: testuser_v1@example.com
+    - main [ref=e134]:
+      - generic [ref=e136]:
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - heading "Enquiries" [level=2] [ref=e139]
+            - paragraph [ref=e140]: Manage customer enquiries and convert to orders.
+          - generic [ref=e141]:
+            - button "Bulk Upload" [ref=e142]:
               - img
               - text: Bulk Upload
-            - button "Add Enquiry" [ref=e161]:
+            - button "Add Enquiry" [ref=e143]:
               - img
               - text: Add Enquiry
-        - generic [ref=e162]:
-          - generic [ref=e163]:
-            - img [ref=e164]
-            - textbox "Search enquiries..." [ref=e167]
-          - button "Toggle Analytics Dashboard" [active] [ref=e169]:
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - img [ref=e146]
+            - textbox "Search enquiries..." [ref=e149]
+          - button "Toggle Analytics Dashboard" [active] [ref=e151]:
             - img
-        - generic [ref=e170]:
-          - generic [ref=e171]:
-            - generic [ref=e172]:
-              - generic [ref=e173]:
-                - generic [ref=e174]: Total Enquiries
-                - img [ref=e175]
-              - generic [ref=e177]:
-                - generic [ref=e178]: "13"
-                - paragraph [ref=e179]: Lifetime enquiries received
-            - generic [ref=e180]:
-              - generic [ref=e181]:
-                - generic [ref=e182]: Active Enquiries
-                - img [ref=e183]
+        - generic [ref=e152]:
+          - generic [ref=e153]:
+            - generic [ref=e154]:
+              - generic [ref=e155]:
+                - generic [ref=e156]: Total Enquiries
+                - img [ref=e157]
+              - generic [ref=e159]:
+                - generic [ref=e160]: "13"
+                - paragraph [ref=e161]: Lifetime enquiries received
+            - generic [ref=e162]:
+              - generic [ref=e163]:
+                - generic [ref=e164]: Active Enquiries
+                - img [ref=e165]
+              - generic [ref=e170]:
+                - generic [ref=e171]: "11"
+                - paragraph [ref=e172]: In progress
+            - generic [ref=e173]:
+              - generic [ref=e174]:
+                - generic [ref=e175]: Conversion Rate
+                - img [ref=e176]
+              - generic [ref=e179]:
+                - generic [ref=e180]: 0.0%
+                - paragraph [ref=e181]: Enquiries to Quotes
+            - generic [ref=e182]:
+              - generic [ref=e183]:
+                - generic [ref=e184]: Won Deals
+                - img [ref=e185]
               - generic [ref=e188]:
-                - generic [ref=e189]: "11"
-                - paragraph [ref=e190]: In progress
-            - generic [ref=e191]:
-              - generic [ref=e192]:
-                - generic [ref=e193]: Conversion Rate
-                - img [ref=e194]
-              - generic [ref=e197]:
-                - generic [ref=e198]: 0.0%
-                - paragraph [ref=e199]: Enquiries to Quotes
-            - generic [ref=e200]:
-              - generic [ref=e201]:
-                - generic [ref=e202]: Won Deals
-                - img [ref=e203]
-              - generic [ref=e206]:
-                - generic [ref=e207]: "2"
-                - paragraph [ref=e208]: Successfully closed
-          - generic [ref=e209]:
-            - generic [ref=e210]:
-              - generic [ref=e212]: Enquiry Activity Trend
-              - application [ref=e217]:
-                - generic [ref=e225]:
-                  - generic [ref=e228]: Dec 11
-                  - generic [ref=e229]:
-                    - generic [ref=e231]: "0"
-                    - generic [ref=e233]: "4"
-                    - generic [ref=e235]: "8"
-                    - generic [ref=e237]: "12"
-                    - generic [ref=e239]: "16"
-            - generic [ref=e240]:
-              - generic [ref=e242]: Status Distribution
-              - generic [ref=e246]:
-                - list [ref=e248]:
-                  - listitem [ref=e249]:
-                    - img "New legend icon" [ref=e250]
+                - generic [ref=e189]: "2"
+                - paragraph [ref=e190]: Successfully closed
+          - generic [ref=e191]:
+            - generic [ref=e192]:
+              - generic [ref=e194]: Enquiry Activity Trend
+              - application [ref=e199]:
+                - generic [ref=e207]:
+                  - generic [ref=e210]: Dec 11
+                  - generic [ref=e211]:
+                    - generic [ref=e213]: "0"
+                    - generic [ref=e215]: "4"
+                    - generic [ref=e217]: "8"
+                    - generic [ref=e219]: "12"
+                    - generic [ref=e221]: "16"
+            - generic [ref=e222]:
+              - generic [ref=e224]: Status Distribution
+              - generic [ref=e228]:
+                - list [ref=e230]:
+                  - listitem [ref=e231]:
+                    - img "New legend icon" [ref=e232]
                     - text: New
-                  - listitem [ref=e252]:
-                    - img "Won legend icon" [ref=e253]
+                  - listitem [ref=e234]:
+                    - img "Won legend icon" [ref=e235]
                     - text: Won
-                - application [ref=e255]
+                - application [ref=e237]
   - region "Notifications (F8)":
     - list
-  - alert [ref=e263]
-  - generic [ref=e264]: "0"
+  - button "Open Next.js Dev Tools" [ref=e250] [cursor=pointer]:
+    - img [ref=e251]
+  - alert [ref=e254]
+  - generic [ref=e255]: "0"
 ```

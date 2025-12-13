@@ -96,11 +96,6 @@
   - region "Notifications (F8)":
     - list
   - button "Open Next.js Dev Tools" [ref=e145] [cursor=pointer]:
-    - generic [ref=e148]:
-      - text: Compiling
-      - generic [ref=e149]:
-        - generic [ref=e150]: .
-        - generic [ref=e151]: .
-        - generic [ref=e152]: .
-  - alert [ref=e153]
+    - img [ref=e146]
+  - alert [ref=e149]
 ```
