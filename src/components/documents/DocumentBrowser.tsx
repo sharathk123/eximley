@@ -341,6 +341,7 @@ export function DocumentBrowser({ referenceType, referenceId, category, title, d
                                     <Button
                                         variant="ghost"
                                         size="icon"
+                                        aria-label="View document"
                                         className="h-7 w-7 hover:text-primary hover:bg-primary/10"
                                         onClick={() => handleDownload(doc.id, doc.file_name)}
                                         title="Download"
@@ -350,6 +351,7 @@ export function DocumentBrowser({ referenceType, referenceId, category, title, d
                                     <Button
                                         variant="ghost"
                                         size="icon"
+                                        aria-label="Download document"
                                         className="h-7 w-7 hover:text-primary hover:bg-primary/10"
                                         onClick={() => handleShare(doc.id)}
                                         title="Share"
@@ -359,6 +361,7 @@ export function DocumentBrowser({ referenceType, referenceId, category, title, d
                                     <Button
                                         variant="ghost"
                                         size="icon"
+                                        aria-label="Delete document"
                                         className="h-7 w-7 hover:text-destructive hover:bg-destructive/10 text-muted-foreground"
                                         onClick={() => handleDelete(doc.id)}
                                         title="Archive"

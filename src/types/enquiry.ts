@@ -43,7 +43,9 @@ export interface Enquiry {
     updated_at: string;
     version?: number;
     parent_enquiry_id?: string;
-    items?: EnquiryItem[];
+    enquiry_items?: EnquiryItem[];
+    entities?: any;
+    quotes?: any[]; // Related quotes for lineage
 }
 
 export interface EnquiryViewProps {

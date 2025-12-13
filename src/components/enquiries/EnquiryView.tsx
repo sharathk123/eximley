@@ -133,12 +133,13 @@ export function EnquiryView({ enquiry, onRefresh }: EnquiryViewProps) {
                         documentType="enquiry"
                         documentId={enquiry.id}
                         relatedDocuments={{
-                            exportOrders: enquiry.quotes?.map((quote: any) => ({
-                                id: quote.id,
-                                number: quote.quote_number,
-                                status: quote.status,
-                                date: quote.quote_date
-                            })) || []
+                            exportOrders: enquiry.quotes?.map((q: any) => ({
+                                id: q.id,
+                                type: 'quote',
+                                number: q.quote_number,
+                                status: q.status,
+                                date: q.created_at
+                            })) ?? []
                         }}
                     />
                 </TabsContent>

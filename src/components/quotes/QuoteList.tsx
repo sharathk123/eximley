@@ -1,13 +1,5 @@
 "use client";
 
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,6 +24,8 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DocumentFormatter } from "@/lib/utils/documentFormatter";
+import { DataTable, DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface QuoteListProps {
     quotes: any[];
@@ -48,10 +42,6 @@ interface QuoteListProps {
     onMarkSent: (quote: any) => void;
     onMarkApproved: (quote: any) => void;
 }
-
-
-
-// ... imports ...
 
 export function QuoteList({
     quotes,
@@ -82,26 +72,17 @@ export function QuoteList({
         }
     };
 
-    const handleRowClick = (id: string) => {
-        router.push(`/quotes/${id}`);
-    };
-
     const handleActionClick = (e: React.MouseEvent) => {
         e.stopPropagation();
     };
 
     if (!quotes || quotes.length === 0) {
         return (
-            <div className="border rounded-md bg-card p-12 flex flex-col items-center justify-center text-center">
-                <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                    <FileText className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">No quotes found</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
-                    Create a new quote to get started with your sales process.
-                </p>
-                {/* Action button would go here if we had a create handler, or just let the header button do it */}
-            </div>
+            <EmptyState
+                icon={FileText}
+                title="No quotes found"
+                description="Create a new quote to get started with your sales process."
+            />
         );
     }
 
@@ -112,7 +93,7 @@ export function QuoteList({
                     <Card
                         key={quote.id}
                         className={`shadow-sm hover:shadow-md hover-lift transition-shadow relative cursor-pointer border-l-4 border-l-primary ${selectedQuotes.includes(quote.id) ? 'bg-primary/5' : ''}`}
-                        onClick={() => handleRowClick(quote.id)}
+                        onClick={() => router.push(`/quotes/${quote.id}`)}
                     >
                         <div className="absolute top-3 right-3 z-10" onClick={handleActionClick}>
                             <Checkbox
@@ -131,22 +112,10 @@ export function QuoteList({
                                     </div>
                                 </div>
                                 <div className="flex gap-1" onClick={handleActionClick}>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => onEdit(quote)}
-                                        title="Edit"
-
-                                    >
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(quote)} title="Edit" aria-label="Edit quote">
                                         <Edit className="h-4 w-4" />
                                     </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => onDelete(quote)}
-                                    >
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(quote)} aria-label="Delete quote">
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                 </div>
@@ -180,12 +149,7 @@ export function QuoteList({
                             </div>
 
                             <div className="flex gap-2 pt-2" onClick={handleActionClick}>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => onGeneratePdf(quote.id)}
-                                    disabled={generatingPdfId === quote.id}
-                                >
+                                <Button size="sm" variant="outline" onClick={() => onGeneratePdf(quote.id)} disabled={generatingPdfId === quote.id}>
                                     {generatingPdfId === quote.id ? (
                                         <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                                     ) : (
@@ -195,18 +159,10 @@ export function QuoteList({
                                 </Button>
                                 {quote.status !== 'converted' && quote.status !== 'rejected' && (
                                     <>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => onConvertToPI(quote)}
-                                        >
+                                        <Button size="sm" variant="outline" onClick={() => onConvertToPI(quote)}>
                                             <FileText className="h-3 w-3 mr-1" /> To PI
                                         </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => onRevise(quote)}
-                                        >
+                                        <Button size="sm" variant="outline" onClick={() => onRevise(quote)}>
                                             <Copy className="h-3 w-3 mr-1" /> Revise
                                         </Button>
                                     </>
@@ -219,134 +175,137 @@ export function QuoteList({
         );
     }
 
-    return (
-        <div className="border rounded-md bg-card">
-            <Table className="table-fixed">
-                <TableHeader className="bg-muted/50">
-                    <TableRow>
-                        <TableHead className="w-[50px]">
-                            <Checkbox
-                                checked={quotes.length > 0 && selectedQuotes.length === quotes.length}
-                                onCheckedChange={(checked) => onSelectAll(checked as boolean)}
-                                aria-label="Select all"
-                            />
-                        </TableHead>
-                        <TableHead className="w-[140px]">Quote #</TableHead>
-                        <TableHead className="w-[200px]">Buyer</TableHead>
-                        <TableHead className="w-[120px]">Date</TableHead>
-                        <TableHead className="w-[150px]">Total</TableHead>
-                        <TableHead className="w-[150px]">Status</TableHead>
-                        <TableHead className="w-[180px]">Reference</TableHead>
-                        <TableHead className="w-[120px] text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {quotes.map((quote) => (
-                        <TableRow
-                            key={quote.id}
-                            className={`cursor-pointer hover:bg-muted/50 ${selectedQuotes.includes(quote.id) ? "bg-muted/50" : ""}`}
-                            onClick={() => handleRowClick(quote.id)}
-                        >
-                            <TableCell onClick={handleActionClick}>
-                                <Checkbox
-                                    checked={selectedQuotes.includes(quote.id)}
-                                    onCheckedChange={() => onSelectQuote(quote.id)}
-                                    aria-label={`Select quote ${quote.quote_number}`}
-                                />
-                            </TableCell>
-                            <TableCell className="font-medium">
-                                {DocumentFormatter.formatDocumentNumber(quote.quote_number, quote.version || 1, quote.status)}
-                            </TableCell>
-                            <TableCell>{quote.entities?.name || "—"}</TableCell>
-                            <TableCell>{new Date(quote.quote_date).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                                {quote.total_amount > 0 ? `${quote.currency_code || 'USD'} ${quote.total_amount.toFixed(2)}` : "—"}
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant={getStatusColor(quote.status)}>{quote.status}</Badge>
-                            </TableCell>
-                            <TableCell className="text-sm">
-                                <div className="space-y-1">
-                                    {quote.enquiries && (
-                                        <div className="flex items-center text-muted-foreground text-xs">
-                                            <span className="mr-1">From:</span>
-                                            <a href={`/enquiries/${quote.enquiries.id}`} onClick={(e) => e.stopPropagation()} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:underline font-medium">
-                                                {quote.enquiries.enquiry_number}
-                                            </a>
-                                        </div>
-                                    )}
-                                    {quote.proforma_invoices && (
-                                        <div className="flex items-center text-muted-foreground text-xs">
-                                            <span className="mr-1">To:</span>
-                                            <a href={`/invoices/proforma/${quote.proforma_invoices.id}`} onClick={(e) => e.stopPropagation()} className="bg-blue-100/50 text-blue-700 dark:text-blue-400 dark:bg-blue-900/30 px-1.5 py-0.5 rounded hover:underline font-medium">
-                                                {quote.proforma_invoices.invoice_number}
-                                            </a>
-                                        </div>
-                                    )}
-                                    {(!quote.enquiries && !quote.proforma_invoices) && <span className="text-muted-foreground text-xs">—</span>}
-                                </div>
-                            </TableCell>
-                            <TableCell className="text-right" onClick={handleActionClick}>
-                                <div className="flex justify-end gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => onEdit(quote)}
-                                        title="Edit"
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => onGeneratePdf(quote.id)}
-                                        disabled={generatingPdfId === quote.id}
-                                        title="Download PDF"
-                                    >
-                                        {generatingPdfId === quote.id ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <Download className="h-4 w-4" />
-                                        )}
-                                    </Button>
+    // List view using DataTable with custom checkbox column
+    const columns: DataTableColumn<any>[] = [
+        {
+            key: 'select',
+            header: '',
+            width: 'w-[50px]',
+            cell: (quote) => (
+                <Checkbox
+                    checked={selectedQuotes.includes(quote.id)}
+                    onCheckedChange={() => onSelectQuote(quote.id)}
+                    aria-label={`Select quote ${quote.quote_number}`}
+                    onClick={(e) => e.stopPropagation()}
+                />
+            )
+        },
+        {
+            key: 'quote_number',
+            header: 'Quote #',
+            width: 'w-[140px]',
+            sortable: true,
+            cellClassName: 'font-medium',
+            cell: (quote) => DocumentFormatter.formatDocumentNumber(quote.quote_number, quote.version || 1, quote.status)
+        },
+        {
+            key: 'buyer',
+            header: 'Buyer',
+            width: 'w-[200px]',
+            cell: (quote) => quote.entities?.name || "—"
+        },
+        {
+            key: 'quote_date',
+            header: 'Date',
+            width: 'w-[120px]',
+            sortable: true,
+            cell: (quote) => new Date(quote.quote_date).toLocaleDateString()
+        },
+        {
+            key: 'total_amount',
+            header: 'Total',
+            width: 'w-[150px]',
+            sortable: true,
+            cell: (quote) => quote.total_amount > 0 ? `${quote.currency_code || 'USD'} ${quote.total_amount.toFixed(2)}` : "—"
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            width: 'w-[150px]',
+            sortable: true,
+            cell: (quote) => <Badge variant={getStatusColor(quote.status)}>{quote.status}</Badge>
+        },
+        {
+            key: 'reference',
+            header: 'Reference',
+            width: 'w-[180px]',
+            cell: (quote) => (
+                <div className="space-y-1">
+                    {quote.enquiries && (
+                        <div className="flex items-center text-muted-foreground text-xs">
+                            <span className="mr-1">From:</span>
+                            <a href={`/enquiries/${quote.enquiries.id}`} onClick={(e) => e.stopPropagation()} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:underline font-medium">
+                                {quote.enquiries.enquiry_number}
+                            </a>
+                        </div>
+                    )}
+                    {quote.proforma_invoices && (
+                        <div className="flex items-center text-muted-foreground text-xs">
+                            <span className="mr-1">To:</span>
+                            <a href={`/invoices/proforma/${quote.proforma_invoices.id}`} onClick={(e) => e.stopPropagation()} className="bg-blue-100/50 text-blue-700 dark:text-blue-400 dark:bg-blue-900/30 px-1.5 py-0.5 rounded hover:underline font-medium">
+                                {quote.proforma_invoices.invoice_number}
+                            </a>
+                        </div>
+                    )}
+                    {(!quote.enquiries && !quote.proforma_invoices) && <span className="text-muted-foreground text-xs">—</span>}
+                </div>
+            )
+        }
+    ];
 
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => onMarkSent(quote)} disabled={quote.status === 'sent'}>
-                                                <ArrowRight className="h-4 w-4 mr-2" /> Mark as Sent
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => onMarkApproved(quote)} disabled={quote.status === 'approved'}>
-                                                <CheckCircle2 className="h-4 w-4 mr-2" /> Mark as Approved
-                                            </DropdownMenuItem>
-                                            {quote.status !== 'converted' && quote.status !== 'rejected' && (
-                                                <>
-                                                    <DropdownMenuItem onClick={() => onConvertToPI(quote)}>
-                                                        <FileText className="h-4 w-4 mr-2" /> Convert to PI
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => router.push(`/quotes/${quote.id}/edit`)}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Edit
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => onRevise(quote)}>
-                                                        <Copy className="h-4 w-4 mr-2" /> Create Revision
-                                                    </DropdownMenuItem>
-                                                </>
-                                            )}
-                                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(quote)}>
-                                                <Trash2 className="h-4 w-4 mr-2" /> Delete
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+    return (
+        <DataTable
+            data={quotes}
+            columns={columns}
+            searchKeys={['quote_number', 'status']}
+            searchPlaceholder="Search quotes..."
+            onRowClick={(quote) => router.push(`/quotes/${quote.id}`)}
+            actions={(quote) => (
+                <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(quote)} title="Edit" aria-label="Edit quote">
+                        <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => onGeneratePdf(quote.id)} disabled={generatingPdfId === quote.id} title="Download PDF" aria-label="Download PDF">
+                        {generatingPdfId === quote.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <Download className="h-4 w-4" />
+                        )}
+                    </Button>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View details">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onMarkSent(quote)} disabled={quote.status === 'sent'}>
+                                <ArrowRight className="h-4 w-4 mr-2" /> Mark as Sent
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onMarkApproved(quote)} disabled={quote.status === 'approved'}>
+                                <CheckCircle2 className="h-4 w-4 mr-2" /> Mark as Approved
+                            </DropdownMenuItem>
+                            {quote.status !== 'converted' && quote.status !== 'rejected' && (
+                                <>
+                                    <DropdownMenuItem onClick={() => onConvertToPI(quote)}>
+                                        <FileText className="h-4 w-4 mr-2" /> Convert to PI
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => router.push(`/quotes/${quote.id}/edit`)}>
+                                        <Edit className="mr-2 h-4 w-4" /> Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onRevise(quote)}>
+                                        <Copy className="h-4 w-4 mr-2" /> Create Revision
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(quote)}>
+                                <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            )}
+        />
     );
 }

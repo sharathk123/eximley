@@ -16,6 +16,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { RevisionDialog } from '@/components/shared';
 
 interface QuoteHeaderProps {
     quote: any;
@@ -59,6 +60,7 @@ export function QuoteHeader({
                 <Button
                     variant="ghost"
                     size="icon"
+                    aria-label="Refresh"
                     onClick={() => router.push('/quotes')}
                     className="h-9 w-9 rounded-full hover:bg-muted transition-colors"
                 >
@@ -142,20 +144,16 @@ export function QuoteHeader({
                 </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog open={showReviseDialog} onOpenChange={setShowReviseDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Create Revision?</AlertDialogTitle>
-                        <AlertDialogDescription>Create a new version (V{(quote.version || 1) + 1})?</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmRevise} disabled={revising}>
-                            {revising ? "Creating..." : "Create Revision"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Revision Dialog */}
+            <RevisionDialog
+                open={showReviseDialog}
+                onOpenChange={setShowReviseDialog}
+                onConfirm={handleConfirmRevise}
+                documentNumber={quote.quote_number}
+                currentVersion={quote.version || 1}
+                documentType="Quote"
+                loading={revising}
+            />
         </div>
     );
 }

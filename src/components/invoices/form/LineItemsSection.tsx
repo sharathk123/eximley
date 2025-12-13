@@ -83,6 +83,7 @@ export function LineItemsSection({ control, skus, currency }: LineItemsSectionPr
                                 type="button"
                                 variant="ghost"
                                 size="icon"
+                                aria-label={`Remove item ${index + 1}`}
                                 className="text-destructive hover:bg-destructive/10 mt-8"
                                 onClick={() => remove(index)}
                                 disabled={fields.length === 1}

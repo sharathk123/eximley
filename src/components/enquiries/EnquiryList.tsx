@@ -1,13 +1,5 @@
 "use client";
 
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +19,8 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DocumentFormatter } from "@/lib/utils/documentFormatter";
+import { DataTable, DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface EnquiryListProps {
     enquiries: any[];
@@ -47,7 +41,7 @@ export function EnquiryList({
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'new': return 'default'; // Uses primary variable
+            case 'new': return 'default';
             case 'contacted': return 'secondary';
             case 'quoted': return 'outline';
             case 'won': return 'default';
@@ -69,15 +63,11 @@ export function EnquiryList({
 
     if (!enquiries || enquiries.length === 0) {
         return (
-            <div className="border rounded-md bg-card p-12 flex flex-col items-center justify-center text-center">
-                <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                    <FileText className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">No enquiries found</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
-                    Record new enquiries to track customer interest and generate leads.
-                </p>
-            </div>
+            <EmptyState
+                icon={FileText}
+                title="No enquiries found"
+                description="Record new enquiries to track customer interest and generate leads."
+            />
         );
     }
 
@@ -99,26 +89,10 @@ export function EnquiryList({
                                     </div>
                                 </div>
                                 <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 hover:bg-muted"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            router.push(`/enquiries/${enquiry.id}/edit`);
-                                        }}
-                                    >
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => router.push(`/enquiries/${enquiry.id}/edit`)} aria-label="Edit enquiry">
                                         <Edit className="h-4 w-4" />
                                     </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onDelete(enquiry);
-                                        }}
-                                    >
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => onDelete(enquiry)} aria-label="Delete enquiry">
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
@@ -162,112 +136,124 @@ export function EnquiryList({
         );
     }
 
-    return (
-        <div className="border border-border rounded-md bg-card">
-            <Table>
-                <TableHeader className="bg-muted/50">
-                    <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[120px]">Enquiry #</TableHead>
-                        <TableHead className="w-[150px]">Customer</TableHead>
-                        <TableHead className="w-[150px]">Company</TableHead>
-                        <TableHead className="hidden md:table-cell w-[200px]">Interested Products</TableHead>
-                        <TableHead className="hidden md:table-cell w-[100px]">Source</TableHead>
-                        <TableHead className="w-[100px]">Status</TableHead>
-                        <TableHead className="w-[100px]">Priority</TableHead>
-                        <TableHead className="w-[150px]">Reference</TableHead>
-                        <TableHead className="w-[100px] text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {enquiries.map((enquiry) => (
-                        <TableRow
-                            key={enquiry.id}
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => router.push(`/enquiries/${enquiry.id}`)}
-                        >
-                            <TableCell className="font-medium text-foreground">
-                                {DocumentFormatter.formatDocumentNumber(enquiry.enquiry_number, enquiry.version || 1, enquiry.status)}
-                            </TableCell>
-                            <TableCell>{enquiry.customer_name}</TableCell>
-                            <TableCell>{enquiry.customer_company || "—"}</TableCell>
-                            <TableCell className="hidden md:table-cell">
-                                {enquiry.enquiry_items && enquiry.enquiry_items.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                        {enquiry.enquiry_items.map((item: any, index: number) => (
-                                            <Badge key={index} variant="secondary" className="px-1 py-0 text-[10px] font-normal h-5 truncate max-w-[150px]">
-                                                {item.skus?.products?.name || item.skus?.name || item.skus?.sku_code || "Unknown"}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                ) : <span className="text-muted-foreground text-xs">—</span>}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell capitalize">{enquiry.source?.replace('_', ' ') || "—"}</TableCell>
-                            <TableCell><Badge variant={getStatusColor(enquiry.status) as any}>{enquiry.status}</Badge></TableCell>
-                            <TableCell><Badge variant={getPriorityColor(enquiry.priority) as any}>{enquiry.priority}</Badge></TableCell>
-                            <TableCell>
-                                {enquiry.quotes && enquiry.quotes.length > 0 ? (
-                                    <div className="flex items-center text-muted-foreground text-xs" onClick={(e) => e.stopPropagation()}>
-                                        <span className="mr-1">To:</span>
-                                        <a href={`/quotes/${enquiry.quotes[0].id}`} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:underline font-medium">
-                                            {enquiry.quotes[0].quote_number}
-                                        </a>
-                                    </div>
-                                ) : <span className="text-muted-foreground text-xs">—</span>}
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            router.push(`/enquiries/${enquiry.id}/edit`);
-                                        }}
-                                        title="Edit"
-                                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => router.push(`/enquiries/${enquiry.id}/edit`)}>
-                                                <Edit className="h-4 w-4 mr-2" /> Edit Enquiry
-                                            </DropdownMenuItem>
-
-                                            {enquiry.status !== 'converted' && enquiry.status !== 'won' && enquiry.status !== 'lost' && (
-                                                <>
-                                                    <DropdownMenuItem onClick={() => onConvert(enquiry)}>
-                                                        <FileText className="h-4 w-4 mr-2" /> Create Quote
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => onMarkStatus(enquiry, 'won')}>
-                                                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" /> Mark as Won
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => onMarkStatus(enquiry, 'lost')}>
-                                                        <XCircle className="h-4 w-4 mr-2 text-destructive" /> Mark as Lost
-                                                    </DropdownMenuItem>
-                                                </>
-                                            )}
-
-                                            <DropdownMenuItem
-                                                className="text-destructive focus:text-destructive"
-                                                onClick={() => onDelete(enquiry)}
-                                            >
-                                                <Trash2 className="h-4 w-4 mr-2" /> Delete
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            </TableCell>
-                        </TableRow>
+    // List view using DataTable
+    const columns: DataTableColumn<any>[] = [
+        {
+            key: 'enquiry_number',
+            header: 'Enquiry #',
+            width: 'w-[120px]',
+            sortable: true,
+            cellClassName: 'font-medium',
+            cell: (enq) => DocumentFormatter.formatDocumentNumber(enq.enquiry_number, enq.version || 1, enq.status)
+        },
+        {
+            key: 'customer_name',
+            header: 'Customer',
+            width: 'w-[150px]',
+            sortable: true,
+            cell: (enq) => enq.customer_name
+        },
+        {
+            key: 'customer_company',
+            header: 'Company',
+            width: 'w-[150px]',
+            cell: (enq) => enq.customer_company || "—"
+        },
+        {
+            key: 'products',
+            header: 'Interested Products',
+            width: 'w-[200px]',
+            headerClassName: 'hidden md:table-cell',
+            cellClassName: 'hidden md:table-cell',
+            cell: (enq) => enq.enquiry_items && enq.enquiry_items.length > 0 ? (
+                <div className="flex flex-wrap gap-1 max-w-[200px]">
+                    {enq.enquiry_items.map((item: any, index: number) => (
+                        <Badge key={index} variant="secondary" className="px-1 py-0 text-[10px] font-normal h-5 truncate max-w-[150px]">
+                            {item.skus?.products?.name || item.skus?.name || item.skus?.sku_code || "Unknown"}
+                        </Badge>
                     ))}
-                </TableBody>
-            </Table>
-        </div>
+                </div>
+            ) : <span className="text-muted-foreground text-xs">—</span>
+        },
+        {
+            key: 'source',
+            header: 'Source',
+            width: 'w-[100px]',
+            headerClassName: 'hidden md:table-cell',
+            cellClassName: 'hidden md:table-cell capitalize',
+            cell: (enq) => enq.source?.replace('_', ' ') || "—"
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            width: 'w-[100px]',
+            sortable: true,
+            cell: (enq) => <Badge variant={getStatusColor(enq.status) as any}>{enq.status}</Badge>
+        },
+        {
+            key: 'priority',
+            header: 'Priority',
+            width: 'w-[100px]',
+            sortable: true,
+            cell: (enq) => <Badge variant={getPriorityColor(enq.priority) as any}>{enq.priority}</Badge>
+        },
+        {
+            key: 'reference',
+            header: 'Reference',
+            width: 'w-[150px]',
+            cell: (enq) => enq.quotes && enq.quotes.length > 0 ? (
+                <div className="flex items-center text-muted-foreground text-xs">
+                    <span className="mr-1">To:</span>
+                    <a href={`/quotes/${enq.quotes[0].id}`} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:underline font-medium" onClick={(e) => e.stopPropagation()}>
+                        {enq.quotes[0].quote_number}
+                    </a>
+                </div>
+            ) : <span className="text-muted-foreground text-xs">—</span>
+        }
+    ];
+
+    return (
+        <DataTable
+            data={enquiries}
+            columns={columns}
+            searchKeys={['enquiry_number', 'customer_name', 'customer_company', 'email', 'subject']}
+            searchPlaceholder="Search enquiries..."
+            onRowClick={(enq) => router.push(`/enquiries/${enq.id}`)}
+            actions={(enq) => (
+                <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => router.push(`/enquiries/${enq.id}/edit`)} title="Edit" className="h-8 w-8" aria-label="Edit enquiry">
+                        <Edit className="h-4 w-4" />
+                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View details">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => router.push(`/enquiries/${enq.id}/edit`)}>
+                                <Edit className="h-4 w-4 mr-2" /> Edit Enquiry
+                            </DropdownMenuItem>
+                            {enq.status !== 'converted' && enq.status !== 'won' && enq.status !== 'lost' && (
+                                <>
+                                    <DropdownMenuItem onClick={() => onConvert(enq)}>
+                                        <FileText className="h-4 w-4 mr-2" /> Create Quote
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onMarkStatus(enq, 'won')}>
+                                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" /> Mark as Won
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onMarkStatus(enq, 'lost')}>
+                                        <XCircle className="h-4 w-4 mr-2 text-destructive" /> Mark as Lost
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(enq)}>
+                                <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            )}
+        />
     );
 }

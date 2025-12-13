@@ -18,6 +18,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { PageHeader } from "@/components/ui/page-header";
+import { PageContainer } from "@/components/ui/page-container";
+import { SearchInput } from "@/components/ui/search-input";
 import { useToast } from "@/components/ui/use-toast";
 
 const skuSchema = z.object({
@@ -269,7 +272,7 @@ export default function SKUPage() {
 
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
+        <PageContainer>
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">SKU Management</h1>
                 <div className="flex gap-2">
@@ -382,17 +385,12 @@ export default function SKUPage() {
 
 
             {/* SEARCH & FILTERS */}
-            <div className="flex items-center gap-2 max-w-sm">
-                <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by SKU code or name..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-8"
-                    />
-                </div>
-            </div>
+            <SearchInput
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by SKU code or name..."
+                className="max-w-sm"
+            />
 
             {/* EDIT DIALOG */}
             <Dialog open={openEdit} onOpenChange={setOpenEdit}>
@@ -490,7 +488,7 @@ export default function SKUPage() {
                     </div>
                 )
             }
-        </div >
+        </PageContainer>
     );
 }
 

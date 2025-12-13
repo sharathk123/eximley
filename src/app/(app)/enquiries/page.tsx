@@ -28,8 +28,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EnquiryBulkUploadDialog } from "@/components/enquiries/EnquiryBulkUploadDialog";
 import { EnquiryList } from "@/components/enquiries/EnquiryList";
+import { LoadingState } from "@/components/ui/loading-state";
 import { PageHeader } from "@/components/ui/page-header";
-import { useRouter } from "next/navigation";
+import { PageContainer } from "@/components/ui/page-container";
+import { DeleteDialog } from "@/components/shared";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function EnquiriesPage() {
     const router = useRouter();
@@ -49,6 +52,15 @@ export default function EnquiriesPage() {
     useEffect(() => {
         fetchEnquiries();
     }, []);
+
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const statusParam = searchParams.get('status');
+        if (statusParam) {
+            setActiveTab(statusParam);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -160,7 +172,7 @@ export default function EnquiriesPage() {
     const paginatedEnquiries = filteredEnquiries.slice(startIndex, startIndex + itemsPerPage);
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
+        <PageContainer>
             <PageHeader
                 title="Enquiries"
                 description="Manage customer enquiries and convert to orders."
@@ -203,7 +215,7 @@ export default function EnquiriesPage() {
 
                 <TabsContent value={activeTab} className="mt-4">
                     {loading ? (
-                        <div className="flex justify-center p-12"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+                        <LoadingState message="Loading enquiries..." size="sm" />
                     ) : filteredEnquiries.length === 0 ? (
                         <EmptyState
                             icon={MessageSquare}
@@ -276,6 +288,6 @@ export default function EnquiriesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </PageContainer>
     );
 }

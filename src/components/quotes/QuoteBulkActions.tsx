@@ -31,6 +31,7 @@ export function QuoteBulkActions({
             <div className="flex items-center gap-2">
                 <Button
                     variant="ghost"
+                    aria-label="Approve selected"
                     size="sm"
                     className="hover:bg-background/20 hover:text-background text-background h-8"
                     onClick={onApprove}
@@ -41,6 +42,7 @@ export function QuoteBulkActions({
                 </Button>
                 <Button
                     variant="ghost"
+                    aria-label="Reject selected"
                     size="sm"
                     className="hover:bg-background/20 hover:text-background text-background h-8"
                     onClick={onSend}
@@ -51,6 +53,7 @@ export function QuoteBulkActions({
                 </Button>
                 <Button
                     variant="ghost"
+                    aria-label="Mark selected as sent"
                     size="sm"
                     className="hover:bg-destructive/90 hover:text-white text-destructive-foreground h-8"
                     onClick={onDelete}
@@ -64,6 +67,7 @@ export function QuoteBulkActions({
             <Button
                 variant="ghost"
                 size="icon"
+                aria-label="Clear selection"
                 className="h-6 w-6 hover:bg-background/20 hover:text-background text-background rounded-full"
                 onClick={onClearSelection}
             >

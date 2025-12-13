@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CreditCard } from "lucide-react";
 
 interface PurchaseOrderPaymentDialogProps {
     open: boolean;
@@ -155,7 +157,11 @@ export function PurchaseOrderPaymentDialog({
                     <div>
                         <h4 className="font-medium text-sm mb-2">Payment History</h4>
                         {payments.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No payments recorded yet.</p>
+                            <EmptyState
+                                icon={CreditCard}
+                                title="No payments"
+                                description="No payments have been recorded for this purchase order yet."
+                            />
                         ) : (
                             <Table>
                                 <TableHeader>

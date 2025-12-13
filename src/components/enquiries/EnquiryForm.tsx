@@ -147,7 +147,7 @@ export function EnquiryForm({ enquiry }: EnquiryFormProps) {
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-10">
             <div className="flex items-center gap-4 mb-6">
-                <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
@@ -169,7 +169,7 @@ export function EnquiryForm({ enquiry }: EnquiryFormProps) {
                                 <FormField control={form.control} name="customer_name" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Customer Name <span className="text-destructive">*</span></FormLabel>
-                                        <FormControl><Input placeholder="John Doe" {...field} autoComplete="off" data-lpignore="true" /></FormControl>
+                                        <FormControl><Input placeholder="John Doe" {...field} autoComplete="off" data-lpignore="true" required /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
@@ -186,7 +186,7 @@ export function EnquiryForm({ enquiry }: EnquiryFormProps) {
                                 <FormField control={form.control} name="customer_email" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
-                                        <FormControl><Input placeholder="john@example.com" {...field} autoComplete="new-password" data-lpignore="true" /></FormControl>
+                                        <FormControl><Input placeholder="john@example.com" {...field} autoComplete="new-password" data-lpignore="true" required /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
@@ -227,6 +227,7 @@ export function EnquiryForm({ enquiry }: EnquiryFormProps) {
                                                         const code = field.value?.split(' ')[0] || "+91";
                                                         field.onChange(`${code} ${e.target.value}`);
                                                     }}
+                                                    required
                                                 />
                                             </FormControl>
                                         </div>
@@ -446,7 +447,7 @@ export function EnquiryForm({ enquiry }: EnquiryFormProps) {
                                                         />
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                                                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} aria-label={`Remove item ${index + 1}`}>
                                                             <Trash2 className="h-4 w-4 text-destructive" />
                                                         </Button>
                                                     </TableCell>

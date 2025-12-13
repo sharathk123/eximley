@@ -8,17 +8,55 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 
+/**
+ * Return type for the useExportOrderActions hook
+ */
 interface UseExportOrderActionsReturn {
+    /** Whether an approval action is in progress */
     approving: boolean;
+
+    /** Whether a rejection action is in progress */
     rejecting: boolean;
+
+    /** Whether a revision action is in progress */
     revising: boolean;
+
+    /** Whether a status update action is in progress */
     updatingStatus: boolean;
+
+    /** Approves the export order */
     handleApprove: () => Promise<void>;
+
+    /** Rejects the export order with a reason */
     handleReject: (reason: string) => Promise<void>;
+
+    /** Creates a new revision of the export order */
     handleRevise: () => Promise<void>;
+
+    /** Updates the order status to a new value */
     handleMarkStatus: (status: string) => Promise<void>;
 }
 
+/**
+ * Custom hook for managing Export Order actions
+ * 
+ * Provides handlers for approve, reject, revise, and status update operations.
+ * Manages loading states, API calls, toast notifications, and navigation.
+ * 
+ * @param order - The export order object to perform actions on
+ * @param onRefresh - Optional callback to refresh data after successful operations
+ * @returns Object containing loading states and action handlers
+ * 
+ * @example
+ * ```tsx
+ * const {
+ *     approving,
+ *     handleApprove,
+ *     handleReject,
+ *     handleRevise
+ * } = useExportOrderActions(order, onRefresh);
+ * ```
+ */
 export function useExportOrderActions(order: any, onRefresh?: () => void): UseExportOrderActionsReturn {
     const [approving, setApproving] = useState(false);
     const [rejecting, setRejecting] = useState(false);

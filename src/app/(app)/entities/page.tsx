@@ -30,8 +30,10 @@ import {
 
 import { EntityFormValues } from "@/lib/schemas/entity";
 import { EntityList } from "@/components/entities/EntityList";
+import { LoadingState } from "@/components/ui/loading-state";
 import { EntityDialog } from "@/components/entities/EntityDialog";
 import { EntityBulkUpload } from "@/components/entities/EntityBulkUpload";
+import { PageContainer } from "@/components/ui/page-container";
 
 export default function EntitiesPage() {
     const [entities, setEntities] = useState<any[]>([]);
@@ -140,7 +142,7 @@ export default function EntitiesPage() {
     const paginatedEntities = filteredEntities.slice(startIndex, startIndex + itemsPerPage);
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
+        <PageContainer>
             <PageHeader
                 title="Contacts Directory"
                 description="Manage Buyers, Suppliers, and Partners."
@@ -180,7 +182,7 @@ export default function EntitiesPage() {
 
                 <TabsContent value={activeTab} className="mt-4">
                     {loading ? (
-                        <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8" /></div>
+                        <LoadingState message="Loading entities..." size="sm" />
                     ) : filteredEntities.length === 0 ? (
                         <EmptyState
                             icon={Users}
@@ -245,6 +247,6 @@ export default function EntitiesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </PageContainer>
     );
 }

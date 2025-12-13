@@ -18,8 +18,11 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PageHeader } from "@/components/ui/page-header";
+import { PageContainer } from "@/components/ui/page-container";
 import { useToast } from "@/components/ui/use-toast";
 import { ShippingBillList } from "@/components/shipping-bills/ShippingBillList";
+import { LoadingState } from "@/components/ui/loading-state";
 import {
     Pagination,
     PaginationContent,
@@ -106,7 +109,7 @@ export default function ShippingBillsPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto p-6">
+        <PageContainer className="space-y-6 max-w-7xl mx-auto p-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground">Shipping Bills</h1>
@@ -141,9 +144,7 @@ export default function ShippingBillsPage() {
             </Tabs>
 
             {loading ? (
-                <div className="flex justify-center p-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
+                <LoadingState message="Loading shipping bills..." size="sm" />
             ) : filteredBills.length === 0 ? (
                 <EmptyState
                     icon={Ship}
@@ -206,6 +207,6 @@ export default function ShippingBillsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </PageContainer>
     );
 }

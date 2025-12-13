@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, ShoppingCart } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -16,10 +17,13 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import { PageHeader } from "@/components/ui/page-header";
+import { PageContainer } from "@/components/ui/page-container";
 import { useToast } from "@/components/ui/use-toast";
 
 import { PurchaseOrderList } from "@/components/purchase-orders/PurchaseOrderList";
 import { PurchaseOrderPaymentDialog } from "@/components/purchase-orders/PurchaseOrderPaymentDialog";
+import { LoadingState } from "@/components/ui/loading-state";
 
 export default function PurchaseOrdersPage() {
     const router = useRouter();
@@ -37,6 +41,7 @@ export default function PurchaseOrdersPage() {
     const [selectedPO, setSelectedPO] = useState<any>(null);
 
     const { toast } = useToast();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchData();
@@ -47,6 +52,7 @@ export default function PurchaseOrdersPage() {
     }, [currentPage]);
 
     const fetchData = async () => {
+        setLoading(true);
         try {
             const res = await fetch("/api/purchase-orders");
             if (res.ok) {
@@ -59,6 +65,8 @@ export default function PurchaseOrdersPage() {
         } catch (err) {
             console.error("Failed to fetch POs:", err);
             setPurchaseOrders([]);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -103,7 +111,7 @@ export default function PurchaseOrdersPage() {
     const paginatedPOs = filteredPOs.slice(startIndex, startIndex + itemsPerPage);
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
+        <PageContainer>
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Purchase Orders</h1>
@@ -117,18 +125,14 @@ export default function PurchaseOrdersPage() {
             </div>
 
             <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search POs..."
-                        className="pl-8"
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                    />
-                </div>
+                <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    placeholder="Search POs..."
+                />
                 <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
@@ -145,7 +149,9 @@ export default function PurchaseOrdersPage() {
                 </TabsList>
 
                 <TabsContent value={activeTab} className="mt-4">
-                    {paginatedPOs.length === 0 ? (
+                    {loading ? (
+                        <LoadingState message="Loading purchase orders..." size="sm" />
+                    ) : paginatedPOs.length === 0 ? (
                         <EmptyState
                             icon={ShoppingCart}
                             title="No Purchase Orders found"
@@ -195,6 +201,6 @@ export default function PurchaseOrdersPage() {
                 po={selectedPO}
                 onPaymentRecorded={fetchData}
             />
-        </div>
+        </PageContainer>
     );
 }

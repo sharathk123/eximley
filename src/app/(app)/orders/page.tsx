@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, ShoppingCart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Pagination,
@@ -31,8 +32,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { OrderList } from "@/components/orders/OrderList";
+import { PageHeader } from "@/components/ui/page-header";
+import { PageContainer } from "@/components/ui/page-container";
 import { PaymentDialog } from "@/components/orders/PaymentDialog";
 import { OrderStats } from "@/components/orders/OrderStats";
+import { LoadingState } from "@/components/ui/loading-state";
 
 export default function OrdersPage() {
     const router = useRouter();
@@ -48,25 +52,36 @@ export default function OrdersPage() {
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
+    const [loading, setLoading] = useState(true);
 
     const { toast } = useToast();
 
+    const searchParams = useSearchParams();
+
     useEffect(() => {
+        const statusParam = searchParams.get('status');
+        if (statusParam) {
+            setActiveTab(statusParam);
+        }
         fetchData();
-    }, []);
+    }, [searchParams]);
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentPage]);
 
     const fetchData = async () => {
+        setLoading(true);
         try {
             const res = await fetch("/api/orders");
             const data = await res.json();
             if (data.orders) setOrders(data.orders);
         } catch (err) {
             console.error("Failed to fetch orders:", err);
+            setOrders([]);
             toast({ title: "Error", description: "Failed to fetch orders", variant: "destructive" });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -113,34 +128,27 @@ export default function OrdersPage() {
     const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Export Orders</h1>
-                    <p className="text-muted-foreground">
-                        Manage confirmed Sales Orders and track status.
-                    </p>
-                </div>
+        <PageContainer>
+            <PageHeader
+                title="Export Orders"
+                description="Manage confirmed Sales Orders and track status."
+            >
                 <Button onClick={handleCreate}>
                     <Plus className="mr-2 h-4 w-4" /> New Order
                 </Button>
-            </div>
+            </PageHeader>
 
             <OrderStats orders={orders} />
 
             <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search orders..."
-                        className="pl-8"
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                    />
-                </div>
+                <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    placeholder="Search orders..."
+                />
                 <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
@@ -158,7 +166,9 @@ export default function OrdersPage() {
                 </TabsList>
 
                 <TabsContent value={activeTab} className="mt-4">
-                    {paginatedOrders.length === 0 ? (
+                    {loading ? (
+                        <LoadingState message="Loading orders..." size="sm" />
+                    ) : paginatedOrders.length === 0 ? (
                         <EmptyState
                             icon={ShoppingCart}
                             title="No orders found"
@@ -225,6 +235,6 @@ export default function OrdersPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </PageContainer>
     );
 }

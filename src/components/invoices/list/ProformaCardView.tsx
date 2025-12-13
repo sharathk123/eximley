@@ -43,6 +43,7 @@ export function ProformaCardView({
                                 <Button
                                     variant="ghost"
                                     size="icon"
+                                    aria-label="Edit proforma"
                                     className="h-8 w-8"
                                     onClick={(e) => { e.stopPropagation(); onEdit(inv); }}
                                 >
@@ -51,6 +52,7 @@ export function ProformaCardView({
                                 <Button
                                     variant="ghost"
                                     size="icon"
+                                    aria-label="Delete proforma"
                                     className="h-8 w-8"
                                     onClick={(e) => { e.stopPropagation(); onDelete(inv); }}
                                 >

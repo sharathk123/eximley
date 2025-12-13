@@ -9,6 +9,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
     CheckCircle2,
     XCircle,
@@ -190,8 +191,12 @@ export function EnquiryDetailsTab({ enquiry }: EnquiryDetailsTabProps) {
                         <TableBody>
                             {items.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                                        No items added yet
+                                    <TableCell colSpan={8} className="py-0">
+                                        <EmptyState
+                                            icon={Package}
+                                            title="No items"
+                                            description="No enquiry items have been added yet."
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ) : (

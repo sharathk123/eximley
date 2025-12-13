@@ -37,6 +37,7 @@ export function EnquiryHeader({
                 <Button
                     variant="ghost"
                     size="icon"
+                    aria-label="Refresh"
                     onClick={() => router.push('/enquiries')}
                     className="h-9 w-9 rounded-full hover:bg-muted transition-colors"
                 >

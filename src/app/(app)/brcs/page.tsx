@@ -23,6 +23,8 @@ import {
     TrendingUp,
     Calendar
 } from "lucide-react";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function BRCsPage() {
     const [activeTab, setActiveTab] = useState("all");
@@ -198,14 +200,11 @@ export default function BRCsPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-start">
-                <div>
-                    <h1 className="text-3xl font-bold">e-BRC Tracking</h1>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Track export proceeds realization and RBI compliance
-                    </p>
-                </div>
+        <PageContainer>
+            <PageHeader
+                title="e-BRC Tracking"
+                description="Track export proceeds realization and RBI compliance"
+            >
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
@@ -277,7 +276,7 @@ export default function BRCsPage() {
                         </form>
                     </DialogContent>
                 </Dialog>
-            </div>
+            </PageHeader>
 
             <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); fetchBRCs(val); }}>
                 <TabsList>
@@ -524,6 +523,6 @@ export default function BRCsPage() {
                     )}
                 </DialogContent>
             </Dialog>
-        </div>
+        </PageContainer>
     );
 }

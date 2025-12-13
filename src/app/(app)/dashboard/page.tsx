@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Package, TrendingUp, AlertCircle, FileText, ClipboardCheck, ArrowRight } from "lucide-react";
+import { Loader2, Package, TrendingUp, AlertCircle, FileText, ClipboardCheck, ArrowRight, DollarSign, Ship, Shield, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface DashboardData {
     stats: {
@@ -16,6 +20,13 @@ interface DashboardData {
         total_enquiries: number;
         new_enquiries: number;
         won_enquiries: number;
+        monthly_revenue: number;
+        pending_brcs: number;
+        commercial_invoices: number;
+        pending_approvals: number;
+        sea_shipments: number;
+        air_shipments: number;
+        insured_shipments: number;
     };
     recent_shipments: any[];
     recent_orders: any[];
@@ -50,27 +61,24 @@ export default function DashboardPage() {
     }, []);
 
     if (loading) {
-        return <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+        return <LoadingState message="Loading dashboard..." />;
     }
 
     if (!data) return <div className="text-destructive">Failed to load dashboard data.</div>;
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h2>
-                    <p className="text-muted-foreground">Overview of your trade operations.</p>
-                </div>
-                <div className="flex gap-2">
-                    <Link href="/quotes">
-                        <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> New Quote</Button>
-                    </Link>
-                    <Link href="/shipments/new">
-                        <Button><Package className="mr-2 h-4 w-4" /> New Shipment</Button>
-                    </Link>
-                </div>
-            </div>
+        <PageContainer>
+            <PageHeader
+                title="Dashboard"
+                description="Overview of your trade operations."
+            >
+                <Link href="/quotes">
+                    <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> New Quote</Button>
+                </Link>
+                <Link href="/shipments/new">
+                    <Button><Package className="mr-2 h-4 w-4" /> New Shipment</Button>
+                </Link>
+            </PageHeader>
 
             {/* Onboarding Banner for New Users */}
             {showOnboarding && (
@@ -139,41 +147,135 @@ export default function DashboardPage() {
                     </Card>
                 </Link>
 
+                <Link href="/quotes?status=sent">
+                    <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200 cursor-pointer">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Active Quotes</CardTitle>
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{data.stats.active_quotes}</div>
+                            <p className="text-xs text-muted-foreground">Drafts & Sent quotes</p>
+                        </CardContent>
+                    </Card>
+                </Link>
+
+                <Link href="/orders?status=confirmed">
+                    <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200 cursor-pointer">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+                            <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{data.stats.pending_orders}</div>
+                            <p className="text-xs text-muted-foreground">Confirmed & In Production</p>
+                        </CardContent>
+                    </Card>
+                </Link>
+
+                <Link href="/shipments?status=shipped">
+                    <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200 cursor-pointer">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Active Shipments</CardTitle>
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{data.stats.active_shipments}</div>
+                            <p className="text-xs text-muted-foreground">
+                                of {data.stats.total_shipments} total shipments
+                            </p>
+                        </CardContent>
+                    </Card>
+                </Link>
+            </div>
+
+            {/* Financial & Compliance Metrics */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Active Quotes</CardTitle>
-                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+                        <DollarSign className="h-4 w-4 text-green-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{data.stats.active_quotes}</div>
-                        <p className="text-xs text-muted-foreground">Drafts & Sent quotes</p>
+                        <div className="text-2xl font-bold text-green-600">${(data.stats.monthly_revenue / 1000).toFixed(1)}K</div>
+                        <p className="text-xs text-muted-foreground">Export value this month</p>
+                    </CardContent>
+                </Card>
+
+                <Link href="/quotes?status=converted">
+                    <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200 cursor-pointer">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
+                            <AlertCircle className="h-4 w-4 text-orange-600" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-orange-600">{data.stats.pending_approvals}</div>
+                            <p className="text-xs text-muted-foreground">Proformas awaiting review</p>
+                        </CardContent>
+                    </Card>
+                </Link>
+
+                <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Commercial Invoices</CardTitle>
+                        <CheckCircle className="h-4 w-4 text-blue-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-blue-600">{data.stats.commercial_invoices}</div>
+                        <p className="text-xs text-muted-foreground">Converted from Proforma</p>
                     </CardContent>
                 </Card>
 
                 <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-                        <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">Pending BRCs</CardTitle>
+                        <FileText className="h-4 w-4 text-purple-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{data.stats.pending_orders}</div>
-                        <p className="text-xs text-muted-foreground">Confirmed & In Production</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Active Shipments</CardTitle>
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{data.stats.active_shipments}</div>
-                        <p className="text-xs text-muted-foreground">
-                            of {data.stats.total_shipments} total shipments
-                        </p>
+                        <div className="text-2xl font-bold text-purple-600">{data.stats.pending_brcs}</div>
+                        <p className="text-xs text-muted-foreground">Bank realization pending</p>
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Shipping Insights */}
+            <Card className="shadow-sm">
+                <CardHeader>
+                    <CardTitle>Shipping Insights</CardTitle>
+                    <CardDescription>Transport modes and insurance coverage</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <div className="flex items-center gap-3 p-3 border rounded-lg">
+                            <div className="p-2 bg-blue-100 rounded">
+                                <Ship className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <div className="text-2xl font-bold">{data.stats.sea_shipments}</div>
+                                <div className="text-xs text-muted-foreground">Sea Shipments</div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 border rounded-lg">
+                            <div className="p-2 bg-sky-100 rounded">
+                                <Package className="h-5 w-5 text-sky-600" />
+                            </div>
+                            <div>
+                                <div className="text-2xl font-bold">{data.stats.air_shipments}</div>
+                                <div className="text-xs text-muted-foreground">Air Shipments</div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 border rounded-lg">
+                            <div className="p-2 bg-green-100 rounded">
+                                <Shield className="h-5 w-5 text-green-600" />
+                            </div>
+                            <div>
+                                <div className="text-2xl font-bold">{data.stats.insured_shipments}</div>
+                                <div className="text-xs text-muted-foreground">Insured (CIF/CIP)</div>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             <div className="grid gap-8 md:grid-cols-2">
                 {/* Recent Orders */}
@@ -187,23 +289,30 @@ export default function DashboardPage() {
                             <Button variant="ghost" size="sm" className="gap-1">View All <ArrowRight className="h-3 w-3" /></Button>
                         </Link>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-6">
                         {data.recent_orders.length === 0 ? (
-                            <div className="text-center py-6 text-muted-foreground text-sm">No recent orders found.</div>
+                            <EmptyState
+                                icon={ClipboardCheck}
+                                title="No orders yet"
+                                description="Your recent orders will appear here."
+                                className="py-6"
+                            />
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 {data.recent_orders.map((order: any) => (
-                                    <div key={order.id} className="flex justify-between items-start border-b last:border-0 pb-3 last:pb-0">
-                                        <div>
-                                            <div className="font-medium text-sm">{order.order_number}</div>
-                                            <div className="text-xs text-muted-foreground">{order.entities?.name || "Unknown Buyer"}</div>
+                                    <div
+                                        key={order.id}
+                                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                                    >
+                                        <div className="flex-1">
+                                            <p className="font-medium text-sm">{order.order_number}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {new Date(order.created_at).toLocaleDateString()}
+                                            </p>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="text-sm font-medium">{order.currency_code} {order.total_amount?.toLocaleString() || '0'}</div>
-                                            <div className="text-xs capitalize text-muted-foreground bg-secondary px-1.5 py-0.5 rounded inline-block mt-1">
-                                                {order.status}
-                                            </div>
-                                        </div>
+                                        <span className="text-sm text-muted-foreground capitalize">
+                                            {order.status}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
@@ -224,7 +333,12 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         {data.recent_shipments.length === 0 ? (
-                            <div className="text-center py-6 text-muted-foreground text-sm">No recent shipments found.</div>
+                            <EmptyState
+                                icon={Package}
+                                title="No shipments yet"
+                                description="Your recent shipments will appear here."
+                                className="py-6"
+                            />
                         ) : (
                             <div className="space-y-4">
                                 {data.recent_shipments.map((shipment: any) => (
@@ -246,6 +360,6 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </PageContainer>
     );
 }

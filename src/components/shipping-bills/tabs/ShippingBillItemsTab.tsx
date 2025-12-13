@@ -7,6 +7,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Package } from "lucide-react";
 
 interface ShippingBillItemsTabProps {
     sb: any;
@@ -22,7 +24,11 @@ export function ShippingBillItemsTab({ sb }: ShippingBillItemsTabProps) {
             </CardHeader>
             <CardContent>
                 {items.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">No items found</p>
+                    <EmptyState
+                        icon={Package}
+                        title="No items"
+                        description="No shipping bill items have been added yet."
+                    />
                 ) : (
                     <div className="rounded-md border">
                         <Table>

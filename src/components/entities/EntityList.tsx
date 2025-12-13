@@ -1,13 +1,5 @@
 "use client";
 
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +11,7 @@ import {
     Mail,
     Phone
 } from "lucide-react";
+import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 
 interface EntityListProps {
     entities: any[];
@@ -54,6 +47,7 @@ export function EntityList({
                                     <Button
                                         variant="ghost"
                                         size="icon"
+                                        aria-label="Edit entity"
                                         className="h-8 w-8"
                                         onClick={() => onEdit(entity)}
                                     >
@@ -62,6 +56,7 @@ export function EntityList({
                                     <Button
                                         variant="ghost"
                                         size="icon"
+                                        aria-label="Delete entity"
                                         className="h-8 w-8 text-destructive"
                                         onClick={() => onDelete(entity)}
                                     >
@@ -97,66 +92,87 @@ export function EntityList({
         );
     }
 
+    // List view using DataTable
+    const columns: DataTableColumn<any>[] = [
+        {
+            key: 'name',
+            header: 'Name',
+            width: 'w-[200px]',
+            sortable: true,
+            cell: (entity) => (
+                <div className="flex items-center gap-2 font-medium">
+                    {entity.name}
+                    {entity.verification_status === 'verified' && (
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                    )}
+                </div>
+            )
+        },
+        {
+            key: 'type',
+            header: 'Type',
+            width: 'w-[120px]',
+            sortable: true,
+            cell: (entity) => (
+                <Badge variant="outline" className="capitalize">{entity.type}</Badge>
+            )
+        },
+        {
+            key: 'email',
+            header: 'Email',
+            width: 'w-[220px]',
+            cellClassName: 'text-muted-foreground',
+            cell: (entity) => entity.email || "—"
+        },
+        {
+            key: 'country',
+            header: 'Country',
+            width: 'w-[150px]',
+            sortable: true,
+            cell: (entity) => entity.country || "—"
+        },
+        {
+            key: 'verification_status',
+            header: 'Status',
+            width: 'w-[120px]',
+            sortable: true,
+            cell: (entity) => (
+                <Badge variant={entity.verification_status === 'verified' ? "default" : "secondary"}>
+                    {entity.verification_status === 'verified' ? "Verified" : "Unverified"}
+                </Badge>
+            )
+        }
+    ];
+
     return (
-        <div className="border rounded-md bg-card">
-            <Table className="table-fixed">
-                <TableHeader className="bg-muted/50">
-                    <TableRow>
-                        <TableHead className="w-[200px]">Name</TableHead>
-                        <TableHead className="w-[120px]">Type</TableHead>
-                        <TableHead className="w-[220px]">Email</TableHead>
-                        <TableHead className="w-[150px]">Country</TableHead>
-                        <TableHead className="w-[120px]">Status</TableHead>
-                        <TableHead className="w-[120px] text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {entities.map((entity) => (
-                        <TableRow key={entity.id}>
-                            <TableCell className="font-medium">
-                                <div className="flex items-center gap-2">
-                                    {entity.name}
-                                    {entity.verification_status === 'verified' && (
-                                        <CheckCircle2 className="w-4 h-4 text-primary" />
-                                    )}
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant="outline" className="capitalize">{entity.type}</Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">
-                                {entity.email || "—"}
-                            </TableCell>
-                            <TableCell>{entity.country || "—"}</TableCell>
-                            <TableCell>
-                                <Badge variant={entity.verification_status === 'verified' ? "default" : "secondary"}>
-                                    {entity.verification_status === 'verified' ? "Verified" : "Unverified"}
-                                </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => onEdit(entity)}
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-destructive"
-                                        onClick={() => onDelete(entity)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+        <DataTable
+            data={entities}
+            columns={columns}
+            searchKeys={['name', 'email', 'country', 'type']}
+            searchPlaceholder="Search entities..."
+            onRowClick={(entity) => onEdit(entity)}
+            actions={(entity) => (
+                <div className="flex justify-end gap-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Edit entity"
+                        className="h-8 w-8"
+                        onClick={() => onEdit(entity)}
+                    >
+                        <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Delete entity"
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => onDelete(entity)}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+            )}
+        />
     );
 }

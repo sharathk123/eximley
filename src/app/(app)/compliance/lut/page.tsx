@@ -17,6 +17,8 @@ import {
     AlertCircle,
     Download
 } from "lucide-react";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function LutPage() {
     const [luts, setLuts] = useState<any[]>([]);
@@ -99,14 +101,11 @@ export default function LutPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-start">
-                <div>
-                    <h1 className="text-3xl font-bold">Letter of Undertaking (LUT)</h1>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Manage your GST LUTs for zero-rated exports
-                    </p>
-                </div>
+        <PageContainer>
+            <PageHeader
+                title="Letter of Undertaking (LUT)"
+                description="Manage your GST LUTs for zero-rated exports"
+            >
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
@@ -149,7 +148,7 @@ export default function LutPage() {
                         </form>
                     </DialogContent>
                 </Dialog>
-            </div>
+            </PageHeader>
 
             <div className="grid gap-6">
                 <Card>
@@ -237,6 +236,6 @@ export default function LutPage() {
                     </Card>
                 </div>
             </div>
-        </div>
+        </PageContainer>
     );
 }

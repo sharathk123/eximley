@@ -367,6 +367,7 @@ export default function HSNIngest() {
                                     </div>
                                     <Button
                                         variant="ghost"
+                                        aria-label="Remove file"
                                         size="sm"
                                         onClick={() => removeFile(i)}
                                         disabled={uploading || processing}

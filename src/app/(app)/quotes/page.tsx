@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
+import { PageContainer } from "@/components/ui/page-container";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Pagination,
@@ -21,6 +23,7 @@ import { QuoteAnalytics } from "@/components/quotes/QuoteAnalytics";
 import { QuoteTemplateDialog } from "@/components/quotes/QuoteTemplateDialog";
 import { QuoteList } from "@/components/quotes/QuoteList";
 import { QuoteBulkActions } from "@/components/quotes/QuoteBulkActions";
+import { LoadingState } from "@/components/ui/loading-state";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -35,7 +38,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useQuoteManagement } from "@/hooks/use-quote-management";
 import { DocumentFormatter } from "@/lib/utils/documentFormatter";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function QuotesPage() {
     const router = useRouter();
@@ -60,6 +63,15 @@ export default function QuotesPage() {
         convertToPI,
         createRevision
     } = useQuoteManagement();
+
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const statusParam = searchParams.get('status');
+        if (statusParam) {
+            setActiveTab(statusParam); // This sets the state in the hook/component
+        }
+    }, [searchParams, setActiveTab]);
 
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
     const [showAnalytics, setShowAnalytics] = useState(false);
@@ -122,7 +134,7 @@ export default function QuotesPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
+        <PageContainer>
             <PageHeader
                 title="Quotes"
                 description="Manage quotations and convert to Proforma Invoices."
@@ -136,15 +148,14 @@ export default function QuotesPage() {
             </PageHeader>
 
             <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search quotes..."
-                        className="pl-8"
-                        value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                    />
-                </div>
+                <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    placeholder="Search quotes..."
+                />
                 <div className="flex items-center gap-2">
                     <Button
                         variant={showAnalytics ? "default" : "outline"}
@@ -173,7 +184,7 @@ export default function QuotesPage() {
 
                     <TabsContent value={activeTab} className="mt-4">
                         {loading ? (
-                            <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8" /></div>
+                            <LoadingState message="Loading quotes..." size="sm" />
                         ) : quotes.length === 0 ? (
                             <EmptyState
                                 icon={FileText}
@@ -288,6 +299,6 @@ export default function QuotesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </PageContainer>
     );
 }

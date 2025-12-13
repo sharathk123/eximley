@@ -14,6 +14,8 @@ import { Calculator, FileText, Database, Loader2, TrendingUp, DollarSign, CheckC
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function IncentivesPage() {
     const [activeTab, setActiveTab] = useState("calculator");
@@ -151,13 +153,11 @@ export default function IncentivesPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div>
-                <h1 className="text-3xl font-bold">Incentives Calculator</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                    Calculate RoDTEP and Duty Drawback benefits for your exports
-                </p>
-            </div>
+        <PageContainer>
+            <PageHeader
+                title="Incentives Calculator"
+                description="Calculate RoDTEP and Duty Drawback benefits for your exports"
+            />
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-3 max-w-md">
@@ -494,6 +494,6 @@ export default function IncentivesPage() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </PageContainer>
     );
 }

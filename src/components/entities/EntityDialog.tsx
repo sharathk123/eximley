@@ -27,6 +27,8 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { entitySchema, EntityFormValues } from "@/lib/schemas/entity";
+import { FormContainer } from "@/components/ui/form-container";
+import { FormSection } from "@/components/ui/form-section";
 
 interface EntityDialogProps {
     open: boolean;
@@ -83,8 +85,8 @@ export function EntityDialog({
                     <DialogTitle>{initialData ? "Edit Contact" : "Add New Contact"}</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                    <FormContainer onSubmit={form.handleSubmit(onSubmit)} spacing="sm">
+                        <FormSection columns={2}>
                             <FormField control={form.control} name="type" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Type</FormLabel>
@@ -113,17 +115,19 @@ export function EntityDialog({
                                     <FormMessage />
                                 </FormItem>
                             )} />
-                        </div>
+                        </FormSection>
 
-                        <FormField control={form.control} name="name" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Company / Contact Name</FormLabel>
-                                <FormControl><Input placeholder="Acme Corp" {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
+                        <FormSection>
+                            <FormField control={form.control} name="name" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Company / Contact Name</FormLabel>
+                                    <FormControl><Input placeholder="Acme Corp" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                        </FormSection>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <FormSection columns={2}>
                             <FormField control={form.control} name="email" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Email</FormLabel>
@@ -138,9 +142,9 @@ export function EntityDialog({
                                     <FormMessage />
                                 </FormItem>
                             )} />
-                        </div>
+                        </FormSection>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <FormSection columns={2}>
                             <FormField control={form.control} name="country" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Country</FormLabel>
@@ -155,17 +159,19 @@ export function EntityDialog({
                                     <FormMessage />
                                 </FormItem>
                             )} />
-                        </div>
+                        </FormSection>
 
-                        <FormField control={form.control} name="address" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Full Address</FormLabel>
-                                <FormControl><Input placeholder="Office address..." {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
+                        <FormSection>
+                            <FormField control={form.control} name="address" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Full Address</FormLabel>
+                                    <FormControl><Input placeholder="Office address..." {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                        </FormSection>
 
-                        <div className="flex justify-end space-x-2 pt-4">
+                        <div className="flex justify-end space-x-2">
                             <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
                                 Cancel
                             </Button>
@@ -173,7 +179,7 @@ export function EntityDialog({
                                 {form.formState.isSubmitting ? "Saving..." : initialData ? "Update Contact" : "Save Contact"}
                             </Button>
                         </div>
-                    </form>
+                    </FormContainer>
                 </Form>
             </DialogContent>
         </Dialog>

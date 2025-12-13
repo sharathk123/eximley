@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Copy, CheckCircle2, XCircle, Trash2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Edit, Copy, CheckCircle2, XCircle, Trash2, RefreshCw, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useProformaActions } from '@/hooks/useProformaActions';
 import { useState } from 'react';
@@ -35,18 +35,26 @@ export function ProformaHeader({
         rejecting,
         revising,
         updatingStatus,
+        convertingToCommercial,
         handleApprove,
         handleReject,
         handleRevise,
-        handleMarkStatus
+        handleMarkStatus,
+        handleConvertToCommercial
     } = useProformaActions(invoice, onRefresh);
     const [showApproveDialog, setShowApproveDialog] = useState(false);
     const [showRejectDialog, setShowRejectDialog] = useState(false);
     const [showReviseDialog, setShowReviseDialog] = useState(false);
+    const [showConvertDialog, setShowConvertDialog] = useState(false);
 
     const handleConfirmRevise = async () => {
         await handleRevise();
         setShowReviseDialog(false);
+    };
+
+    const handleConfirmConvertToCommercial = async () => {
+        await handleConvertToCommercial();
+        setShowConvertDialog(false);
     };
 
     return (
@@ -55,6 +63,7 @@ export function ProformaHeader({
                 <Button
                     variant="ghost"
                     size="icon"
+                    aria-label="Refresh"
                     onClick={() => router.back()}
                     className="h-9 w-9 rounded-full hover:bg-muted transition-colors"
                 >
@@ -98,6 +107,23 @@ export function ProformaHeader({
                             )}
                         </Button>
                     </>
+                )}
+
+                {/* Convert to Commercial Invoice - show only for approved proforma invoices */}
+                {invoice.status === 'approved' && invoice.invoice_type === 'proforma' && (
+                    <Button
+                        size="sm"
+                        variant="default"
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => setShowConvertDialog(true)}
+                        disabled={convertingToCommercial}
+                    >
+                        {convertingToCommercial ? (
+                            <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Converting...</>
+                        ) : (
+                            <><FileText className="h-4 w-4 mr-2" /> Convert to Commercial Invoice</>
+                        )}
+                    </Button>
                 )}
 
                 {invoice.status !== 'converted' && invoice.status !== 'rejected' && invoice.status !== 'revised' && (
@@ -178,6 +204,26 @@ export function ProformaHeader({
                 documentType="Proforma Invoice"
                 loading={revising}
             />
+
+            {/* Convert to Commercial Dialog */}
+            <AlertDialog open={showConvertDialog} onOpenChange={setShowConvertDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Convert to Commercial Invoice?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will convert this Proforma Invoice into a Commercial Invoice for actual shipped goods.
+                            The invoice number will remain the same but will be marked as commercial type.
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmConvertToCommercial} className="bg-blue-600 hover:bg-blue-700">
+                            Convert to Commercial
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

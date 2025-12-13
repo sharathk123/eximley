@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
 
 const costSheetSchema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -121,14 +123,11 @@ export default function CostingPage() {
     const convertedPrice = previewPrice / (watchRate || 1);
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Cost Sheets</h1>
-                    <p className="text-muted-foreground">
-                        Calculate product costs and export pricing.
-                    </p>
-                </div>
+        <PageContainer>
+            <PageHeader
+                title="Cost Sheets"
+                description="Calculate product costs and export pricing."
+            >
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
                         <Button>
@@ -260,7 +259,7 @@ export default function CostingPage() {
                         </Form>
                     </DialogContent>
                 </Dialog>
-            </div>
+            </PageHeader>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {sheets.map((sheet) => (
@@ -295,7 +294,7 @@ export default function CostingPage() {
                     </Card>
                 ))}
             </div>
-        </div>
+        </PageContainer>
     );
 }
 

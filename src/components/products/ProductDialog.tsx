@@ -31,6 +31,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { productSchema, ProductFormValues } from "@/lib/schemas/product";
+import { FormContainer } from "@/components/ui/form-container";
+import { FormSection } from "@/components/ui/form-section";
 
 interface ProductDialogProps {
     open: boolean;
@@ -118,8 +120,8 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSave 
                 </DialogHeader>
 
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
+                    <FormContainer onSubmit={form.handleSubmit(handleSubmit)} spacing="md">
+                        <FormSection columns={2} title="Basic Information">
                             <FormField control={form.control} name="name" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Product Name</FormLabel>
@@ -145,17 +147,19 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSave 
                                     <FormMessage />
                                 </FormItem>
                             )} />
-                        </div>
+                        </FormSection>
 
-                        <FormField control={form.control} name="description" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Description</FormLabel>
-                                <FormControl><Textarea placeholder="Detailed product description..." {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
+                        <FormSection title="Product Description">
+                            <FormField control={form.control} name="description" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl><Textarea placeholder="Detailed product description..." {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                        </FormSection>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <FormSection columns={2} title="Material & Specifications">
                             <FormField control={form.control} name="material_primary" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Primary Material</FormLabel>
@@ -170,9 +174,9 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSave 
                                     <FormMessage />
                                 </FormItem>
                             )} />
-                        </div>
+                        </FormSection>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <FormSection columns={2} title="Manufacturing Details">
                             <FormField control={form.control} name="manufacturing_method" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Manufacturing Method</FormLabel>
@@ -187,17 +191,19 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSave 
                                     <FormMessage />
                                 </FormItem>
                             )} />
-                        </div>
+                        </FormSection>
 
-                        <FormField control={form.control} name="features" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Features (comma separated)</FormLabel>
-                                <FormControl><Input placeholder="Eco-friendly, Durable" {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
+                        <FormSection title="Features">
+                            <FormField control={form.control} name="features" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Features (comma separated)</FormLabel>
+                                    <FormControl><Input placeholder="Eco-friendly, Durable" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                        </FormSection>
 
-                        <div className="space-y-4">
+                        <FormSection title="Additional Attributes">
                             <div className="flex justify-between items-center">
                                 <h3 className="text-sm font-medium">Additional Attributes</h3>
                                 <Button
@@ -228,24 +234,26 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSave 
                                     </Button>
                                 </div>
                             ))}
-                        </div>
+                        </FormSection>
 
-                        <FormField control={form.control} name="image_url" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Image URL (Optional)</FormLabel>
-                                <FormControl><Input placeholder="https://..." {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
+                        <FormSection title="Product Image">
+                            <FormField control={form.control} name="image_url" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Image URL (Optional)</FormLabel>
+                                    <FormControl><Input placeholder="https://..." {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                        </FormSection>
 
-                        <div className="flex justify-end space-x-2 pt-4">
+                        <div className="flex justify-end space-x-2">
                             <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Cancel</Button>
                             <Button type="submit" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {product ? "Update Product" : "Create Product"}
                             </Button>
                         </div>
-                    </form>
+                    </FormContainer>
                 </Form>
             </DialogContent>
         </Dialog>

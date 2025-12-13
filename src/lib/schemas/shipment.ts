@@ -17,6 +17,19 @@ export const shipmentSchema = z.object({
     port_of_discharge: z.string().optional(),
     vessel_name: z.string().optional(),
     container_numbers: z.string().optional(), // Transformed in onSubmit
+    // Transport Documents
+    transport_mode: z.enum(["sea", "air", "road", "rail"]).optional().default("sea"),
+    bl_number: z.string().optional(),
+    bl_date: z.string().optional(),
+    awb_number: z.string().optional(),
+    awb_date: z.string().optional(),
+    // Insurance
+    insurance_company: z.string().optional(),
+    insurance_policy_number: z.string().optional(),
+    insurance_value: z.coerce.number().optional(),
+    insurance_currency: z.string().optional().default("USD"),
+    insurance_date: z.string().optional(),
+    insurance_coverage_type: z.string().optional(),
 });
 
 export type ShipmentFormValues = z.infer<typeof shipmentSchema>;

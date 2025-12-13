@@ -95,6 +95,59 @@ export async function GET() {
             .eq("company_id", companyId)
             .eq("status", "won");
 
+        // 8. Financial Metrics - Total Export Value (This Month)
+        const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+        const { data: monthlyOrders } = await supabase
+            .from("export_orders")
+            .select("total_amount, currency_code")
+            .eq("company_id", companyId)
+            .gte("created_at", firstDayOfMonth);
+
+        const monthlyRevenue = monthlyOrders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+
+        // 9. Compliance Metrics
+        // Pending BRCs
+        const { count: pendingBRCs } = await supabase
+            .from("brcs")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .eq("status", "pending");
+
+        // Commercial Invoices (new metric!)
+        const { count: commercialInvoices } = await supabase
+            .from("proforma_invoices")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .eq("invoice_type", "commercial");
+
+        // Proformas Pending Approval
+        const { count: pendingApprovals } = await supabase
+            .from("proforma_invoices")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .eq("status", "pending");
+
+        // 10. Shipping Insights
+        // Shipments by transport mode
+        const { data: seaShipments } = await supabase
+            .from("shipments")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .eq("transport_mode", "sea");
+
+        const { data: airShipments } = await supabase
+            .from("shipments")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .eq("transport_mode", "air");
+
+        // Insured Shipments
+        const { count: insuredShipments } = await supabase
+            .from("shipments")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .not("insurance_company", "is", null);
+
         return NextResponse.json({
             stats: {
                 total_shipments: totalShipments || 0,
@@ -103,7 +156,17 @@ export async function GET() {
                 pending_orders: pendingOrders || 0,
                 total_enquiries: totalEnquiries || 0,
                 new_enquiries: newEnquiries || 0,
-                won_enquiries: wonEnquiries || 0
+                won_enquiries: wonEnquiries || 0,
+                // Financial
+                monthly_revenue: monthlyRevenue,
+                // Compliance
+                pending_brcs: pendingBRCs || 0,
+                commercial_invoices: commercialInvoices || 0,
+                pending_approvals: pendingApprovals || 0,
+                // Shipping
+                sea_shipments: seaShipments?.length || 0,
+                air_shipments: airShipments?.length || 0,
+                insured_shipments: insuredShipments || 0
             },
             recent_shipments: recentShipments || [],
             recent_orders: recentOrders || []

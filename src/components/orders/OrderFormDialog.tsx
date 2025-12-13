@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { FormContainer } from "@/components/ui/form-container";
+import { FormSection } from "@/components/ui/form-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -126,23 +129,23 @@ export function OrderFormDialog({
                     <DialogTitle>{initialData ? 'Edit Order' : 'New Sales Order'}</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                        {/* PI Selection Shortcut only on create */}
-                        {!initialData && (
-                            <div className="bg-slate-50 p-4 rounded-md border text-sm">
-                                <div className="mb-2 block font-semibold text-primary">Import from Proforma Invoice</div>
-                                <Select onValueChange={onPISelect}>
-                                    <SelectTrigger><SelectValue placeholder="Select a PI to auto-fill..." /></SelectTrigger>
-                                    <SelectContent>
-                                        {invoices.map(pi => (
-                                            <SelectItem key={pi.id} value={pi.id}>{pi.invoice_number} - {pi.entities?.name} ({pi.total_amount})</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
+                    <FormContainer onSubmit={form.handleSubmit(handleSubmit)} spacing="md">
+                        <FormSection columns={2} title="Buyer & Reference">
+                            {/* PI Selection Shortcut only on create */}
+                            {!initialData && (
+                                <div className="bg-slate-50 p-4 rounded-md border text-sm">
+                                    <div className="mb-2 block font-semibold text-primary">Import from Proforma Invoice</div>
+                                    <Select onValueChange={onPISelect}>
+                                        <SelectTrigger><SelectValue placeholder="Select a PI to auto-fill..." /></SelectTrigger>
+                                        <SelectContent>
+                                            {invoices.map(pi => (
+                                                <SelectItem key={pi.id} value={pi.id}>{pi.invoice_number} - {pi.entities?.name} ({pi.total_amount})</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
 
-                        <div className="grid grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
                                 name="buyer_id"
@@ -172,9 +175,9 @@ export function OrderFormDialog({
                                     </FormItem>
                                 )}
                             />
-                        </div>
+                        </FormSection>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <FormSection columns={3} title="Order Details">
                             <FormField
                                 control={form.control}
                                 name="currency_code"
@@ -211,31 +214,31 @@ export function OrderFormDialog({
                                     </FormItem>
                                 )}
                             />
-                        </div>
-                        <FormField
-                            control={form.control}
-                            name="status"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Status</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="pending">Pending</SelectItem>
-                                            <SelectItem value="confirmed">Confirmed</SelectItem>
-                                            <SelectItem value="in_production">In Production</SelectItem>
-                                            <SelectItem value="ready">Ready</SelectItem>
-                                            <SelectItem value="shipped">Shipped</SelectItem>
-                                            <SelectItem value="completed">Completed</SelectItem>
-                                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        </FormSection>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <FormSection columns={2} title="Additional Information">
+                            <FormField
+                                control={form.control}
+                                name="status"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Status</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="pending">Pending</SelectItem>
+                                                <SelectItem value="confirmed">Confirmed</SelectItem>
+                                                <SelectItem value="in_production">In Production</SelectItem>
+                                                <SelectItem value="ready">Ready</SelectItem>
+                                                <SelectItem value="shipped">Shipped</SelectItem>
+                                                <SelectItem value="completed">Completed</SelectItem>
+                                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             <FormField
                                 control={form.control}
                                 name="payment_method"
@@ -270,10 +273,10 @@ export function OrderFormDialog({
                                     </FormItem>
                                 )}
                             />
-                        </div>
+                        </FormSection>
                         <Separator />
 
-                        <div className="space-y-4">
+                        <FormSection title="Line Items">
                             <div className="flex justify-between items-center">
                                 <h3 className="font-semibold">Line Items</h3>
                                 <Button type="button" variant="outline" size="sm" onClick={() => append({ sku_id: "", quantity: 1, unit_price: 0 })}>
@@ -327,7 +330,7 @@ export function OrderFormDialog({
                                                     </FormItem>
                                                 )}
                                             />
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length === 1}>
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length === 1} aria-label={`Remove item ${index + 1}`}>
                                                 <Trash2 className="h-4 w-4 text-red-500" />
                                             </Button>
                                         </div>
@@ -338,12 +341,12 @@ export function OrderFormDialog({
                             <div className="flex justify-end text-lg font-bold border-t pt-2">
                                 Total: {watchCurrency} {previewTotal.toFixed(2)}
                             </div>
-                        </div>
+                        </FormSection>
 
                         <Button type="submit" className="w-full">
                             {initialData ? 'Update Order' : 'Create Order'}
                         </Button>
-                    </form>
+                    </FormContainer>
                 </Form>
             </DialogContent>
         </Dialog >

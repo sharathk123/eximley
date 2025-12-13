@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, LayoutTemplate, Trash2, ArrowRight } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface QuoteTemplateDialogProps {
     open: boolean;
@@ -76,11 +77,11 @@ export function QuoteTemplateDialog({ open, onOpenChange, onSelectTemplate }: Qu
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 ) : templates.length === 0 ? (
-                    <div className="flex-1 flex flex-col justify-center items-center text-muted-foreground p-8 text-center">
-                        <LayoutTemplate className="h-12 w-12 mb-4 opacity-50" />
-                        <p>No templates found.</p>
-                        <p className="text-sm mt-2">Save a quote as a template to see it here.</p>
-                    </div>
+                    <EmptyState
+                        icon={LayoutTemplate}
+                        title="No templates"
+                        description="Save a quote as a template to see it here."
+                    />
                 ) : (
                     <ScrollArea className="flex-1 pr-4">
                         <div className="grid gap-4 p-1">
@@ -92,6 +93,7 @@ export function QuoteTemplateDialog({ open, onOpenChange, onSelectTemplate }: Qu
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
+                                                aria-label="Delete template"
                                                 className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
                                                 onClick={(e) => {
                                                     e.stopPropagation();

@@ -7,18 +7,7 @@ import { useRouter } from 'next/navigation';
 import { usePurchaseOrderActions } from '@/hooks/use-purchase-order-actions';
 import { usePurchaseOrderPdf } from '@/hooks/use-purchase-order-pdf';
 import { useState } from 'react';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ApprovalDialog, RejectionDialog, RevisionDialog, DeleteDialog } from '@/components/shared';
 
 interface PurchaseOrderHeaderProps {
     po: any;
@@ -37,18 +26,16 @@ export function PurchaseOrderHeader({ po }: PurchaseOrderHeaderProps) {
     const [showRejectDialog, setShowRejectDialog] = useState(false);
     const [showReviseDialog, setShowReviseDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [rejectionReason, setRejectionReason] = useState("");
 
     const handleConfirmApprove = async () => {
         const success = await approvePO();
         if (success) setShowApproveDialog(false);
     };
 
-    const handleConfirmReject = async () => {
-        const success = await rejectPO(rejectionReason);
+    const handleConfirmReject = async (reason: string) => {
+        const success = await rejectPO(reason);
         if (success) {
             setShowRejectDialog(false);
-            setRejectionReason("");
         }
     };
 
@@ -183,95 +170,46 @@ export function PurchaseOrderHeader({ po }: PurchaseOrderHeaderProps) {
                 )}
             </div>
 
-            {/* Approve Dialog */}
-            <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Approve Purchase Order?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will approve PO {po.po_number} and change its status to approved.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmApprove} disabled={loading}>
-                            {loading ? "Approving..." : "Approve"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Approval Dialog */}
+            <ApprovalDialog
+                open={showApproveDialog}
+                onOpenChange={setShowApproveDialog}
+                onConfirm={handleConfirmApprove}
+                documentNumber={po.po_number}
+                documentType="Purchase Order"
+                loading={loading}
+            />
 
-            {/* Reject Dialog */}
-            <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Reject Purchase Order?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Provide a reason for rejecting PO {po.po_number}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="py-4">
-                        <Label htmlFor="reason">Rejection Reason</Label>
-                        <Input
-                            id="reason"
-                            value={rejectionReason}
-                            onChange={(e) => setRejectionReason(e.target.value)}
-                            placeholder="Enter rejection reason..."
-                            className="mt-2"
-                        />
-                    </div>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleConfirmReject}
-                            disabled={loading || !rejectionReason.trim()}
-                            className="bg-destructive text-destructive-foreground"
-                        >
-                            {loading ? "Rejecting..." : "Reject"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Rejection Dialog */}
+            <RejectionDialog
+                open={showRejectDialog}
+                onOpenChange={setShowRejectDialog}
+                onConfirm={handleConfirmReject}
+                documentNumber={po.po_number}
+                documentType="Purchase Order"
+                loading={loading}
+            />
 
-            {/* Revise Dialog */}
-            <AlertDialog open={showReviseDialog} onOpenChange={setShowReviseDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Create New Revision?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will create a new version V{(po.version || 1) + 1} of PO {po.po_number}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmRevise} disabled={loading}>
-                            {loading ? "Creating..." : "Create Revision"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Revision Dialog */}
+            <RevisionDialog
+                open={showReviseDialog}
+                onOpenChange={setShowReviseDialog}
+                onConfirm={handleConfirmRevise}
+                documentNumber={po.po_number}
+                currentVersion={po.version || 1}
+                documentType="Purchase Order"
+                loading={loading}
+            />
 
             {/* Delete Dialog */}
-            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Purchase Order?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete PO {po.po_number}. This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleConfirmDelete}
-                            disabled={loading}
-                            className="bg-destructive text-destructive-foreground"
-                        >
-                            {loading ? "Deleting..." : "Delete"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDialog
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+                onConfirm={handleConfirmDelete}
+                documentNumber={po.po_number}
+                documentType="Purchase Order"
+                loading={loading}
+            />
         </div>
     );
 }

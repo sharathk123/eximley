@@ -9,14 +9,46 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { DocumentFormatter } from "@/lib/utils/documentFormatter";
 
+/**
+ * Return type for the useQuoteActions hook
+ */
 interface UseQuoteActionsReturn {
+    /** Whether a revision action is in progress */
     revising: boolean;
+
+    /** Whether a convert to PI action is in progress */
     converting: boolean;
+
+    /** Creates a new revision of the quote */
     handleRevise: () => Promise<void>;
+
+    /** Marks the quote status (won/lost) */
     handleMarkStatus: (status: string) => Promise<void>;
+
+    /** Converts the quote to a Proforma Invoice */
     handleConvertToPI: () => Promise<void>;
 }
 
+/**
+ * Custom hook for managing Quote actions
+ * 
+ * Provides handlers for revise, mark status, and convert to PI operations.
+ * Manages loading states, API calls, toast notifications, and navigation.
+ * 
+ * @param quote - The quote object to perform actions on
+ * @param onRefresh - Optional callback to refresh data after successful operations
+ * @returns Object containing loading states and action handlers
+ * 
+ * @example
+ * ```tsx
+ * const {
+ *     revising,
+ *     converting,
+ *     handleRevise,
+ *     handleConvertToPI
+ * } = useQuoteActions(quote, onRefresh);
+ * ```
+ */
 export function useQuoteActions(quote: any, onRefresh?: () => void): UseQuoteActionsReturn {
     const [revising, setRevising] = useState(false);
     const [converting, setConverting] = useState(false);

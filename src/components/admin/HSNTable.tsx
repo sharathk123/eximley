@@ -299,10 +299,10 @@ export default function HSNTable() {
                                     </TableCell>
                                     <TableCell className="pr-6 py-4 align-top text-right w-[100px]">
                                         <div className="flex items-center justify-end gap-1">
-                                            <Button variant="ghost" size="icon" onClick={() => startEdit(hsn)} className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full">
+                                            <Button variant="ghost" size="icon" onClick={() => startEdit(hsn)} className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full" aria-label="Edit HSN">
                                                 <Pencil className="w-3.5 h-3.5" />
                                             </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => setHsnToDelete(hsn)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full">
+                                            <Button variant="ghost" size="icon" onClick={() => setHsnToDelete(hsn)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full" aria-label="Delete HSN">
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </Button>
                                         </div>

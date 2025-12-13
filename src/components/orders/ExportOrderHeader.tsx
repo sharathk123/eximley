@@ -11,27 +11,8 @@ import { ArrowLeft, Edit, CheckCircle2, XCircle, Copy, Loader2 } from 'lucide-re
 import { useRouter } from 'next/navigation';
 import { DocumentFormatter } from "@/lib/utils/documentFormatter";
 import { useState } from "react";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { ApprovalDialog, RejectionDialog, RevisionDialog } from '@/components/shared';
 
 interface ExportOrderHeaderProps {
     order: any;
@@ -62,18 +43,15 @@ export function ExportOrderHeader({
     const [showApproveDialog, setShowApproveDialog] = useState(false);
     const [showRejectDialog, setShowRejectDialog] = useState(false);
     const [showReviseDialog, setShowReviseDialog] = useState(false);
-    const [rejectionReason, setRejectionReason] = useState("");
 
     const handleConfirmApprove = async () => {
         await onApprove();
         setShowApproveDialog(false);
     };
 
-    const handleConfirmReject = async () => {
-        if (!rejectionReason.trim()) return;
-        await onReject(rejectionReason);
+    const handleConfirmReject = async (reason: string) => {
+        await onReject(reason);
         setShowRejectDialog(false);
-        setRejectionReason("");
     };
 
     const handleConfirmRevise = async () => {
@@ -107,6 +85,7 @@ export function ExportOrderHeader({
                 <Button
                     variant="ghost"
                     size="icon"
+                    aria-label="Refresh"
                     onClick={() => router.push('/orders')}
                     className="h-9 w-9 rounded-full hover:bg-muted transition-colors"
                 >
@@ -194,79 +173,36 @@ export function ExportOrderHeader({
                 </Button>
             </div>
 
-            {/* Approve Dialog */}
-            <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Approve Export Order?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will approve order {order.order_number} and mark it as ready for confirmation.
-                            This action will be recorded in the audit trail.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmApprove} className="bg-green-600 hover:bg-green-700">
-                            Approve Order
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Approval Dialog */}
+            <ApprovalDialog
+                open={showApproveDialog}
+                onOpenChange={setShowApproveDialog}
+                onConfirm={handleConfirmApprove}
+                documentNumber={order.order_number}
+                documentType="Export Order"
+                loading={approving}
+            />
 
-            {/* Reject Dialog */}
-            <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Reject Export Order</DialogTitle>
-                        <DialogDescription>
-                            Please provide a reason for rejecting order {order.order_number}.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="rejection-reason">Rejection Reason *</Label>
-                            <Textarea
-                                id="rejection-reason"
-                                placeholder="Enter the reason for rejection..."
-                                value={rejectionReason}
-                                onChange={(e) => setRejectionReason(e.target.value)}
-                                rows={4}
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={handleConfirmReject}
-                            disabled={!rejectionReason.trim() || rejecting}
-                        >
-                            {rejecting ? 'Rejecting...' : 'Reject Order'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* Rejection Dialog */}
+            <RejectionDialog
+                open={showRejectDialog}
+                onOpenChange={setShowRejectDialog}
+                onConfirm={handleConfirmReject}
+                documentNumber={order.order_number}
+                documentType="Export Order"
+                loading={rejecting}
+            />
 
-            {/* Revise Dialog */}
-            <AlertDialog open={showReviseDialog} onOpenChange={setShowReviseDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Create New Revision?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will create version {(order.version || 1) + 1} of order {order.order_number}.
-                            The current version will be marked as 'revised'. You will be redirected to the new revision.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmRevise}>
-                            Create Revision
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Revision Dialog */}
+            <RevisionDialog
+                open={showReviseDialog}
+                onOpenChange={setShowReviseDialog}
+                onConfirm={handleConfirmRevise}
+                documentNumber={order.order_number}
+                currentVersion={order.version || 1}
+                documentType="Export Order"
+                loading={revising}
+            />
         </div>
     );
 }

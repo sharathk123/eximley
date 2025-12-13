@@ -2,9 +2,10 @@ import { createSessionClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
-    request: NextRequest,
-    { params }: { params: { id: string } }
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         const supabase = await createSessionClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -13,7 +14,7 @@ export async function POST(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const invoiceId = params.id;
+        const invoiceId = id;
 
         // Get the invoice
         const { data: invoice, error: fetchError } = await supabase

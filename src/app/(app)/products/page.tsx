@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Search, Package, Sparkles, Loader2, AlertCircle, Trash2 } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -35,6 +36,9 @@ import { ProductTable } from "@/components/products/ProductTable";
 import { ProductDialog } from "@/components/products/ProductDialog";
 import { ProductBulkUpload } from "@/components/products/ProductBulkUpload";
 import { ProductFormValues } from "@/lib/schemas/product";
+import { PageHeader } from "@/components/ui/page-header";
+import { PageContainer } from "@/components/ui/page-container";
+import { LoadingState } from "@/components/ui/loading-state";
 import { Plus } from "lucide-react";
 
 export default function ProductsPage() {
@@ -380,12 +384,11 @@ export default function ProductsPage() {
     const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-                    <p className="text-muted-foreground">Manage your master product catalog and categories.</p>
-                </div>
+        <PageContainer>
+            <PageHeader
+                title="Products"
+                description="Manage your master product catalog and categories."
+            >
                 <div className="flex gap-2">
                     <ProductBulkUpload onSuccess={fetchProducts} />
 
@@ -417,28 +420,22 @@ export default function ProductsPage() {
                         <Plus className="mr-2 h-4 w-4" /> Add Product
                     </Button>
                 </div>
-            </div>
+            </PageHeader>
 
             <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search products..."
-                        className="pl-8"
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                    />
-                </div>
+                <SearchInput
+                    value={searchTerm}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    placeholder="Search by name, category, or HSN..."
+                />
                 <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
             {loading ? (
-                <div className="flex justify-center p-8">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
+                <LoadingState message="Loading products..." size="sm" />
             ) : filteredProducts.length === 0 ? (
                 <EmptyState
                     icon={Package}
@@ -547,6 +544,6 @@ export default function ProductsPage() {
                     onSelect={() => { fetchProducts(); setSelectionDialogOpen(false); }}
                 />
             )}
-        </div>
+        </PageContainer>
     );
 }

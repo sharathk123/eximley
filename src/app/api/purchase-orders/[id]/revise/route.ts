@@ -2,9 +2,10 @@ import { createSessionClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
-    request: NextRequest,
-    { params }: { params: { id: string } }
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: poId } = await params;
     try {
         const supabase = await createSessionClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -12,8 +13,6 @@ export async function POST(
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        const poId = params.id;
 
         // Get the original PO with all related data
         const { data: originalPo, error: fetchError } = await supabase

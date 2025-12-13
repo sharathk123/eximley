@@ -1,13 +1,5 @@
 "use client";
 
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +10,7 @@ import {
     ExternalLink
 } from "lucide-react";
 import Link from "next/link";
+import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 
 interface PurchaseOrderListProps {
     purchaseOrders: any[];
@@ -49,7 +42,7 @@ export function PurchaseOrderList({
         switch (status) {
             case 'paid': return 'success';
             case 'partial': return 'warning';
-            default: return 'secondary'; // unpaid
+            default: return 'secondary';
         }
     };
 
@@ -82,7 +75,7 @@ export function PurchaseOrderList({
                                 )}
                             </div>
 
-                            <div className="flex justify-end gap-2 pt-2 border-t mt-2    ">
+                            <div className="flex justify-end gap-2 pt-2 border-t mt-2">
                                 <Button variant="ghost" size="icon" onClick={() => onPayments(po)} title="Payments">
                                     <CreditCard className="h-4 w-4" />
                                 </Button>
@@ -98,61 +91,80 @@ export function PurchaseOrderList({
         );
     }
 
+    // List view using DataTable
+    const columns: DataTableColumn<any>[] = [
+        {
+            key: 'po_number',
+            header: 'PO #',
+            width: 'w-[120px]',
+            sortable: true,
+            cell: (po) => (
+                <Link href={`/purchase-orders/${po.id}`} className="text-primary hover:underline font-medium">
+                    {po.po_number}
+                </Link>
+            )
+        },
+        {
+            key: 'vendor',
+            header: 'Vendor',
+            width: 'w-[180px]',
+            cell: (po) => po.entities?.name || '—'
+        },
+        {
+            key: 'order_date',
+            header: 'Date',
+            width: 'w-[110px]',
+            sortable: true,
+            cell: (po) => new Date(po.order_date).toLocaleDateString()
+        },
+        {
+            key: 'export_order',
+            header: 'Export Order',
+            width: 'w-[150px]',
+            cell: (po) => po.export_orders ? (
+                <Link href="/orders" className="flex items-center gap-1 text-primary hover:underline">
+                    {po.export_orders.order_number} <ExternalLink className="h-3 w-3" />
+                </Link>
+            ) : <span className="text-muted-foreground">—</span>
+        },
+        {
+            key: 'total_amount',
+            header: 'Total',
+            width: 'w-[130px]',
+            sortable: true,
+            cell: (po) => `${po.currency_code} ${Number(po.total_amount).toFixed(2)}`
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            width: 'w-[120px]',
+            sortable: true,
+            cell: (po) => (
+                <div className="flex flex-col gap-1 items-start">
+                    <Badge variant={getStatusColor(po.status) as any}>{po.status}</Badge>
+                    {po.payment_status && <Badge variant={getPaymentStatusColor(po.payment_status) as any} className="text-[10px] h-5">{po.payment_status}</Badge>}
+                </div>
+            )
+        }
+    ];
+
     return (
-        <div className="border rounded-md bg-card">
-            <Table className="table-fixed">
-                <TableHeader className="bg-muted/50">
-                    <TableRow>
-                        <TableHead className="w-[120px]">PO #</TableHead>
-                        <TableHead className="w-[180px]">Vendor</TableHead>
-                        <TableHead className="w-[110px]">Date</TableHead>
-                        <TableHead className="w-[150px]">Export Order</TableHead>
-                        <TableHead className="w-[130px]">Total</TableHead>
-                        <TableHead className="w-[120px]">Status</TableHead>
-                        <TableHead className="w-[120px] text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {purchaseOrders.map((po) => (
-                        <TableRow key={po.id}>
-                            <TableCell className="font-medium">
-                                <Link href={`/purchase-orders/${po.id}`} className="text-primary hover:underline">
-                                    {po.po_number}
-                                </Link>
-                            </TableCell>
-                            <TableCell>{po.entities?.name}</TableCell>
-                            <TableCell>{new Date(po.order_date).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                                {po.export_orders ? (
-                                    <Link href="/orders" className="flex items-center gap-1 text-primary hover:underline">
-                                        {po.export_orders.order_number} <ExternalLink className="h-3 w-3" />
-                                    </Link>
-                                ) : (
-                                    <span className="text-muted-foreground">—</span>
-                                )}
-                            </TableCell>
-                            <TableCell>{po.currency_code} {Number(po.total_amount).toFixed(2)}</TableCell>
-                            <TableCell>
-                                <div className="flex flex-col gap-1 items-start">
-                                    <Badge variant={getStatusColor(po.status) as any}>{po.status}</Badge>
-                                    {po.payment_status && <Badge variant={getPaymentStatusColor(po.payment_status) as any} className="text-[10px] h-5">{po.payment_status}</Badge>}
-                                </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                    <Button variant="ghost" size="icon" onClick={() => onPayments(po)} title="Payments">
-                                        <CreditCard className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" onClick={() => onEdit(po)}><Edit className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" onClick={() => onDelete(po)}>
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+        <DataTable
+            data={purchaseOrders}
+            columns={columns}
+            searchKeys={['po_number', 'status']}
+            searchPlaceholder="Search purchase orders..."
+            actions={(po) => (
+                <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => onPayments(po)} title="Payments">
+                        <CreditCard className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(po)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => onDelete(po)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                </div>
+            )}
+        />
     );
 }

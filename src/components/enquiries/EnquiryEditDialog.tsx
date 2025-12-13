@@ -480,6 +480,7 @@ export function EnquiryEditDialog({ open, onOpenChange, enquiry, onSave }: Enqui
                                                             type="button"
                                                             variant="ghost"
                                                             size="icon"
+                                                            aria-label="Remove item"
                                                             className="h-8 w-8 text-destructive hover:bg-destructive/10"
                                                             onClick={() => remove(index)}
                                                         >

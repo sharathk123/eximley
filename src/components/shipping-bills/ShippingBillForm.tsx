@@ -112,7 +112,7 @@ export function ShippingBillForm({ initialData, mode }: ShippingBillFormProps) {
     return (
         <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl mx-auto">
             <div className="flex items-center gap-4">
-                <Button type="button" variant="ghost" size="icon" onClick={() => router.back()}>
+                <Button type="button" variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <h1 className="text-2xl font-bold">
@@ -245,6 +245,7 @@ export function ShippingBillForm({ initialData, mode }: ShippingBillFormProps) {
                                 type="button"
                                 variant="ghost"
                                 size="icon"
+                                aria-label={`Remove package ${index + 1}`}
                                 onClick={() => handleRemoveItem(index)}
                                 disabled={items.length === 1}
                             >

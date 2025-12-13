@@ -33,7 +33,7 @@ export function ProformaInvoiceForm({ initialData, mode }: ProformaInvoiceFormPr
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-10">
             <div className="flex items-center gap-4 mb-6">
-                <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>

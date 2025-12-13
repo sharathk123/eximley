@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function LandedCostCalculatorPage() {
     const [values, setValues] = useState({
@@ -42,11 +44,11 @@ export default function LandedCostCalculatorPage() {
     };
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6">
-            <div className="space-y-2">
-                <h1 className="text-3xl font-bold">Landed Cost Calculator</h1>
-                <p className="text-muted-foreground">Estimate the total cost of importing goods into India.</p>
-            </div>
+        <PageContainer>
+            <PageHeader
+                title="Landed Cost Calculator"
+                description="Estimate the total cost of importing goods into India."
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
@@ -118,6 +120,6 @@ export default function LandedCostCalculatorPage() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </PageContainer>
     );
 }

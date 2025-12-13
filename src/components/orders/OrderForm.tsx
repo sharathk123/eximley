@@ -158,7 +158,7 @@ export function OrderForm({ initialData, mode }: OrderFormProps) {
     return (
         <div className="space-y-6 max-w-5xl mx-auto">
             <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <h1 className="text-2xl font-bold">
@@ -198,7 +198,7 @@ export function OrderForm({ initialData, mode }: OrderFormProps) {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Buyer <span className="text-destructive">*</span></FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value} required>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select Buyer" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     {buyers.map(b => (
@@ -216,7 +216,7 @@ export function OrderForm({ initialData, mode }: OrderFormProps) {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Order Date <span className="text-destructive">*</span></FormLabel>
-                                            <FormControl><Input type="date" {...field} /></FormControl>
+                                            <FormControl><Input type="date" {...field} required /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -230,7 +230,7 @@ export function OrderForm({ initialData, mode }: OrderFormProps) {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Currency <span className="text-destructive">*</span></FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value} required>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select Currency" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     {currencies.map(c => (
@@ -332,7 +332,7 @@ export function OrderForm({ initialData, mode }: OrderFormProps) {
                                             <FormItem className="col-span-2">
                                                 <FormLabel>Product/SKU *</FormLabel>
                                                 <FormControl>
-                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                    <Select onValueChange={field.onChange} value={field.value} required>
                                                         <SelectTrigger><SelectValue placeholder="Select SKU" /></SelectTrigger>
                                                         <SelectContent>
                                                             {skus.map(s => (
@@ -351,7 +351,7 @@ export function OrderForm({ initialData, mode }: OrderFormProps) {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Quantity *</FormLabel>
-                                                <FormControl><Input type="number" {...field} /></FormControl>
+                                                <FormControl><Input type="number" {...field} required /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
@@ -362,12 +362,12 @@ export function OrderForm({ initialData, mode }: OrderFormProps) {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Price *</FormLabel>
-                                                <FormControl><Input type="number" {...field} /></FormControl>
+                                                <FormControl><Input type="number" {...field} required /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length === 1}>
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length === 1} aria-label={`Remove item ${index + 1}`}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>

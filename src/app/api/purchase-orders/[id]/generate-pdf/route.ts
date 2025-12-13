@@ -4,8 +4,9 @@ import { generatePurchaseOrderPDF } from "@/lib/pdf/generators/purchaseOrderPDF"
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         const supabase = await createSessionClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -14,7 +15,7 @@ export async function POST(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const poId = params.id;
+        const poId = id;
         const url = new URL(request.url);
         const exportToDms = url.searchParams.get('export') === 'true';
 

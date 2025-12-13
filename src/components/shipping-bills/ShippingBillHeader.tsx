@@ -7,18 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useShippingBillActions } from '@/hooks/use-shipping-bill-actions';
 import { useShippingBillPdf } from '@/hooks/use-shipping-bill-pdf';
 import { useState } from 'react';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ApprovalDialog, RejectionDialog, RevisionDialog, DeleteDialog } from '@/components/shared';
 
 interface ShippingBillHeaderProps {
     sb: any;
@@ -37,18 +26,16 @@ export function ShippingBillHeader({ sb }: ShippingBillHeaderProps) {
     const [showRejectDialog, setShowRejectDialog] = useState(false);
     const [showReviseDialog, setShowReviseDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [rejectionReason, setRejectionReason] = useState("");
 
     const handleConfirmApprove = async () => {
         const success = await approveSB();
         if (success) setShowApproveDialog(false);
     };
 
-    const handleConfirmReject = async () => {
-        const success = await rejectSB(rejectionReason);
+    const handleConfirmReject = async (reason: string) => {
+        const success = await rejectSB(reason);
         if (success) {
             setShowRejectDialog(false);
-            setRejectionReason("");
         }
     };
 
@@ -80,6 +67,7 @@ export function ShippingBillHeader({ sb }: ShippingBillHeaderProps) {
                 <Button
                     variant="ghost"
                     size="icon"
+                    aria-label="Refresh"
                     onClick={() => router.back()}
                     className="h-9 w-9"
                 >
@@ -184,92 +172,46 @@ export function ShippingBillHeader({ sb }: ShippingBillHeaderProps) {
                 )}
             </div>
 
-            {/* Dialogs */}
-            <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>File Shipping Bill?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will file SB {sb.sb_number} with customs and change its status to filed.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmApprove} disabled={loading}>
-                            {loading ? "Filing..." : "File with Customs"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Approval Dialog (File with Customs) */}
+            <ApprovalDialog
+                open={showApproveDialog}
+                onOpenChange={setShowApproveDialog}
+                onConfirm={handleConfirmApprove}
+                documentNumber={sb.sb_number}
+                documentType="Shipping Bill"
+                loading={loading}
+            />
 
-            <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Reject Shipping Bill?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Provide a reason for rejecting SB {sb.sb_number}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="py-4">
-                        <Label htmlFor="reason">Rejection Reason</Label>
-                        <Input
-                            id="reason"
-                            value={rejectionReason}
-                            onChange={(e) => setRejectionReason(e.target.value)}
-                            placeholder="Enter rejection reason..."
-                            className="mt-2"
-                        />
-                    </div>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleConfirmReject}
-                            disabled={loading || !rejectionReason.trim()}
-                            className="bg-destructive text-destructive-foreground"
-                        >
-                            {loading ? "Rejecting..." : "Reject"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Rejection Dialog */}
+            <RejectionDialog
+                open={showRejectDialog}
+                onOpenChange={setShowRejectDialog}
+                onConfirm={handleConfirmReject}
+                documentNumber={sb.sb_number}
+                documentType="Shipping Bill"
+                loading={loading}
+            />
 
-            <AlertDialog open={showReviseDialog} onOpenChange={setShowReviseDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Create New Revision?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will create a new version V{(sb.version || 1) + 1} of SB {sb.sb_number}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmRevise} disabled={loading}>
-                            {loading ? "Creating..." : "Create Revision"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Revision Dialog */}
+            <RevisionDialog
+                open={showReviseDialog}
+                onOpenChange={setShowReviseDialog}
+                onConfirm={handleConfirmRevise}
+                documentNumber={sb.sb_number}
+                currentVersion={sb.version || 1}
+                documentType="Shipping Bill"
+                loading={loading}
+            />
 
-            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Shipping Bill?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete SB {sb.sb_number}. This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleConfirmDelete}
-                            disabled={loading}
-                            className="bg-destructive text-destructive-foreground"
-                        >
-                            {loading ? "Deleting..." : "Delete"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Delete Dialog */}
+            <DeleteDialog
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+                onConfirm={handleConfirmDelete}
+                documentNumber={sb.sb_number}
+                documentType="Shipping Bill"
+                loading={loading}
+            />
         </div>
     );
 }

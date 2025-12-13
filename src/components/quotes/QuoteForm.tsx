@@ -263,7 +263,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-10">
             <div className="flex items-center gap-4 mb-6">
-                <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
@@ -316,7 +316,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
                                         <FormItem>
                                             <FormLabel>Quote Date <span className="text-destructive">*</span></FormLabel>
                                             <FormControl>
-                                                <Input type="date" {...field} />
+                                                <Input type="date" {...field} required />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -536,6 +536,7 @@ export function QuoteForm({ initialData, initialValues, mode }: QuoteFormProps) 
                                             type="button"
                                             variant="ghost"
                                             size="icon"
+                                            aria-label={`Remove item ${index + 1}`}
                                             className="text-destructive hover:bg-destructive/10 mt-8"
                                             onClick={() => remove(index)}
                                             disabled={fields.length === 1}

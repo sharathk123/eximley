@@ -1,7 +1,21 @@
 /**
  * RevisionDialog Component
  * 
- * Reusable revision confirmation dialog for any document type
+ * A reusable confirmation dialog for creating new document revisions.
+ * Automatically calculates and displays the next version number.
+ * 
+ * @example
+ * ```tsx
+ * <RevisionDialog
+ *     open={showReviseDialog}
+ *     onOpenChange={setShowReviseDialog}
+ *     onConfirm={handleRevise}
+ *     documentNumber="QT-2024-089"
+ *     currentVersion={2}
+ *     documentType="Quote"
+ *     loading={revising}
+ * />
+ * ```
  */
 
 import {
@@ -15,13 +29,29 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+/**
+ * Props for the RevisionDialog component
+ */
 interface RevisionDialogProps {
+    /** Controls the open/closed state of the dialog */
     open: boolean;
+
+    /** Callback fired when the dialog's open state changes */
     onOpenChange: (open: boolean) => void;
+
+    /** Callback fired when the user confirms creating a revision */
     onConfirm: () => void;
+
+    /** The document number to display in the dialog (e.g., "ENQ-2024-156") */
     documentNumber: string;
+
+    /** The current version number of the document (e.g., 1, 2, 3) */
     currentVersion: number;
+
+    /** The type of document being revised (e.g., "Enquiry", "Proforma Invoice") */
     documentType?: string;
+
+    /** Whether the revision action is in progress (shows loading state) */
     loading?: boolean;
 }
 

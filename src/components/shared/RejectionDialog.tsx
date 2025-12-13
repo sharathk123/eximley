@@ -1,7 +1,20 @@
 /**
  * RejectionDialog Component
  * 
- * Reusable rejection dialog with reason input for any document type
+ * A reusable rejection dialog with required reason input for workflow processes.
+ * Manages internal state for rejection reason and automatically resets on close.
+ * 
+ * @example
+ * ```tsx
+ * <RejectionDialog
+ *     open={showRejectDialog}
+ *     onOpenChange={setShowRejectDialog}
+ *     onConfirm={handleReject}  // Called with (reason: string)
+ *     documentNumber="EO-2024-045"
+ *     documentType="Export Order"
+ *     loading={rejecting}
+ * />
+ * ```
  */
 
 import { useState } from "react";
@@ -17,12 +30,26 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
+/**
+ * Props for the RejectionDialog component
+ */
 interface RejectionDialogProps {
+    /** Controls the open/closed state of the dialog */
     open: boolean;
+
+    /** Callback fired when the dialog's open state changes */
     onOpenChange: (open: boolean) => void;
+
+    /** Callback fired when the user confirms rejection. Receives the rejection reason as a string. */
     onConfirm: (reason: string) => void;
+
+    /** The document number to display in the dialog (e.g., "SB-2024-012") */
     documentNumber: string;
+
+    /** The type of document being rejected (e.g., "Shipping Bill", "Purchase Order") */
     documentType?: string;
+
+    /** Whether the rejection action is in progress (shows loading state and disables inputs) */
     loading?: boolean;
 }
 

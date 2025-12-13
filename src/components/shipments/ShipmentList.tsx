@@ -1,13 +1,5 @@
 "use client";
 
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +11,7 @@ import {
     Package
 } from "lucide-react";
 import Link from "next/link";
+import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 
 interface ShipmentListProps {
     shipments: any[];
@@ -87,42 +80,62 @@ export function ShipmentList({
         );
     }
 
+    // List view using DataTable
+    const columns: DataTableColumn<any>[] = [
+        {
+            key: 'shipment_number',
+            header: 'Shipment #',
+            width: 'w-[140px]',
+            sortable: true,
+            cellClassName: 'font-medium',
+            cell: (ship) => ship.shipment_number
+        },
+        {
+            key: 'shipment_date',
+            header: 'Date',
+            width: 'w-[120px]',
+            sortable: true,
+            cell: (ship) => new Date(ship.shipment_date).toLocaleDateString()
+        },
+        {
+            key: 'order_number',
+            header: 'Order',
+            width: 'w-[150px]',
+            cell: (ship) => ship.export_orders?.order_number || '—'
+        },
+        {
+            key: 'buyer',
+            header: 'Buyer',
+            width: 'w-[180px]',
+            cell: (ship) => ship.export_orders?.entities?.name || '—'
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            width: 'w-[130px]',
+            sortable: true,
+            cell: (ship) => <Badge variant={getStatusColor(ship.status) as any}>{ship.status}</Badge>
+        }
+    ];
+
     return (
-        <div className="rounded-md border bg-card">
-            <Table className="table-fixed">
-                <TableHeader className="bg-muted/50">
-                    <TableRow>
-                        <TableHead className="w-[140px]">Shipment #</TableHead>
-                        <TableHead className="w-[120px]">Date</TableHead>
-                        <TableHead className="w-[150px]">Order</TableHead>
-                        <TableHead className="w-[180px]">Buyer</TableHead>
-                        <TableHead className="w-[130px]">Status</TableHead>
-                        <TableHead className="w-[120px] text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {shipments.map((ship) => (
-                        <TableRow key={ship.id}>
-                            <TableCell className="font-medium">{ship.shipment_number}</TableCell>
-                            <TableCell>{new Date(ship.shipment_date).toLocaleDateString()}</TableCell>
-                            <TableCell>{ship.export_orders?.order_number}</TableCell>
-                            <TableCell>{ship.export_orders?.entities?.name}</TableCell>
-                            <TableCell><Badge variant={getStatusColor(ship.status) as any}>{ship.status}</Badge></TableCell>
-                            <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                    <Button variant="ghost" size="sm" onClick={() => onView(ship)}>View</Button>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { /* Edit Placeholder */ }}>
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(ship)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+        <DataTable
+            data={shipments}
+            columns={columns}
+            searchKeys={['shipment_number', 'status']}
+            searchPlaceholder="Search shipments..."
+            onRowClick={(ship) => onView(ship)}
+            actions={(ship) => (
+                <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => onView(ship)}>View</Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { /* Edit Placeholder */ }}>
+                        <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(ship)}>
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+            )}
+        />
     );
 }

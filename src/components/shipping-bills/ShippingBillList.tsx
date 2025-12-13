@@ -1,24 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
     Trash2,
     Edit,
-    FileCheck,
-    ChevronLeft,
-    ChevronRight
+    FileCheck
 } from "lucide-react";
+import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 
 interface ShippingBillListProps {
     shippingBills: any[];
@@ -106,58 +97,85 @@ export function ShippingBillList({
         );
     }
 
+    // List view using DataTable
+    const columns: DataTableColumn<any>[] = [
+        {
+            key: 'sb_number',
+            header: 'SB Number',
+            width: 'w-[140px]',
+            sortable: true,
+            cell: (sb) => (
+                <Link href={`/shipping-bills/${sb.id}`} className="text-primary hover:underline font-medium">
+                    {sb.sb_number}
+                </Link>
+            )
+        },
+        {
+            key: 'sb_date',
+            header: 'Date',
+            width: 'w-[110px]',
+            sortable: true,
+            cell: (sb) => new Date(sb.sb_date).toLocaleDateString()
+        },
+        {
+            key: 'order_number',
+            header: 'Order',
+            width: 'w-[130px]',
+            cell: (sb) => sb.export_orders?.order_number || '—'
+        },
+        {
+            key: 'buyer',
+            header: 'Buyer',
+            width: 'w-[180px]',
+            cell: (sb) => sb.export_orders?.entities?.name || '—'
+        },
+        {
+            key: 'fob_value',
+            header: 'FOB Value',
+            width: 'w-[130px]',
+            sortable: true,
+            cell: (sb) => `${sb.currency_code} ${Number(sb.fob_value).toFixed(2)}`
+        },
+        {
+            key: 'port_code',
+            header: 'Port',
+            width: 'w-[100px]',
+            cell: (sb) => sb.port_code || '—'
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            width: 'w-[100px]',
+            sortable: true,
+            cell: (sb) => getStatusBadge(sb.status)
+        }
+    ];
+
     return (
-        <div className="border border-border rounded-md bg-card">
-            <Table className="table-fixed">
-                <TableHeader className="bg-muted/50">
-                    <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[140px]">SB Number</TableHead>
-                        <TableHead className="w-[110px]">Date</TableHead>
-                        <TableHead className="w-[130px]">Order</TableHead>
-                        <TableHead className="w-[180px]">Buyer</TableHead>
-                        <TableHead className="w-[130px]">FOB Value</TableHead>
-                        <TableHead className="w-[100px]">Port</TableHead>
-                        <TableHead className="w-[100px]">Status</TableHead>
-                        <TableHead className="w-[120px] text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {shippingBills.map(sb => (
-                        <TableRow key={sb.id} className="hover:bg-muted/50">
-                            <TableCell className="font-medium text-foreground">
-                                <Link href={`/shipping-bills/${sb.id}`} className="text-primary hover:underline">
-                                    {sb.sb_number}
-                                </Link>
-                            </TableCell>
-                            <TableCell>{new Date(sb.sb_date).toLocaleDateString()}</TableCell>
-                            <TableCell>{sb.export_orders?.order_number || '—'}</TableCell>
-                            <TableCell>{sb.export_orders?.entities?.name || '—'}</TableCell>
-                            <TableCell>{sb.currency_code} {Number(sb.fob_value).toFixed(2)}</TableCell>
-                            <TableCell>{sb.port_code || '—'}</TableCell>
-                            <TableCell>{getStatusBadge(sb.status)}</TableCell>
-                            <TableCell>
-                                <div className="flex gap-2 justify-end">
-                                    {sb.status === 'drafted' && (
-                                        <>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => onEdit(sb)}>
-                                                <Edit className="h-4 w-4 text-primary" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => onFile(sb.id)} title="Mark as Filed">
-                                                <FileCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                            </Button>
-                                        </>
-                                    )}
-                                    {(sb.status === 'drafted' || sb.status === 'cancelled') && (
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => onDelete(sb)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+        <DataTable
+            data={shippingBills}
+            columns={columns}
+            searchKeys={['sb_number', 'port_code', 'status']}
+            searchPlaceholder="Search shipping bills..."
+            actions={(sb) => (
+                <div className="flex gap-2 justify-end">
+                    {sb.status === 'drafted' && (
+                        <>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => onEdit(sb)}>
+                                <Edit className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => onFile(sb.id)} title="Mark as Filed">
+                                <FileCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            </Button>
+                        </>
+                    )}
+                    {(sb.status === 'drafted' || sb.status === 'cancelled') && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => onDelete(sb)}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+            )}
+        />
     );
 }

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface QuoteItemsTabProps {
     items: any[];
@@ -36,18 +37,12 @@ export function QuoteItemsTab({ items, currency }: QuoteItemsTabProps) {
                     <TableBody>
                         {!items || items.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="h-[300px] text-center">
-                                    <div className="flex flex-col items-center justify-center space-y-3">
-                                        <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
-                                            <Package className="h-6 w-6 text-muted-foreground" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="font-medium text-muted-foreground">No items added to this quote</p>
-                                            <p className="text-xs text-muted-foreground/60 w-64 mx-auto">
-                                                Add products to generate the quote calculation.
-                                            </p>
-                                        </div>
-                                    </div>
+                                <TableCell colSpan={8} className="py-0">
+                                    <EmptyState
+                                        icon={Package}
+                                        title="No items"
+                                        description="No quote items have been added yet. Add products to generate the quote calculation."
+                                    />
                                 </TableCell>
                             </TableRow>
                         ) : (

@@ -4,8 +4,9 @@ import { generateShippingBillPDF } from "@/lib/pdf/generators/shippingBillPDF";
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         const supabase = await createSessionClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -14,7 +15,7 @@ export async function POST(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const sbId = params.id;
+        const sbId = id;
         const { searchParams } = new URL(request.url);
         const exportToDms = searchParams.get('export') === 'true';
 

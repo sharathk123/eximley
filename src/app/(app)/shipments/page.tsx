@@ -3,15 +3,17 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/use-toast";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { SearchInput } from "@/components/ui/search-input";
+import { LoadingState } from "@/components/ui/loading-state";
 import {
     Loader2,
     Plus,
-    Search,
     Ship,
 } from "lucide-react";
 import {
@@ -22,20 +24,11 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 import { ShipmentList } from "@/components/shipments/ShipmentList";
 import { ShipmentDialog } from "@/components/shipments/ShipmentDialog";
 import { ShipmentDetailsDialog } from "@/components/shipments/ShipmentDetailsDialog";
+import { DeleteDialog } from "@/components/shared";
 
 function ShipmentsPage() {
     const { toast } = useToast();
@@ -70,6 +63,11 @@ function ShipmentsPage() {
         const createMode = searchParams.get('create');
         if (createMode === 'true') {
             setIsCreateOpen(true);
+        }
+        
+        const statusParam = searchParams.get('status');
+        if (statusParam) {
+            setActiveTab(statusParam);
         }
     }, [searchParams]);
 
@@ -134,29 +132,22 @@ function ShipmentsPage() {
     const paginatedShipments = filteredShipments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Shipments</h1>
-                    <p className="text-muted-foreground">Manage logistics, packing lists, and delivery tracking.</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button onClick={() => setIsCreateOpen(true)}>
-                        <Plus className="mr-2 h-4 w-4" /> New Shipment
-                    </Button>
-                </div>
-            </div>
+        <PageContainer>
+            <PageHeader
+                title="Shipments"
+                description="Manage logistics, packing lists, and delivery tracking."
+            >
+                <Button onClick={() => setIsCreateOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" /> New Shipment
+                </Button>
+            </PageHeader>
 
-            <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search shipments..."
-                        className="pl-8"
-                        value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                    />
-                </div>
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                    placeholder="Search shipments..."
+                />
                 <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
@@ -170,7 +161,7 @@ function ShipmentsPage() {
             </Tabs>
 
             {isLoading ? (
-                <div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+                <LoadingState message="Loading shipments..." />
             ) : filteredShipments.length === 0 ? (
                 <EmptyState
                     icon={Ship}
@@ -229,7 +220,6 @@ function ShipmentsPage() {
                 initialOrderId={initialOrderId}
                 onSuccess={() => {
                     fetchShipments();
-                    // Clear URL params if needed, or just let them be
                 }}
             />
 
@@ -239,30 +229,22 @@ function ShipmentsPage() {
                 onOpenChange={(open) => !open && setSelectedShipment(null)}
             />
 
-            <AlertDialog open={!!deletingShipment} onOpenChange={(open) => !open && setDeletingShipment(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete shipment {deletingShipment?.shipment_number}.
-                            This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </div>
+            {/* Delete Dialog */}
+            <DeleteDialog
+                open={!!deletingShipment}
+                onOpenChange={(open) => !open && setDeletingShipment(null)}
+                onConfirm={handleDelete}
+                documentNumber={deletingShipment?.shipment_number || ''}
+                documentType="Shipment"
+                loading={false}
+            />
+        </PageContainer>
     );
 }
 
 export default function ShipmentsPageWrapper() {
     return (
-        <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
+        <Suspense fallback={<LoadingState />}>
             <ShipmentsPage />
         </Suspense>
     );

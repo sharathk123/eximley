@@ -3,17 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    try {
+    const { id: orderId } = await params;    try {
         const supabase = await createSessionClient();
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        const orderId = params.id;
         const body = await request.json();
         const { reason } = body;
 

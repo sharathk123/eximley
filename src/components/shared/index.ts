@@ -8,3 +8,4 @@ export { StatusBadge } from './StatusBadge';
 export { ApprovalDialog } from './ApprovalDialog';
 export { RejectionDialog } from './RejectionDialog';
 export { RevisionDialog } from './RevisionDialog';
+export { DeleteDialog } from './DeleteDialog';

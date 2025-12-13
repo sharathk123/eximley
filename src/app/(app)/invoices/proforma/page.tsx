@@ -26,9 +26,12 @@ import {
 } from "@/components/ui/pagination";
 import { Search, Plus, Loader2, FileText } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
+import { PageContainer } from "@/components/ui/page-container";
+import { SearchInput } from "@/components/ui/search-input";
 import { useProformaManagement } from "@/hooks/use-proforma-management";
 
 import { ProformaList } from "@/components/invoices/ProformaList";
+import { LoadingState } from "@/components/ui/loading-state";
 import { useRouter } from "next/navigation";
 
 export default function ProformaPage() {
@@ -67,7 +70,7 @@ export default function ProformaPage() {
     // Hook already returns paginated invoices.
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
+        <PageContainer>
             <PageHeader
                 title="Proforma Invoices"
                 description="Manage Proforma Invoices and convert to Confirmed Orders."
@@ -78,18 +81,14 @@ export default function ProformaPage() {
             </PageHeader>
 
             <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search invoices..."
-                        className="pl-8"
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                    />
-                </div>
+                <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    placeholder="Search invoices..."
+                />
                 <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
@@ -108,7 +107,7 @@ export default function ProformaPage() {
 
                 <TabsContent value={activeTab} className="mt-4">
                     {loading ? (
-                        <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8" /></div>
+                        <LoadingState message="Loading invoices..." size="sm" />
                     ) : invoices.length === 0 ? (
                         <EmptyState
                             icon={FileText}
@@ -199,6 +198,6 @@ export default function ProformaPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </PageContainer>
     );
 }

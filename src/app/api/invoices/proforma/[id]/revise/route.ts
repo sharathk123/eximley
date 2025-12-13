@@ -2,9 +2,10 @@ import { createSessionClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
-    request: NextRequest,
-    { params }: { params: { id: string } }
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: invoiceId } = await params;
     try {
         const supabase = await createSessionClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -12,8 +13,6 @@ export async function POST(
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        const invoiceId = params.id;
 
         // Get the original invoice with all related data
         const { data: originalInvoice, error: fetchError } = await supabase
@@ -30,7 +29,7 @@ export async function POST(
         const canRevise = ['pending', 'approved', 'rejected'].includes(originalInvoice.status);
         if (!canRevise) {
             return NextResponse.json(
-                { error: `Cannot revise invoice with status: ${originalInvoice.status}` },
+                { error: `Cannot revise invoice with status: ${originalInvoice.status} ` },
                 { status: 400 }
             );
         }

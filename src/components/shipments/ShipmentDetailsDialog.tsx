@@ -52,7 +52,41 @@ export function ShipmentDetailsDialog({
                                 <span className="text-muted-foreground">Date:</span> <span>{new Date(shipment.shipment_date).toLocaleDateString()}</span>
                             </div>
                         </div>
+                        <div className="space-y-1">
+                            <div className="font-semibold text-muted-foreground">Transport</div>
+                            <div className="grid grid-cols-[100px_1fr] gap-1">
+                                <span className="text-muted-foreground">Mode:</span> <span className="capitalize">{shipment.transport_mode || 'Sea'}</span>
+                                {shipment.bl_number && <><span className="text-muted-foreground">BOL #:</span> <span>{shipment.bl_number}</span></>}
+                                {shipment.bl_date && <><span className="text-muted-foreground">BOL Date:</span> <span>{new Date(shipment.bl_date).toLocaleDateString()}</span></>}
+                                {shipment.awb_number && <><span className="text-muted-foreground">AWB #:</span> <span>{shipment.awb_number}</span></>}
+                                {shipment.awb_date && <><span className="text-muted-foreground">AWB Date:</span> <span>{new Date(shipment.awb_date).toLocaleDateString()}</span></>}
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Insurance Details */}
+                    {(shipment.insurance_company || shipment.insurance_policy_number) && (
+                        <div className="space-y-4 border rounded-md p-4 bg-muted/30">
+                            <h4 className="font-semibold text-sm">Insurance Details</h4>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                {shipment.insurance_company && (
+                                    <div><span className="text-muted-foreground">Company:</span> <span className="font-medium">{shipment.insurance_company}</span></div>
+                                )}
+                                {shipment.insurance_policy_number && (
+                                    <div><span className="text-muted-foreground">Policy #:</span> <span className="font-medium">{shipment.insurance_policy_number}</span></div>
+                                )}
+                                {shipment.insurance_value && (
+                                    <div><span className="text-muted-foreground">Value:</span> <span className="font-medium">{shipment.insurance_currency} {Number(shipment.insurance_value).toLocaleString()}</span></div>
+                                )}
+                                {shipment.insurance_date && (
+                                    <div><span className="text-muted-foreground">Date:</span> <span className="font-medium">{new Date(shipment.insurance_date).toLocaleDateString()}</span></div>
+                                )}
+                                {shipment.insurance_coverage_type && (
+                                    <div className="col-span-2"><span className="text-muted-foreground">Coverage:</span> <span className="font-medium">{shipment.insurance_coverage_type}</span></div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     <Separator />
 

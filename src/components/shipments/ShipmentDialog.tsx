@@ -86,6 +86,17 @@ export function ShipmentDialog({
             port_of_loading: "",
             port_of_discharge: "",
             vessel_name: "",
+            transport_mode: "sea",
+            bl_number: "",
+            bl_date: "",
+            awb_number: "",
+            awb_date: "",
+            insurance_company: "",
+            insurance_policy_number: "",
+            insurance_value: undefined,
+            insurance_currency: "USD",
+            insurance_date: "",
+            insurance_coverage_type: "",
         }
     });
 
@@ -101,6 +112,17 @@ export function ShipmentDialog({
                 port_of_loading: "",
                 port_of_discharge: "",
                 vessel_name: "",
+                transport_mode: "sea",
+                bl_number: "",
+                bl_date: "",
+                awb_number: "",
+                awb_date: "",
+                insurance_company: "",
+                insurance_policy_number: "",
+                insurance_value: undefined,
+                insurance_currency: "USD",
+                insurance_date: "",
+                insurance_coverage_type: "",
             });
             setSelectedOrderId(null);
             setShippableItems([]);
@@ -295,6 +317,93 @@ export function ShipmentDialog({
                             <FormField control={form.control} name="port_of_loading" render={({ field }) => (
                                 <FormItem><FormLabel>Port of Loading</FormLabel><FormControl><Input placeholder="e.g. Mumbai" {...field} /></FormControl></FormItem>
                             )} />
+                            <FormField control={form.control} name="port_of_discharge" render={({ field }) => (
+                                <FormItem><FormLabel>Port of Discharge</FormLabel><FormControl><Input placeholder="e.g. Hamburg" {...field} /></FormControl></FormItem>
+                            )} />
+                            <FormField control={form.control} name="vessel_name" render={({ field }) => (
+                                <FormItem><FormLabel>Vessel Name (Sea)</FormLabel><FormControl><Input placeholder="Optional" {...field} /></FormControl></FormItem>
+                            )} />
+                        </div>
+
+                        {/* Transport Documents Section */}
+                        <div className="space-y-4 border rounded-md p-4 bg-muted/30">
+                            <h4 className="font-semibold text-sm">Transport Documents</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField control={form.control} name="transport_mode" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Transport Mode</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="sea">Sea (BOL)</SelectItem>
+                                                <SelectItem value="air">Air (AWB)</SelectItem>
+                                                <SelectItem value="road">Road</SelectItem>
+                                                <SelectItem value="rail">Rail</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormItem>
+                                )} />
+                            </div>
+
+                            {/* Bill of Lading (Sea) */}
+                            {form.watch("transport_mode") === "sea" && (
+                                <div className="grid grid-cols-2 gap-4 pt-2">
+                                    <FormField control={form.control} name="bl_number" render={({ field }) => (
+                                        <FormItem><FormLabel>Bill of Lading Number</FormLabel><FormControl><Input placeholder="BOL-123456" {...field} /></FormControl></FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="bl_date" render={({ field }) => (
+                                        <FormItem><FormLabel>BOL Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl></FormItem>
+                                    )} />
+                                </div>
+                            )}
+
+                            {/* Airway Bill (Air) */}
+                            {form.watch("transport_mode") === "air" && (
+                                <div className="grid grid-cols-2 gap-4 pt-2">
+                                    <FormField control={form.control} name="awb_number" render={({ field }) => (
+                                        <FormItem><FormLabel>Airway Bill Number</FormLabel><FormControl><Input placeholder="AWB-123456" {...field} /></FormControl></FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="awb_date" render={({ field }) => (
+                                        <FormItem><FormLabel>AWB Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl></FormItem>
+                                    )} />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Insurance Section (Optional for CIF/CIP) */}
+                        <div className="space-y-4 border rounded-md p-4 bg-muted/30">
+                            <h4 className="font-semibold text-sm">Insurance (Optional - for CIF/CIP shipments)</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField control={form.control} name="insurance_company" render={({ field }) => (
+                                    <FormItem><FormLabel>Insurance Company</FormLabel><FormControl><Input placeholder="Optional" {...field} /></FormControl></FormItem>
+                                )} />
+                                <FormField control={form.control} name="insurance_policy_number" render={({ field }) => (
+                                    <FormItem><FormLabel>Policy Number</FormLabel><FormControl><Input placeholder="Optional" {...field} /></FormControl></FormItem>
+                                )} />
+                                <FormField control={form.control} name="insurance_value" render={({ field }) => (
+                                    <FormItem><FormLabel>Insured Value</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value || ""} onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} /></FormControl></FormItem>
+                                )} />
+                                <FormField control={form.control} name="insurance_currency" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Currency</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="USD">USD</SelectItem>
+                                                <SelectItem value="EUR">EUR</SelectItem>
+                                                <SelectItem value="GBP">GBP</SelectItem>
+                                                <SelectItem value="INR">INR</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="insurance_date" render={({ field }) => (
+                                    <FormItem><FormLabel>Insurance Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl></FormItem>
+                                )} />
+                                <FormField control={form.control} name="insurance_coverage_type" render={({ field }) => (
+                                    <FormItem><FormLabel>Coverage Type</FormLabel><FormControl><Input placeholder="e.g., All Risk, FPA" {...field} /></FormControl></FormItem>
+                                )} />
+                            </div>
                         </div>
 
                         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
@@ -302,7 +411,7 @@ export function ShipmentDialog({
                         </Button>
                     </form>
                 </Form>
-            </DialogContent>
-        </Dialog>
+            </DialogContent >
+        </Dialog >
     );
 }
