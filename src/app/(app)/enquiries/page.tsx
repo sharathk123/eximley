@@ -24,11 +24,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Loader2, MessageSquare, FileText } from "lucide-react";
+import { Plus, Loader2, MessageSquare, FileText, BarChart3 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EnquiryBulkUploadDialog } from "@/components/enquiries/EnquiryBulkUploadDialog";
 import { EnquiryList } from "@/components/enquiries/EnquiryList";
+import { EnquiryAnalytics } from "@/components/enquiries/EnquiryAnalytics";
 import { LoadingState } from "@/components/ui/loading-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageContainer } from "@/components/ui/page-container";
@@ -47,6 +48,7 @@ export default function EnquiriesPage() {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list'); // Default to list view
+    const [showAnalytics, setShowAnalytics] = useState(false);
     const itemsPerPage = 12;
     const { toast } = useToast();
 
@@ -193,77 +195,91 @@ export default function EnquiriesPage() {
                     }}
                     placeholder="Search enquiries..."
                 />
-                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant={showAnalytics ? "default" : "outline"}
+                        size="icon"
+                        onClick={() => setShowAnalytics(!showAnalytics)}
+                        title="Toggle Analytics Dashboard"
+                    >
+                        <BarChart3 className="h-4 w-4" />
+                    </Button>
+                    {!showAnalytics && <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />}
+                </div>
             </div>
 
-            <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
-                setActiveTab(value);
-                setCurrentPage(1);
-            }}>
-                <TabsList>
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="new">New</TabsTrigger>
-                    <TabsTrigger value="contacted">Contacted</TabsTrigger>
-                    <TabsTrigger value="quoted">Quoted</TabsTrigger>
-                    <TabsTrigger value="won">Won</TabsTrigger>
-                    <TabsTrigger value="lost">Lost</TabsTrigger>
-                    <TabsTrigger value="converted">Converted</TabsTrigger>
-                </TabsList>
+            {showAnalytics ? (
+                <EnquiryAnalytics />
+            ) : (
+                <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
+                    setActiveTab(value);
+                    setCurrentPage(1);
+                }}>
+                    <TabsList>
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="new">New</TabsTrigger>
+                        <TabsTrigger value="contacted">Contacted</TabsTrigger>
+                        <TabsTrigger value="quoted">Quoted</TabsTrigger>
+                        <TabsTrigger value="won">Won</TabsTrigger>
+                        <TabsTrigger value="lost">Lost</TabsTrigger>
+                        <TabsTrigger value="converted">Converted</TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value={activeTab} className="mt-4">
-                    {loading ? (
-                        <LoadingState message="Loading enquiries..." size="sm" />
-                    ) : filteredEnquiries.length === 0 ? (
-                        <EmptyState
-                            icon={MessageSquare}
-                            title="No enquiries found"
-                            description={searchQuery ? "No results match your search." : "Typically, new enquiries will appear here."}
-                            actionLabel={searchQuery ? "Clear Search" : "Add Enquiry"}
-                            onAction={searchQuery ? () => setSearchQuery("") : () => router.push("/enquiries/create")}
-                        />
-                    ) : (
-                        <>
-                            <EnquiryList
-                                enquiries={paginatedEnquiries}
-                                viewMode={viewMode}
-                                onDelete={setDeletingEnquiry}
-                                onConvert={handleConvertToPI}
-                                onMarkStatus={handleMarkStatus}
+                    <TabsContent value={activeTab} className="mt-4">
+                        {loading ? (
+                            <LoadingState message="Loading enquiries..." size="sm" />
+                        ) : filteredEnquiries.length === 0 ? (
+                            <EmptyState
+                                icon={MessageSquare}
+                                title="No enquiries found"
+                                description={searchQuery ? "No results match your search." : "Typically, new enquiries will appear here."}
+                                actionLabel={searchQuery ? "Clear Search" : "Add Enquiry"}
+                                onAction={searchQuery ? () => setSearchQuery("") : () => router.push("/enquiries/create")}
                             />
+                        ) : (
+                            <>
+                                <EnquiryList
+                                    enquiries={paginatedEnquiries}
+                                    viewMode={viewMode}
+                                    onDelete={setDeletingEnquiry}
+                                    onConvert={handleConvertToPI}
+                                    onMarkStatus={handleMarkStatus}
+                                />
 
-                            {totalPages > 1 && (
-                                <Pagination className="mt-4">
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious
-                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                            <PaginationItem key={page}>
-                                                <PaginationLink
-                                                    onClick={() => setCurrentPage(page)}
-                                                    isActive={currentPage === page}
-                                                    className="cursor-pointer"
-                                                >
-                                                    {page}
-                                                </PaginationLink>
+                                {totalPages > 1 && (
+                                    <Pagination className="mt-4">
+                                        <PaginationContent>
+                                            <PaginationItem>
+                                                <PaginationPrevious
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                />
                                             </PaginationItem>
-                                        ))}
-                                        <PaginationItem>
-                                            <PaginationNext
-                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
-                            )}
-                        </>
-                    )}
-                </TabsContent>
-            </Tabs>
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                                <PaginationItem key={page}>
+                                                    <PaginationLink
+                                                        onClick={() => setCurrentPage(page)}
+                                                        isActive={currentPage === page}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        {page}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            ))}
+                                            <PaginationItem>
+                                                <PaginationNext
+                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                />
+                                            </PaginationItem>
+                                        </PaginationContent>
+                                    </Pagination>
+                                )}
+                            </>
+                        )}
+                    </TabsContent>
+                </Tabs>
+            )}
 
             <AlertDialog open={!!deletingEnquiry} onOpenChange={(open) => !open && setDeletingEnquiry(null)}>
                 <AlertDialogContent>
@@ -283,6 +299,6 @@ export default function EnquiriesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </PageContainer>
+        </PageContainer >
     );
 }
