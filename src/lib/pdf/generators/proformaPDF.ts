@@ -25,7 +25,7 @@ export async function generateProformaPDF(invoice: any, company: any): Promise<B
             const doc = new PDFDocument({
                 autoFirstPage: false,
                 info: {
-                    Title: `Proforma Invoice ${invoice.invoice_number}`,
+                    Title: `${invoice.invoice_type === 'commercial' ? 'Commercial' : 'Proforma'} Invoice ${invoice.invoice_number}`,
                     Author: company.legal_name || company.trade_name || 'Eximley User',
                 }
             });
@@ -42,12 +42,14 @@ export async function generateProformaPDF(invoice: any, company: any): Promise<B
             doc.on('error', reject);
 
             // Render document sections
-            renderHeader(doc, company, 'PROFORMA INVOICE', invoice.invoice_number);
+            // Render document sections
+            const docTitle = invoice.invoice_type === 'commercial' ? 'COMMERCIAL INVOICE' : 'PROFORMA INVOICE';
+            renderHeader(doc, company, docTitle, invoice.invoice_number);
 
             const boxStartY = doc.y;
 
             // Left box - Invoice Details
-            renderInfoBox(doc, PDF_LAYOUT.margin, boxStartY, 'INVOICE DETAILS', [
+            renderInfoBox(doc, PDF_LAYOUT.margin, boxStartY, `${invoice.invoice_type === 'commercial' ? 'COMMERCIAL' : 'PROFORMA'} DETAILS`, [
                 { label: 'Invoice No:', value: invoice.invoice_number || '-' },
                 { label: 'Date:', value: formatDate(invoice.date) },
                 { label: 'Status:', value: invoice.status?.toUpperCase() || 'DRAFT' },

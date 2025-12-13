@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function IncentivesPage() {
     const [activeTab, setActiveTab] = useState("calculator");
@@ -160,7 +161,7 @@ export default function IncentivesPage() {
             />
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3 max-w-md">
+                <TabsList>
                     <TabsTrigger value="calculator">
                         <Calculator className="h-4 w-4 mr-2" />
                         Calculator
@@ -325,7 +326,7 @@ export default function IncentivesPage() {
                                     <h3 className="text-lg font-semibold mb-4">HSN-wise Breakdown</h3>
                                     <div className="border rounded-md">
                                         <Table>
-                                            <TableHeader className="bg-muted/50">
+                                            <TableHeader>
                                                 <TableRow>
                                                     <TableHead>HSN Code</TableHead>
                                                     <TableHead>Description</TableHead>
@@ -392,17 +393,15 @@ export default function IncentivesPage() {
                                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                                 </div>
                             ) : claims.length === 0 ? (
-                                <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                                    <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                                    <h3 className="text-lg font-medium">No claims filed yet</h3>
-                                    <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1">
-                                        Calculate incentives and file claims from the Calculator tab
-                                    </p>
-                                </div>
+                                <EmptyState
+                                    icon={FileText}
+                                    title="No claims filed yet"
+                                    description="Calculate incentives and file claims from the Calculator tab"
+                                />
                             ) : (
-                                <div className="border rounded-md">
+                                <div className="border rounded-md bg-card">
                                     <Table>
-                                        <TableHeader className="bg-muted/50">
+                                        <TableHeader>
                                             <TableRow>
                                                 <TableHead>SB Number</TableHead>
                                                 <TableHead>Type</TableHead>

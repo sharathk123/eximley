@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, ShoppingCart } from "lucide-react";
+import { Plus, ShoppingCart } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/ui/view-toggle";
@@ -112,17 +112,14 @@ export default function PurchaseOrdersPage() {
 
     return (
         <PageContainer>
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Purchase Orders</h1>
-                    <p className="text-muted-foreground">
-                        Manage procurement from suppliers.
-                    </p>
-                </div>
+            <PageHeader
+                title="Purchase Orders"
+                description="Manage procurement from suppliers."
+            >
                 <Button onClick={handleCreate}>
                     <Plus className="mr-2 h-4 w-4" /> New PO
                 </Button>
-            </div>
+            </PageHeader>
 
             <div className="flex items-center justify-between gap-4">
                 <SearchInput
@@ -158,8 +155,7 @@ export default function PurchaseOrdersPage() {
                             description="Manage procurement from suppliers."
                             actionLabel="New PO"
                             onAction={handleCreate}
-                            iconColor="text-blue-600 dark:text-blue-200"
-                            iconBgColor="bg-blue-100 dark:bg-blue-900"
+
                         />
                     ) : (
                         <>

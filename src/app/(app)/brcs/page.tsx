@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function BRCsPage() {
     const [activeTab, setActiveTab] = useState("all");
@@ -397,17 +398,15 @@ export default function BRCsPage() {
                                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                                     </div>
                                 ) : brcs.length === 0 ? (
-                                    <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                                        <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                                        <h3 className="text-lg font-medium">No BRCs found</h3>
-                                        <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1">
-                                            Create BRCs to track export proceeds realization
-                                        </p>
-                                    </div>
+                                    <EmptyState
+                                        icon={FileText}
+                                        title="No BRCs found"
+                                        description="Create BRCs to track export proceeds realization"
+                                    />
                                 ) : (
                                     <div className="border rounded-md">
                                         <Table>
-                                            <TableHeader className="bg-muted/50">
+                                            <TableHeader>
                                                 <TableRow>
                                                     <TableHead>SB Number</TableHead>
                                                     <TableHead>Buyer</TableHead>

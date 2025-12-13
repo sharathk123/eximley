@@ -44,7 +44,7 @@ export function EnquiryList({
             case 'new': return 'default';
             case 'contacted': return 'secondary';
             case 'quoted': return 'outline';
-            case 'won': return 'default';
+            case 'won': return 'default'; // Green ideally
             case 'lost': return 'destructive';
             case 'converted': return 'default';
             default: return 'outline';
@@ -99,7 +99,15 @@ export function EnquiryList({
                             </div>
 
                             <div className="flex gap-2">
-                                <Badge variant={getStatusColor(enquiry.status) as any}>{enquiry.status}</Badge>
+                                <Badge
+                                    variant={getStatusColor(enquiry.status) as any}
+                                    className={
+                                        enquiry.status === 'won' || enquiry.status === 'converted' ? 'bg-green-600 hover:bg-green-700 bg-opacity-90 border-transparent text-white' :
+                                            enquiry.status === 'new' ? 'bg-primary/10 text-primary hover:bg-primary/20 border-primary/20' : ''
+                                    }
+                                >
+                                    {enquiry.status}
+                                </Badge>
                                 <Badge variant={getPriorityColor(enquiry.priority) as any}>{enquiry.priority}</Badge>
                             </div>
 
@@ -154,6 +162,13 @@ export function EnquiryList({
             cell: (enq) => enq.customer_name
         },
         {
+            key: 'enquiry_date',
+            header: 'Date',
+            width: 'w-[120px]',
+            sortable: true,
+            cell: (enq) => new Date(enq.enquiry_date).toLocaleDateString()
+        },
+        {
             key: 'customer_company',
             header: 'Company',
             width: 'w-[150px]',
@@ -188,7 +203,17 @@ export function EnquiryList({
             header: 'Status',
             width: 'w-[100px]',
             sortable: true,
-            cell: (enq) => <Badge variant={getStatusColor(enq.status) as any}>{enq.status}</Badge>
+            cell: (enq) => (
+                <Badge
+                    variant={getStatusColor(enq.status) as any}
+                    className={
+                        enq.status === 'won' || enq.status === 'converted' ? 'bg-green-600 hover:bg-green-700 border-transparent text-white' :
+                            enq.status === 'new' ? 'bg-purple-600 hover:bg-purple-700 border-transparent text-white' : ''
+                    }
+                >
+                    {enq.status}
+                </Badge>
+            )
         },
         {
             key: 'priority',
@@ -213,47 +238,47 @@ export function EnquiryList({
     ];
 
     return (
-        <DataTable
-            data={enquiries}
-            columns={columns}
-            searchKeys={['enquiry_number', 'customer_name', 'customer_company', 'email', 'subject']}
-            searchPlaceholder="Search enquiries..."
-            onRowClick={(enq) => router.push(`/enquiries/${enq.id}`)}
-            actions={(enq) => (
-                <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => router.push(`/enquiries/${enq.id}/edit`)} title="Edit" className="h-8 w-8" aria-label="Edit enquiry">
-                        <Edit className="h-4 w-4" />
-                    </Button>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View details">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => router.push(`/enquiries/${enq.id}/edit`)}>
-                                <Edit className="h-4 w-4 mr-2" /> Edit Enquiry
-                            </DropdownMenuItem>
-                            {enq.status !== 'converted' && enq.status !== 'won' && enq.status !== 'lost' && (
-                                <>
-                                    <DropdownMenuItem onClick={() => onConvert(enq)}>
-                                        <FileText className="h-4 w-4 mr-2" /> Create Quote
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onMarkStatus(enq, 'won')}>
-                                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" /> Mark as Won
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onMarkStatus(enq, 'lost')}>
-                                        <XCircle className="h-4 w-4 mr-2 text-destructive" /> Mark as Lost
-                                    </DropdownMenuItem>
-                                </>
-                            )}
-                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(enq)}>
-                                <Trash2 className="h-4 w-4 mr-2" /> Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            )}
-        />
+        <div className="border rounded-md bg-card">
+            <DataTable
+                data={enquiries}
+                columns={columns}
+                onRowClick={(enq) => router.push(`/enquiries/${enq.id}`)}
+                actions={(enq) => (
+                    <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => router.push(`/enquiries/${enq.id}/edit`)} title="Edit" className="h-8 w-8" aria-label="Edit enquiry">
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View details">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => router.push(`/enquiries/${enq.id}/edit`)}>
+                                    <Edit className="h-4 w-4 mr-2" /> Edit Enquiry
+                                </DropdownMenuItem>
+                                {enq.status !== 'converted' && enq.status !== 'won' && enq.status !== 'lost' && (
+                                    <>
+                                        <DropdownMenuItem onClick={() => onConvert(enq)}>
+                                            <FileText className="h-4 w-4 mr-2" /> Create Quote
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onMarkStatus(enq, 'won')}>
+                                            <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" /> Mark as Won
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onMarkStatus(enq, 'lost')}>
+                                            <XCircle className="h-4 w-4 mr-2 text-destructive" /> Mark as Lost
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(enq)}>
+                                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                )}
+            />
+        </div>
     );
 }

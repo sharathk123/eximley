@@ -121,6 +121,7 @@ export function EntityList({
             key: 'email',
             header: 'Email',
             width: 'w-[220px]',
+            sortable: true,
             cellClassName: 'text-muted-foreground',
             cell: (entity) => entity.email || "—"
         },
@@ -145,34 +146,34 @@ export function EntityList({
     ];
 
     return (
-        <DataTable
-            data={entities}
-            columns={columns}
-            searchKeys={['name', 'email', 'country', 'type']}
-            searchPlaceholder="Search entities..."
-            onRowClick={(entity) => onEdit(entity)}
-            actions={(entity) => (
-                <div className="flex justify-end gap-2">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Edit entity"
-                        className="h-8 w-8"
-                        onClick={() => onEdit(entity)}
-                    >
-                        <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Delete entity"
-                        className="h-8 w-8 text-destructive"
-                        onClick={() => onDelete(entity)}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            )}
-        />
+        <div className="border rounded-md bg-card">
+            <DataTable
+                data={entities}
+                columns={columns}
+                onRowClick={(entity) => onEdit(entity)}
+                actions={(entity) => (
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Edit entity"
+                            className="h-8 w-8"
+                            onClick={() => onEdit(entity)}
+                        >
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Delete entity"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => onDelete(entity)}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
+            />
+        </div>
     );
 }

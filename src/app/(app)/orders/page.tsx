@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+
 import { SearchInput } from "@/components/ui/search-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -175,8 +175,6 @@ export default function OrdersPage() {
                             description="Create a new export order to start processing a sale."
                             actionLabel="Create Order"
                             onAction={handleCreate}
-                            iconColor="text-blue-600 dark:text-blue-200"
-                            iconBgColor="bg-blue-100 dark:bg-blue-900"
                         />
                     ) : (
                         <>

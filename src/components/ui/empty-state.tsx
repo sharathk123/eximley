@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LucideIcon } from "lucide-react";
 
@@ -20,11 +21,12 @@ export function EmptyState({
     actionLabel,
     onAction,
     iconColor = "text-primary",
-    iconBgColor = "bg-primary/10"
-}: EmptyStateProps) {
+    iconBgColor = "bg-primary/10",
+    className
+}: EmptyStateProps & { className?: string }) {
     return (
         <div
-            className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50"
+            className={cn("flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50", className)}
             role="status"
             aria-label={`${title}: ${description}`}
         >

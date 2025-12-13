@@ -374,7 +374,7 @@ export function EnquiryEditDialog({ open, onOpenChange, enquiry, onSave }: Enqui
 
                             <div className="border rounded-md overflow-hidden">
                                 <Table className="table-fixed">
-                                    <TableHeader className="bg-muted/50">
+                                    <TableHeader>
                                         <TableRow>
                                             <TableHead className="w-[35%]">Product <span className="text-destructive">*</span></TableHead>
                                             <TableHead className="w-[15%]">Qty <span className="text-destructive">*</span></TableHead>

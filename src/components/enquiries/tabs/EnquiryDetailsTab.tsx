@@ -34,7 +34,7 @@ interface EnquiryDetailsTabProps {
 }
 
 export function EnquiryDetailsTab({ enquiry }: EnquiryDetailsTabProps) {
-    const items = enquiry.items || [];
+    const items = enquiry.enquiry_items || [];
 
     return (
         <div className="space-y-6">

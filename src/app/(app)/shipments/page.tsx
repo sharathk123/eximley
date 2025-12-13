@@ -64,7 +64,7 @@ function ShipmentsPage() {
         if (createMode === 'true') {
             setIsCreateOpen(true);
         }
-        
+
         const statusParam = searchParams.get('status');
         if (statusParam) {
             setActiveTab(statusParam);
@@ -169,8 +169,7 @@ function ShipmentsPage() {
                     description="Get started by creating a shipment from your confirmed orders."
                     actionLabel="New Shipment"
                     onAction={() => setIsCreateOpen(true)}
-                    iconColor="text-blue-600 dark:text-blue-200"
-                    iconBgColor="bg-blue-100 dark:bg-blue-900"
+
                 />
             ) : (
                 <>

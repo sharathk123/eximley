@@ -1,14 +1,24 @@
 import { createSessionClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import LogoutButton from "@/components/auth/LogoutButton"; // Assuming this handles sign out
+import { NotificationBell } from "@/components/shared/NotificationBell";
+import LogoutButton from "@/components/auth/LogoutButton";
 import {
     LayoutDashboard,
     Building2,
     FileText,
     LogOut,
-    ShieldCheck
+    ShieldCheck,
+    Menu
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
 
 export default async function AdminLayout({
     children,
@@ -58,7 +68,10 @@ export default async function AdminLayout({
                 </nav>
 
                 <div className="p-4 border-t mt-auto space-y-4">
-                    <LogoutButton />
+                    <div className="flex items-center justify-between">
+                        <NotificationBell />
+                        <LogoutButton />
+                    </div>
                     <div className="flex items-center gap-3">
                         <div className="h-8 w-8 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold">
                             {user.email?.charAt(0).toUpperCase()}
@@ -73,7 +86,8 @@ export default async function AdminLayout({
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col overflow-hidden bg-muted/30">
-                <header className="bg-background border-b h-16 flex items-center px-8 shadow-sm justify-between sticky top-0 z-10">
+                <AdminMobileHeader user={user} />
+                <header className="hidden md:flex bg-background border-b h-16 items-center px-8 shadow-sm justify-between sticky top-0 z-10">
                     <h2 className="text-lg font-semibold text-foreground">Administration Console</h2>
                 </header>
                 <div className="flex-1 overflow-auto p-6 md:p-8">
@@ -97,4 +111,44 @@ function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; l
             <span className="font-medium">{label}</span>
         </Link>
     )
+}
+
+function AdminMobileHeader({ user }: { user: any }) {
+    return (
+        <div className="md:hidden bg-card border-b p-4 flex items-center justify-between">
+            <h1 className="text-xl font-bold text-primary">Super Admin</h1>
+            <div className="flex items-center gap-2">
+                <NotificationBell />
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <Menu className="h-6 w-6" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-64 p-0">
+                        <SheetHeader className="p-6 border-b">
+                            <SheetTitle className="text-2xl font-bold text-primary">Super Admin</SheetTitle>
+                        </SheetHeader>
+                        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+                            <NavItem href="/admin" icon={<LayoutDashboard className="w-5 h-5" />} label="Overview" />
+                            <NavItem href="/admin/companies" icon={<Building2 className="w-5 h-5" />} label="Companies" />
+                            <NavItem href="/admin/hsn" icon={<FileText className="w-5 h-5" />} label="ITC-HS & GST Registry" />
+                        </nav>
+                        <div className="p-4 border-t space-y-4">
+                            <LogoutButton />
+                            <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 bg-accent text-accent-foreground rounded-full flex items-center justify-center font-medium">
+                                    {user.email?.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="overflow-hidden">
+                                    <p className="text-sm font-medium truncate">{user.user_metadata?.full_name || "User"}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </SheetContent>
+                </Sheet>
+            </div>
+        </div>
+    );
 }

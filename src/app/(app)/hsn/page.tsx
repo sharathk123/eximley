@@ -352,29 +352,31 @@ export default function HSNPage() {
                     </div>
                 </div>
 
-                <DataTable
-                    data={paginatedCodes}
-                    columns={hsnColumns}
-                    loading={loading}
-                    fixedLayout={false}
-                    emptyState={
-                        <EmptyState
-                            icon={Search}
-                            title="No HSN codes found"
-                            description={searchQuery ? `No results for "${searchQuery}"` : "Try searching for a different code or description."}
-                        />
-                    }
-                    actions={(row) => (
-                        <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => startEdit(row)} aria-label="Edit HSN">
-                                <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => onDelete(row)} aria-label="Delete HSN" className="text-destructive hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    )}
-                />
+                <div className="border rounded-md bg-card">
+                    <DataTable
+                        data={paginatedCodes}
+                        columns={hsnColumns}
+                        loading={loading}
+                        fixedLayout={false}
+                        emptyState={
+                            <EmptyState
+                                icon={Search}
+                                title="No HSN codes found"
+                                description={searchQuery ? `No results for "${searchQuery}"` : "Try searching for a different code or description."}
+                            />
+                        }
+                        actions={(row) => (
+                            <div className="flex items-center justify-end gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => startEdit(row)} aria-label="Edit HSN">
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => onDelete(row)} aria-label="Delete HSN" className="text-destructive hover:text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        )}
+                    />
+                </div>
             </div>
 
             {/* PAGINATION CONTROLS */}

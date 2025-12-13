@@ -1,4 +1,4 @@
-import { createSessionClient, createAdminClient } from '@/lib/supabase/server';
+import { createSessionClient } from '@/lib/supabase/server';
 
 export interface DocumentMetadata {
     documentType: string;
@@ -121,7 +121,7 @@ export class DocumentService {
             }
 
             // Create new database record
-            const insertData: any = {
+            const insertData: Record<string, any> = {
                 company_id: companyId,
                 document_type: metadata.documentType,
                 document_category: metadata.documentCategory,
@@ -323,7 +323,7 @@ export class DocumentService {
             ? new Date(Date.now() + options.expiresIn * 60 * 60 * 1000)
             : null;
 
-        const { data: share, error } = await supabase
+        const { error } = await supabase
             .from('document_shares')
             .insert({
                 document_id: documentId,

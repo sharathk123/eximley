@@ -44,8 +44,23 @@ export interface Enquiry {
     version?: number;
     parent_enquiry_id?: string;
     enquiry_items?: EnquiryItem[];
-    entities?: any;
-    quotes?: any[]; // Related quotes for lineage
+    entities?: EntityReference[];
+    quotes?: RelatedQuote[]; // Related quotes for lineage
+}
+
+export interface RelatedQuote {
+    id: string;
+    quote_number: string;
+    status: string;
+    created_at: string;
+    [key: string]: any;
+}
+
+export interface EntityReference {
+    id: string;
+    name: string;
+    type: string;
+    [key: string]: any;
 }
 
 export interface EnquiryViewProps {

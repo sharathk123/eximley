@@ -47,7 +47,7 @@ export function ProformaInvoiceForm({ initialData, mode }: ProformaInvoiceFormPr
             </div>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form onSubmit={form.handleSubmit((data) => onSubmit(data as any))} className="space-y-8">
 
                     <InvoiceDetailsSection control={form.control} buyers={buyers} />
 

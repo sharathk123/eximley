@@ -216,7 +216,7 @@ export function useProformaActions(invoice: any, onRefresh?: () => void): UsePro
         if (!invoice?.id) return;
         try {
             setConvertingToCommercial(true);
-            const response = await fetch(`/api/proforma/${invoice.id}/convert-commercial`, {
+            const response = await fetch(`/api/invoices/proforma/${invoice.id}/convert-commercial`, {
                 method: 'POST',
             });
 

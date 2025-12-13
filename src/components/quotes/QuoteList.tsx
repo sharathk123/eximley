@@ -63,9 +63,9 @@ export function QuoteList({
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'draft': return 'secondary';
-            case 'sent': return 'default';
+            case 'sent': return 'secondary'; // Blue-ish in UI usually, secondary is safe neutral
             case 'revised': return 'outline';
-            case 'approved': return 'default';
+            case 'approved': return 'default'; // Primary (Purple) or we can use className for Green
             case 'rejected': return 'destructive';
             case 'converted': return 'default';
             default: return 'outline';
@@ -122,7 +122,15 @@ export function QuoteList({
                             </div>
 
                             <div className="flex gap-2">
-                                <Badge variant={getStatusColor(quote.status)}>{quote.status}</Badge>
+                                <Badge
+                                    variant={getStatusColor(quote.status)}
+                                    className={
+                                        quote.status === 'approved' || quote.status === 'converted' ? 'bg-green-600 hover:bg-green-700' :
+                                            quote.status === 'sent' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''
+                                    }
+                                >
+                                    {quote.status}
+                                </Badge>
                                 <Badge variant="outline">{quote.currency_code || 'USD'}</Badge>
                             </div>
 
@@ -151,7 +159,7 @@ export function QuoteList({
                             <div className="flex gap-2 pt-2" onClick={handleActionClick}>
                                 <Button size="sm" variant="outline" onClick={() => onGeneratePdf(quote.id)} disabled={generatingPdfId === quote.id}>
                                     {generatingPdfId === quote.id ? (
-                                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                        <Loader2 className="h-3 w-3 mr-1 animate-spin text-primary" />
                                     ) : (
                                         <Download className="h-3 w-3 mr-1" />
                                     )}
@@ -196,12 +204,17 @@ export function QuoteList({
             width: 'w-[140px]',
             sortable: true,
             cellClassName: 'font-medium',
-            cell: (quote) => DocumentFormatter.formatDocumentNumber(quote.quote_number, quote.version || 1, quote.status)
+            cell: (quote) => (
+                <span className="font-medium text-gray-900 dark:text-gray-100">
+                    {DocumentFormatter.formatDocumentNumber(quote.quote_number, quote.version || 1, quote.status)}
+                </span>
+            )
         },
         {
             key: 'buyer',
             header: 'Buyer',
-            width: 'w-[200px]',
+            width: 'w-[180px]',
+            sortable: true,
             cell: (quote) => quote.entities?.name || "—"
         },
         {
@@ -213,17 +226,27 @@ export function QuoteList({
         },
         {
             key: 'total_amount',
-            header: 'Total',
-            width: 'w-[150px]',
+            header: 'Amount',
+            width: 'w-[140px]',
             sortable: true,
-            cell: (quote) => quote.total_amount > 0 ? `${quote.currency_code || 'USD'} ${quote.total_amount.toFixed(2)}` : "—"
+            cell: (quote) => `${quote.currency_code || 'USD'} ${Number(quote.total_amount).toFixed(2)}`
         },
         {
             key: 'status',
             header: 'Status',
-            width: 'w-[150px]',
+            width: 'w-[120px]',
             sortable: true,
-            cell: (quote) => <Badge variant={getStatusColor(quote.status)}>{quote.status}</Badge>
+            cell: (quote) => (
+                <Badge
+                    variant={getStatusColor(quote.status) as any}
+                    className={
+                        quote.status === 'approved' || quote.status === 'converted' ? 'bg-green-600 hover:bg-green-700 bg-opacity-90' :
+                            quote.status === 'sent' ? 'bg-primary/10 text-primary hover:bg-primary/20 border-primary/20' : ''
+                    }
+                >
+                    {quote.status}
+                </Badge>
+            )
         },
         {
             key: 'reference',
@@ -242,7 +265,7 @@ export function QuoteList({
                     {quote.proforma_invoices && (
                         <div className="flex items-center text-muted-foreground text-xs">
                             <span className="mr-1">To:</span>
-                            <a href={`/invoices/proforma/${quote.proforma_invoices.id}`} onClick={(e) => e.stopPropagation()} className="bg-blue-100/50 text-blue-700 dark:text-blue-400 dark:bg-blue-900/30 px-1.5 py-0.5 rounded hover:underline font-medium">
+                            <a href={`/invoices/proforma/${quote.proforma_invoices.id}`} onClick={(e) => e.stopPropagation()} className="bg-primary/10 text-primary dark:bg-primary/20 px-1.5 py-0.5 rounded hover:underline font-medium">
                                 {quote.proforma_invoices.invoice_number}
                             </a>
                         </div>
@@ -254,58 +277,58 @@ export function QuoteList({
     ];
 
     return (
-        <DataTable
-            data={quotes}
-            columns={columns}
-            searchKeys={['quote_number', 'status']}
-            searchPlaceholder="Search quotes..."
-            onRowClick={(quote) => router.push(`/quotes/${quote.id}`)}
-            actions={(quote) => (
-                <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(quote)} title="Edit" aria-label="Edit quote">
-                        <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onGeneratePdf(quote.id)} disabled={generatingPdfId === quote.id} title="Download PDF" aria-label="Download PDF">
-                        {generatingPdfId === quote.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                            <Download className="h-4 w-4" />
-                        )}
-                    </Button>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View details">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onMarkSent(quote)} disabled={quote.status === 'sent'}>
-                                <ArrowRight className="h-4 w-4 mr-2" /> Mark as Sent
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onMarkApproved(quote)} disabled={quote.status === 'approved'}>
-                                <CheckCircle2 className="h-4 w-4 mr-2" /> Mark as Approved
-                            </DropdownMenuItem>
-                            {quote.status !== 'converted' && quote.status !== 'rejected' && (
-                                <>
-                                    <DropdownMenuItem onClick={() => onConvertToPI(quote)}>
-                                        <FileText className="h-4 w-4 mr-2" /> Convert to PI
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => router.push(`/quotes/${quote.id}/edit`)}>
-                                        <Edit className="mr-2 h-4 w-4" /> Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onRevise(quote)}>
-                                        <Copy className="h-4 w-4 mr-2" /> Create Revision
-                                    </DropdownMenuItem>
-                                </>
+        <div className="border rounded-md bg-card">
+            <DataTable
+                data={quotes}
+                columns={columns}
+                onRowClick={(quote) => router.push(`/quotes/${quote.id}`)}
+                actions={(quote) => (
+                    <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => onEdit(quote)} title="Edit" aria-label="Edit quote">
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => onGeneratePdf(quote.id)} disabled={generatingPdfId === quote.id} title="Download PDF" aria-label="Download PDF">
+                            {generatingPdfId === quote.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            ) : (
+                                <Download className="h-4 w-4" />
                             )}
-                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(quote)}>
-                                <Trash2 className="h-4 w-4 mr-2" /> Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            )}
-        />
+                        </Button>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View details">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => onMarkSent(quote)} disabled={quote.status === 'sent'}>
+                                    <ArrowRight className="h-4 w-4 mr-2" /> Mark as Sent
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onMarkApproved(quote)} disabled={quote.status === 'approved'}>
+                                    <CheckCircle2 className="h-4 w-4 mr-2" /> Mark as Approved
+                                </DropdownMenuItem>
+                                {quote.status !== 'converted' && quote.status !== 'rejected' && (
+                                    <>
+                                        <DropdownMenuItem onClick={() => onConvertToPI(quote)}>
+                                            <FileText className="h-4 w-4 mr-2" /> Convert to PI
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.push(`/quotes/${quote.id}/edit`)}>
+                                            <Edit className="mr-2 h-4 w-4" /> Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onRevise(quote)}>
+                                            <Copy className="h-4 w-4 mr-2" /> Create Revision
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(quote)}>
+                                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                )}
+            />
+        </div>
     );
 }

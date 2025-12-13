@@ -1,4 +1,5 @@
 import { DataTableColumn } from "@/components/ui/data-table";
+import { Badge } from "@/components/ui/badge";
 
 export interface HSNCode {
     id: string;
@@ -89,15 +90,10 @@ export const hsnColumns: DataTableColumn<HSNCode>[] = [
                 return <span className="text-muted-foreground/40 italic">-</span>;
             }
             const rate = row.gst_rate;
-            let badgeClass = 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-            if (rate > 18) badgeClass = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-            else if (rate > 12) badgeClass = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-
-            return (
-                <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold ${badgeClass}`}>
-                    {rate}%
-                </span>
-            );
+            if (rate > 18) return <Badge variant="destructive" className="bg-destructive/10 text-destructive">{rate}%</Badge>;
+            if (rate > 12) return <Badge variant="secondary" className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200">{rate}%</Badge>;
+            return <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200">{rate}%</Badge>;
         }
     }
 ];
+

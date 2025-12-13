@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { SearchInput } from "@/components/ui/search-input";
 
 interface HSNCode {
     id: string;
@@ -86,50 +86,42 @@ export default function HSNCodesPage() {
     };
 
     return (
-        <div className="container mx-auto p-6 max-w-7xl animate-in fade-in space-y-6">
+        <PageContainer>
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="pl-0 hover:bg-transparent hover:text-primary transition-colors"
-                            onClick={() => router.push('/products')}
-                        >
-                            ← Back to Products
-                        </Button>
-                    </div>
-                    <h1 className="text-3xl font-bold tracking-tight">HSN & GST Registry</h1>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                        Search and browse the complete ITC-HS and GST Rate classifications.
-                    </p>
+            <PageHeader
+                title="HSN & GST Registry"
+                description="Search and browse the complete ITC-HS and GST Rate classifications."
+            >
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push('/products')}
+                    >
+                        ← Back to Products
+                    </Button>
+                    {returnTo && (
+                        <div className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-md text-sm font-medium">
+                            Select Mode
+                        </div>
+                    )}
                 </div>
-
-                {returnTo && (
-                    <div className="bg-primary/10 text-primary border border-primary/20 px-4 py-2 rounded-lg text-sm font-medium">
-                        Select a code to assign it to your product
-                    </div>
-                )}
-            </div>
+            </PageHeader>
 
             {/* Controls */}
-            <div className="flex items-center gap-4 bg-card p-1 rounded-xl border shadow-sm">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by HSN Code, Commodity, or Description..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 border-0 focus-visible:ring-0 bg-transparent"
-                    />
-                </div>
+            <div className="flex items-center gap-4">
+                <SearchInput
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search by HSN Code, Commodity, or Description..."
+                    className="max-w-md"
+                />
             </div>
 
             {/* Table */}
             <div className="border rounded-xl shadow-sm bg-card overflow-hidden">
                 <Table>
-                    <TableHeader className="bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                    <TableHeader>
                         <TableRow className="border-b border-border/60 hover:bg-transparent">
                             <TableHead className="py-4 pl-6 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[120px]">ITC HS</TableHead>
                             <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[100px]">GST HSN</TableHead>
@@ -150,8 +142,7 @@ export default function HSNCodesPage() {
                             hsnCodes.map((hsn, index) => (
                                 <TableRow
                                     key={hsn.id}
-                                    className={`align-top border-b border-border/40 transition-colors hover:bg-muted/30 ${index % 2 === 0 ? 'bg-background' : 'bg-muted/5'
-                                        } ${selectedHSN === (hsn.gst_hsn_code || hsn.itc_hs_code) ? 'bg-primary/5 border-primary/20' : ''}`}
+                                    className={`align-top border-b border-border/40 ${selectedHSN === (hsn.gst_hsn_code || hsn.itc_hs_code) ? 'bg-primary/5 border-primary/20' : ''}`}
                                 >
                                     <TableCell className="pl-6 py-4 align-top w-[120px]">
                                         <div className="inline-flex items-center rounded-md border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-xs font-semibold text-primary font-mono">
@@ -185,7 +176,7 @@ export default function HSNCodesPage() {
                                     </TableCell>
                                     <TableCell className="py-4 align-top text-center">
                                         {hsn.gst_rate !== null && hsn.gst_rate !== undefined ? (
-                                            <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold ${hsn.gst_rate > 18 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                            <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold ${hsn.gst_rate > 18 ? 'bg-destructive/10 text-destructive' :
                                                 hsn.gst_rate > 12 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
                                                     'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                                 }`}>
@@ -260,6 +251,6 @@ export default function HSNCodesPage() {
                     </div>
                 )
             }
-        </div>
+        </PageContainer>
     );
 }

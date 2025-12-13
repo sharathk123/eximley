@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
-import { Input } from "@/components/ui/input";
-import { Plus, Loader2, Search, Ship } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
+import { Plus, Loader2, Ship } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     AlertDialog,
@@ -110,33 +110,31 @@ export default function ShippingBillsPage() {
 
     return (
         <PageContainer className="space-y-6 max-w-7xl mx-auto p-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground">Shipping Bills</h1>
-                    <p className="text-sm text-muted-foreground mt-1">Manage customs export declarations and compliance documents.</p>
-                </div>
+            <PageHeader
+                title="Shipping Bills"
+                description="Manage customs export declarations and compliance documents."
+            >
                 <Button onClick={handleCreate}>
                     <Plus className="w-4 h-4 mr-2" /> Add Shipping Bill
                 </Button>
-            </div>
+            </PageHeader>
 
             <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search shipping bills..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-8 bg-card border-border"
-                    />
-                </div>
+                <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    placeholder="Search shipping bills..."
+                />
                 <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
             <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }}>
-                <TabsList className="bg-muted">
+                <TabsList>
                     {['all', 'drafted', 'filed', 'cleared', 'shipped'].map(tab => (
-                        <TabsTrigger key={tab} value={tab} className="capitalize data-[state=active]:bg-background data-[state=active]:text-foreground">
+                        <TabsTrigger key={tab} value={tab} className="capitalize">
                             {tab}
                         </TabsTrigger>
                     ))}

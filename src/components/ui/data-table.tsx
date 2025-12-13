@@ -160,11 +160,11 @@ export function DataTable<T extends { id: string }>({
     // Render sort icon
     const renderSortIcon = (columnKey: string) => {
         if (sortKey !== columnKey) {
-            return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />;
+            return <ArrowUpDown className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />;
         }
         return sortDirection === "asc"
-            ? <ArrowUp className="ml-2 h-4 w-4" />
-            : <ArrowDown className="ml-2 h-4 w-4" />;
+            ? <ArrowUp className="ml-2 h-4 w-4 shrink-0" />
+            : <ArrowDown className="ml-2 h-4 w-4 shrink-0" />;
     };
 
     // Show loading state
@@ -187,7 +187,7 @@ export function DataTable<T extends { id: string }>({
             {/* Table */}
             <div className="rounded-md border">
                 <Table className={fixedLayout ? "table-fixed" : ""} aria-label="Data table">
-                    <TableHeader className="bg-muted/50">
+                    <TableHeader>
                         <TableRow>
                             {columns.map((column) => (
                                 <TableHead
@@ -251,9 +251,14 @@ export function DataTable<T extends { id: string }>({
                                     {columns.map((column) => (
                                         <TableCell
                                             key={column.key}
-                                            className={column.cellClassName}
+                                            className={cn(
+                                                "align-top py-3 whitespace-normal", // Override whitespace-nowrap default
+                                                column.cellClassName
+                                            )}
                                         >
-                                            {column.cell(row)}
+                                            <div className="break-words min-w-0">
+                                                {column.cell(row)}
+                                            </div>
                                         </TableCell>
                                     ))}
                                     {actions && (
@@ -271,18 +276,7 @@ export function DataTable<T extends { id: string }>({
                 </Table>
             </div>
 
-            {/* Results count */}
-            {sortedData.length > 0 && (
-                <div
-                    className="text-sm text-muted-foreground"
-                    role="status"
-                    aria-live="polite"
-                    aria-atomic="true"
-                >
-                    Showing {sortedData.length} of {data.length} {data.length === 1 ? 'item' : 'items'}
-                    {searchQuery && ` (filtered)`}
-                </div>
-            )}
+
         </div>
     );
 }

@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { ViewToggle } from "@/components/ui/view-toggle";
+import { SearchInput } from "@/components/ui/search-input";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Users, Loader2 } from "lucide-react";
+import { Plus, Users, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Pagination,
@@ -154,18 +155,14 @@ export default function EntitiesPage() {
             </PageHeader>
 
             <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search entities..."
-                        className="pl-8"
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                    />
-                </div>
+                <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    placeholder="Search entities..."
+                />
                 <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 

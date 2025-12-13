@@ -124,6 +124,17 @@ export interface Database {
                     eta: string | null
                     etd: string | null
                     is_active: boolean | null
+                    bl_number: string | null
+                    bl_date: string | null
+                    awb_number: string | null
+                    awb_date: string | null
+                    transport_mode: 'sea' | 'air' | 'road' | 'rail' | null
+                    insurance_company: string | null
+                    insurance_policy_number: string | null
+                    insurance_value: number | null
+                    insurance_currency: string | null
+                    insurance_date: string | null
+                    insurance_coverage_type: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -145,6 +156,17 @@ export interface Database {
                     eta?: string | null
                     etd?: string | null
                     is_active?: boolean | null
+                    bl_number?: string | null
+                    bl_date?: string | null
+                    awb_number?: string | null
+                    awb_date?: string | null
+                    transport_mode?: 'sea' | 'air' | 'road' | 'rail' | null
+                    insurance_company?: string | null
+                    insurance_policy_number?: string | null
+                    insurance_value?: number | null
+                    insurance_currency?: string | null
+                    insurance_date?: string | null
+                    insurance_coverage_type?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -166,11 +188,65 @@ export interface Database {
                     eta?: string | null
                     etd?: string | null
                     is_active?: boolean | null
+                    bl_number?: string | null
+                    bl_date?: string | null
+                    awb_number?: string | null
+                    awb_date?: string | null
+                    transport_mode?: 'sea' | 'air' | 'road' | 'rail' | null
+                    insurance_company?: string | null
+                    insurance_policy_number?: string | null
+                    insurance_value?: number | null
+                    insurance_currency?: string | null
+                    insurance_date?: string | null
+                    insurance_coverage_type?: string | null
                     created_at?: string
                     updated_at?: string
                 }
             }
-            // Add other tables as needed for MVP features
+            proforma_invoices: {
+                Row: {
+                    id: string
+                    company_id: string
+                    invoice_number: string
+                    invoice_date: string
+                    status: string
+                    buyer_name: string | null
+                    total_amount: number | null
+                    currency: string | null
+                    created_at: string
+                    updated_at: string
+                    invoice_type: 'proforma' | 'commercial'
+                    converted_to_commercial_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    company_id: string
+                    invoice_number: string
+                    invoice_date: string
+                    status?: string
+                    buyer_name?: string | null
+                    total_amount?: number | null
+                    currency?: string | null
+                    created_at?: string
+                    updated_at?: string
+                    invoice_type?: 'proforma' | 'commercial'
+                    converted_to_commercial_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    company_id?: string
+                    invoice_number?: string
+                    invoice_date?: string
+                    status?: string
+                    buyer_name?: string | null
+                    total_amount?: number | null
+                    currency?: string | null
+                    created_at?: string
+                    updated_at?: string
+                    invoice_type?: 'proforma' | 'commercial'
+                    converted_to_commercial_at?: string | null
+                }
+            }
         }
     }
 }

@@ -16,8 +16,8 @@ export function ExportOrderDocumentsTab({ orderId }: ExportOrderDocumentsTabProp
     return (
         <div className="space-y-6">
             <DocumentBrowser
-                entityType="export_order"
-                entityId={orderId}
+                referenceType="export_order"
+                referenceId={orderId}
             />
         </div>
     );

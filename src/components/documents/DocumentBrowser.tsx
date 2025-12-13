@@ -153,7 +153,7 @@ export function DocumentBrowser({ referenceType, referenceId, category, title, d
     if (loading) {
         return (
             <div className="flex justify-center p-8">
-                <Loader2 className="h-8 w-8 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
     }
@@ -317,7 +317,7 @@ export function DocumentBrowser({ referenceType, referenceId, category, title, d
                             className="group relative overflow-hidden transition-all hover:shadow-md border-muted hover:border-primary/20"
                         >
                             <div className="p-4 flex gap-4">
-                                <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors">
+                                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
                                     <FileText className="h-6 w-6 text-blue-600" />
                                 </div>
                                 <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -387,8 +387,8 @@ export function DocumentBrowser({ referenceType, referenceId, category, title, d
                     {selectedFile && (
                         <div className="space-y-4 py-4">
                             <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/30">
-                                <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                                    <FileText className="h-6 w-6 text-blue-600" />
+                                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                    <FileText className="h-6 w-6 text-primary" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-medium truncate">{selectedFile.name}</p>

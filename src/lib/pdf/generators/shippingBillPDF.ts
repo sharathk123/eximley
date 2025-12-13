@@ -98,6 +98,21 @@ export async function generateShippingBillPDF(shippingBill: any, company: any): 
             if (shippingBill.voyage_number) {
                 vesselFields.push({ label: 'Voyage Number:', value: shippingBill.voyage_number });
             }
+            if (shippingBill.bl_number) {
+                vesselFields.push({ label: 'BL Number:', value: shippingBill.bl_number });
+            }
+            if (shippingBill.bl_date) {
+                vesselFields.push({ label: 'BL Date:', value: formatDate(shippingBill.bl_date) });
+            }
+            if (shippingBill.awb_number) {
+                vesselFields.push({ label: 'AWB Number:', value: shippingBill.awb_number });
+            }
+            if (shippingBill.awb_date) {
+                vesselFields.push({ label: 'AWB Date:', value: formatDate(shippingBill.awb_date) });
+            }
+            if (shippingBill.transport_mode) {
+                vesselFields.push({ label: 'Mode:', value: shippingBill.transport_mode.toUpperCase() });
+            }
             if (shippingBill.port_of_loading) {
                 vesselFields.push({ label: 'Port of Loading:', value: shippingBill.port_of_loading });
             }
@@ -127,6 +142,19 @@ export async function generateShippingBillPDF(shippingBill: any, company: any): 
 
             if (vesselFields.length > 0 || consigneeFields.length > 0) {
                 doc.y = vesselY + PDF_LAYOUT.boxHeight + 25;
+            }
+
+            // Insurance Details
+            if (shippingBill.insurance_policy_number || shippingBill.insurance_company) {
+                const insuranceY = doc.y;
+                const insuranceFields = [];
+                if (shippingBill.insurance_company) insuranceFields.push({ label: 'Insurer:', value: shippingBill.insurance_company });
+                if (shippingBill.insurance_policy_number) insuranceFields.push({ label: 'Policy No:', value: shippingBill.insurance_policy_number });
+                if (shippingBill.insurance_date) insuranceFields.push({ label: 'Date:', value: formatDate(shippingBill.insurance_date) });
+                if (shippingBill.insurance_coverage_type) insuranceFields.push({ label: 'Coverage:', value: shippingBill.insurance_coverage_type });
+
+                renderInfoBox(doc, PDF_LAYOUT.margin, insuranceY, 'INSURANCE DETAILS', insuranceFields);
+                doc.y = insuranceY + PDF_LAYOUT.boxHeight + 25;
             }
 
             // Items table

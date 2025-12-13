@@ -101,12 +101,14 @@ export function ShipmentList({
             key: 'order_number',
             header: 'Order',
             width: 'w-[150px]',
+            sortable: true,
             cell: (ship) => ship.export_orders?.order_number || '—'
         },
         {
             key: 'buyer',
             header: 'Buyer',
             width: 'w-[180px]',
+            sortable: true,
             cell: (ship) => ship.export_orders?.entities?.name || '—'
         },
         {
@@ -119,23 +121,23 @@ export function ShipmentList({
     ];
 
     return (
-        <DataTable
-            data={shipments}
-            columns={columns}
-            searchKeys={['shipment_number', 'status']}
-            searchPlaceholder="Search shipments..."
-            onRowClick={(ship) => onView(ship)}
-            actions={(ship) => (
-                <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onView(ship)}>View</Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { /* Edit Placeholder */ }}>
-                        <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(ship)}>
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            )}
-        />
+        <div className="border rounded-md bg-card">
+            <DataTable
+                data={shipments}
+                columns={columns}
+                onRowClick={(ship) => onView(ship)}
+                actions={(ship) => (
+                    <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => onView(ship)}>View</Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { /* Edit Placeholder */ }}>
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(ship)}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
+            />
+        </div>
     );
 }

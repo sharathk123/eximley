@@ -244,9 +244,9 @@ test.describe('Navigation - E2E Tests', () => {
             { name: 'Shipping', url: '/shipping-bills' },
         ];
 
-        for (const module of modules) {
-            await page.goto(`http://localhost:3000${module.url}`);
-            await expect(page).toHaveURL(new RegExp(module.url));
+        for (const appModule of modules) {
+            await page.goto(`http://localhost:3000${appModule.url}`);
+            await expect(page).toHaveURL(new RegExp(appModule.url));
         }
     });
 

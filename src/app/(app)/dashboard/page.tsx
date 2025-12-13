@@ -82,45 +82,45 @@ export default function DashboardPage() {
 
             {/* Onboarding Banner for New Users */}
             {showOnboarding && (
-                <Card className="border-blue-200 bg-blue-50 shadow-md">
+                <Card className="border-primary/20 bg-primary/5 shadow-md">
                     <CardContent className="pt-6">
                         <div className="flex items-start gap-4">
-                            <div className="p-3 bg-blue-100 rounded-full">
-                                <Package className="h-6 w-6 text-blue-600" />
+                            <div className="p-3 bg-primary/10 rounded-full">
+                                <Package className="h-6 w-6 text-primary" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                                <h3 className="text-lg font-semibold text-foreground mb-2">
                                     Welcome to Eximley! Let's get you started 🎉
                                 </h3>
-                                <p className="text-sm text-blue-800 mb-4">
+                                <p className="text-sm text-muted-foreground mb-4">
                                     To begin managing your export operations, you'll need to set up your product catalog first.
                                     Follow these steps to get started:
                                 </p>
                                 <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-sm text-blue-900">
-                                        <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">1</div>
+                                    <div className="flex items-center gap-2 text-sm text-foreground">
+                                        <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs">1</div>
                                         <span className="font-medium">Create Products</span>
-                                        <span className="text-blue-700">- Add your main product catalog items</span>
+                                        <span className="text-muted-foreground">- Add your main product catalog items</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm text-blue-900">
-                                        <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">2</div>
+                                    <div className="flex items-center gap-2 text-sm text-foreground">
+                                        <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs">2</div>
                                         <span className="font-medium">Add SKUs</span>
-                                        <span className="text-blue-700">- Create variants with HSN codes, pricing, and specifications</span>
+                                        <span className="text-muted-foreground">- Create variants with HSN codes, pricing, and specifications</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm text-blue-900">
-                                        <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">3</div>
+                                    <div className="flex items-center gap-2 text-sm text-foreground">
+                                        <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs">3</div>
                                         <span className="font-medium">Start Trading</span>
-                                        <span className="text-blue-700">- Create quotes, orders, and shipping bills</span>
+                                        <span className="text-muted-foreground">- Create quotes, orders, and shipping bills</span>
                                     </div>
                                 </div>
                                 <div className="flex gap-3">
                                     <Link href="/products">
-                                        <Button className="bg-blue-600 hover:bg-blue-700">
+                                        <Button>
                                             <Package className="mr-2 h-4 w-4" />
                                             Set Up Products Now
                                         </Button>
                                     </Link>
-                                    <Button variant="outline" onClick={() => setShowOnboarding(false)} className="border-blue-300 text-blue-700 hover:bg-blue-100">
+                                    <Button variant="outline" onClick={() => setShowOnboarding(false)}>
                                         Dismiss
                                     </Button>
                                 </div>
@@ -194,10 +194,10 @@ export default function DashboardPage() {
                 <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-                        <DollarSign className="h-4 w-4 text-green-600" />
+                        <DollarSign className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">${(data.stats.monthly_revenue / 1000).toFixed(1)}K</div>
+                        <div className="text-2xl font-bold text-primary">${(data.stats.monthly_revenue / 1000).toFixed(1)}K</div>
                         <p className="text-xs text-muted-foreground">Export value this month</p>
                     </CardContent>
                 </Card>
@@ -206,10 +206,10 @@ export default function DashboardPage() {
                     <Card className="shadow-stripe hover:shadow-stripe-lg transition-all duration-200 cursor-pointer">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-                            <AlertCircle className="h-4 w-4 text-orange-600" />
+                            <AlertCircle className="h-4 w-4 text-destructive" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-orange-600">{data.stats.pending_approvals}</div>
+                            <div className="text-2xl font-bold text-destructive">{data.stats.pending_approvals}</div>
                             <p className="text-xs text-muted-foreground">Proformas awaiting review</p>
                         </CardContent>
                     </Card>

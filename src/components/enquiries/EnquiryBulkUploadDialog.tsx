@@ -96,7 +96,7 @@ export function EnquiryBulkUploadDialog({ onUploadComplete }: EnquiryBulkUploadD
                             className="cursor-pointer flex flex-col items-center gap-2"
                         >
                             {isUploading ? (
-                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
                             ) : (
                                 <FileSpreadsheet className="h-8 w-8 text-muted-foreground" />
                             )}

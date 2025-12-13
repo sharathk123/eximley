@@ -87,7 +87,7 @@ export default async function AppLayout({
                 </nav>
                 <div className="p-4 border-t space-y-4">
                     <div className="flex items-center justify-between">
-                        {/* <NotificationBell /> */}
+                        <NotificationBell />
                         <LogoutButton />
                     </div>
                     <div className="flex items-center gap-3">
@@ -131,7 +131,7 @@ function MobileHeader({ user }: { user: any }) {
         <div className="md:hidden bg-card border-b p-4 flex items-center justify-between">
             <h1 className="text-xl font-bold text-primary">Eximley</h1>
             <div className="flex items-center gap-2">
-                {/* <NotificationBell /> */}
+                <NotificationBell />
                 <Sheet>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -182,5 +182,6 @@ function MobileHeader({ user }: { user: any }) {
                     </SheetContent>
                 </Sheet>
             </div>
-            );
+        </div>
+    );
 }

@@ -114,6 +114,7 @@ export function OrderList({
             key: 'buyer',
             header: 'Buyer',
             width: 'w-[200px]',
+            sortable: true,
             cell: (ord) => ord.entities?.name || '—'
         },
         {
@@ -158,24 +159,24 @@ export function OrderList({
     ];
 
     return (
-        <DataTable
-            data={orders}
-            columns={columns}
-            searchKeys={['order_number', 'status', 'payment_status']}
-            searchPlaceholder="Search orders..."
-            actions={(ord) => (
-                <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => onPayment(ord)} title="Payments" aria-label="Manage payments">
-                        <CreditCard className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(ord)} aria-label="Edit order">
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onDelete(ord)} aria-label="Delete order">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                </div>
-            )}
-        />
+        <div className="border rounded-md bg-card">
+            <DataTable
+                data={orders}
+                columns={columns}
+                actions={(ord) => (
+                    <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => onPayment(ord)} title="Payments" aria-label="Manage payments">
+                            <CreditCard className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => onEdit(ord)} aria-label="Edit order">
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => onDelete(ord)} aria-label="Delete order">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </div>
+                )}
+            />
+        </div>
     );
 }

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface Document {
     id: string;
@@ -340,7 +341,7 @@ export function DocumentLibrary() {
     if (loading) {
         return (
             <div className="flex justify-center items-center p-8">
-                <Loader2 className="h-8 w-8 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
     }
@@ -371,14 +372,13 @@ export function DocumentLibrary() {
             <Card className="flex-1 overflow-hidden">
                 <ScrollArea className="h-[calc(100vh-250px)]">
                     {folderTree.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center p-12 text-center">
-                            <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                                <Folder className="h-8 w-8 text-muted-foreground/50" />
-                            </div>
-                            <h3 className="text-lg font-semibold mb-1">No documents found</h3>
-                            <p className="text-sm text-muted-foreground">
-                                {searchQuery ? 'Try a different search term' : 'Upload documents to get started'}
-                            </p>
+                        <div className="flex flex-col items-center justify-center p-12">
+                            <EmptyState
+                                icon={Folder}
+                                title="No documents found"
+                                description={searchQuery ? 'Try a different search term' : 'Upload documents to get started'}
+                                className="border-none p-0 min-h-[auto]"
+                            />
                         </div>
                     ) : (
                         <div className="p-2">

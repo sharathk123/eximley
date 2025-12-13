@@ -15,10 +15,12 @@ import {
     Calendar,
     CheckCircle2,
     AlertCircle,
-    Download
+    Download,
+    Loader2
 } from "lucide-react";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function LutPage() {
     const [luts, setLuts] = useState<any[]>([]);
@@ -90,14 +92,14 @@ export default function LutPage() {
         const isExpired = new Date(endDate) < new Date();
 
         if (status === 'cancelled') {
-            return <Badge variant="destructive">Cancelled</Badge>;
+            return <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">Cancelled</Badge>;
         }
 
         if (isExpired) {
-            return <Badge variant="secondary">Expired</Badge>;
+            return <Badge variant="secondary" className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200">Expired</Badge>;
         }
 
-        return <Badge variant="default" className="bg-green-600">Active</Badge>;
+        return <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100/80 dark:bg-green-900/30 dark:text-green-400 border-green-200">Active</Badge>;
     };
 
     return (
@@ -159,17 +161,18 @@ export default function LutPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {luts.length === 0 ? (
-                            <div className="text-center py-10 border-2 border-dashed rounded-lg">
-                                <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                                <h3 className="text-lg font-medium">No LUTs Found</h3>
-                                <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
-                                    Add your current Letter of Undertaking to enable zero-rated export tracking.
-                                </p>
-                                <Button variant="outline" onClick={() => setIsAddDialogOpen(true)}>
-                                    Add Your First LUT
-                                </Button>
+                        {loading ? (
+                            <div className="flex justify-center items-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
                             </div>
+                        ) : luts.length === 0 ? (
+                            <EmptyState
+                                icon={FileText}
+                                title="No LUTs Found"
+                                description="Add your current Letter of Undertaking to enable zero-rated export tracking."
+                                actionLabel="Add Your First LUT"
+                                onAction={() => setIsAddDialogOpen(true)}
+                            />
                         ) : (
                             <Table>
                                 <TableHeader>
@@ -204,33 +207,33 @@ export default function LutPage() {
                 </Card>
 
                 <div className="grid md:grid-cols-3 gap-6">
-                    <Card className="bg-blue-50 border-blue-200">
+                    <Card className="bg-primary/5 border-primary/20">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-base text-blue-800 flex items-center gap-2">
+                            <CardTitle className="text-base text-primary flex items-center gap-2">
                                 <CheckCircle2 className="h-4 w-4" /> Why file LUT?
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="text-sm text-blue-700">
+                        <CardContent className="text-sm text-muted-foreground">
                             Filing LUT allows you to export goods without paying IGST upfront, improving cash flow. Without LUT, you must pay IGST and claim a refund later.
                         </CardContent>
                     </Card>
-                    <Card className="bg-orange-50 border-orange-200">
+                    <Card className="bg-secondary/50 border-secondary">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-base text-orange-800 flex items-center gap-2">
+                            <CardTitle className="text-base text-secondary-foreground flex items-center gap-2">
                                 <Calendar className="h-4 w-4" /> Validity
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="text-sm text-orange-700">
+                        <CardContent className="text-sm text-muted-foreground">
                             An LUT is valid for one financial year. You must renew it before March 31st each year to ensure seamless exports in the new financial year.
                         </CardContent>
                     </Card>
-                    <Card className="bg-purple-50 border-purple-200">
+                    <Card className="bg-muted/50 border-border">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-base text-purple-800 flex items-center gap-2">
+                            <CardTitle className="text-base text-foreground flex items-center gap-2">
                                 <FileText className="h-4 w-4" /> GSTR-1
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="text-sm text-purple-700">
+                        <CardContent className="text-sm text-muted-foreground">
                             Exports under LUT must be reported in GSTR-1 Table 6A under "Export without payment of tax" using the LUT number.
                         </CardContent>
                     </Card>

@@ -5,6 +5,7 @@ import type {
     ToastActionElement,
     ToastProps,
 } from "@/components/ui/toast"
+import { notificationManager } from "@/lib/notification-manager";
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -161,6 +162,16 @@ function toast({ ...props }: Toast) {
             },
         },
     })
+
+    // Auto-log to Notification Center
+    if (props.title) {
+        notificationManager.add({
+            title: props.title as string,
+            description: props.description as string,
+            type: props.variant === "destructive" ? "error" : "info",
+            link: props.action ? undefined : undefined // Can be improved later specific links
+        });
+    }
 
     return {
         id: id,

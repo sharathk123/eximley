@@ -37,10 +37,19 @@ export function useProformaForm({ initialData, mode }: UseProformaFormProps) {
         port_of_loading: "",
         port_of_discharge: "",
         bank_id: "",
-        items: [{ sku_id: "", quantity: 1, unit_price: 0, description: "" }]
+        items: [{
+            sku_id: "",
+            quantity: 1,
+            unit_price: 0,
+            description: "",
+            hsn_code: "",
+            unit_of_measurement: "",
+            net_weight: 0,
+            gross_weight: 0
+        }]
     };
 
-    const form = useForm<ProformaFormValues>({
+    const form = useForm({
         resolver: zodResolver(proformaSchema),
         defaultValues,
     });
@@ -150,7 +159,7 @@ export function useProformaForm({ initialData, mode }: UseProformaFormProps) {
 
     const calculateTotal = () => {
         const items = form.watch('items') || [];
-        return items.reduce((sum, item) => sum + (item.quantity || 0) * (item.unit_price || 0), 0);
+        return items.reduce((sum: number, item: any) => sum + (Number(item.quantity) || 0) * (Number(item.unit_price) || 0), 0);
     };
 
     return {

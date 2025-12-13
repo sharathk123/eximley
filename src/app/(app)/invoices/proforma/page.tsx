@@ -115,8 +115,7 @@ export default function ProformaPage() {
                             description="Create one manually or convert from a Quote."
                             actionLabel="Create Proforma"
                             onAction={handleCreate}
-                            iconColor="text-blue-600 dark:text-blue-200"
-                            iconBgColor="bg-blue-100 dark:bg-blue-900"
+
                         />
                     ) : (
                         <>

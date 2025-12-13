@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2, Pencil, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { DataTable } from "@/components/ui/data-table";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Loader2, Pencil, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -236,82 +238,88 @@ export default function HSNTable() {
                 </Dialog>
             </div>
 
-            <div className="border rounded-xl shadow-sm bg-card overflow-hidden">
-                <Table>
-                    <TableHeader className="bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                        <TableRow className="border-b border-border/60 hover:bg-transparent">
-                            <TableHead className="py-4 pl-6 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[120px]">ITC HS</TableHead>
-                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[100px]">GST HSN</TableHead>
-                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[150px]">Chapter</TableHead>
-                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[200px]">Commodity</TableHead>
-                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground min-w-[250px]">ITC HS Description</TableHead>
-                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground min-w-[250px]">GST HSN Description</TableHead>
-                            <TableHead className="py-4 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center w-[80px]">GST %</TableHead>
-                            <TableHead className="py-4 pr-6 h-12 text-xs font-bold uppercase tracking-wider text-muted-foreground w-[100px] text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
-                            <TableRow><TableCell colSpan={8} className="h-32 text-center text-muted-foreground"><Loader2 className="animate-spin inline mr-2 h-5 w-5" /> Loading records...</TableCell></TableRow>
-                        ) : hsnCodes.length === 0 ? (
-                            <TableRow><TableCell colSpan={8} className="h-32 text-center text-muted-foreground italic">No HSN codes found matching your criteria.</TableCell></TableRow>
-                        ) : (
-                            hsnCodes.map((hsn, index) => (
-                                <TableRow key={hsn.id} className={`align-top border-b border-border/40 transition-colors hover:bg-muted/30 ${index % 2 === 0 ? 'bg-background' : 'bg-muted/5'}`}>
-                                    <TableCell className="pl-6 py-4 align-top w-[120px]">
-                                        <div className="inline-flex items-center rounded-md border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-xs font-semibold text-primary font-mono transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                                            {hsn.itc_hs_code}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-4 align-top w-[100px]">
-                                        <div className="inline-flex items-center rounded-md border border-border bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground font-mono">
-                                            {hsn.gst_hsn_code}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-4 align-top">
-                                        <div className="text-sm font-medium text-foreground/80 leading-snug whitespace-normal break-words w-[150px]">
-                                            {hsn.chapter || <span className="text-muted-foreground/40 italic">-</span>}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-4 align-top">
-                                        <div className="text-sm text-foreground/70 leading-snug whitespace-normal break-words w-[200px]">
-                                            {hsn.commodity || <span className="text-muted-foreground/40 italic">-</span>}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-4 align-top">
-                                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-normal break-words min-w-[250px]">
-                                            {hsn.itc_hs_code_description || <span className="text-muted-foreground/40 italic">No description available</span>}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-4 align-top">
-                                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-normal break-words min-w-[250px]">
-                                            {hsn.gst_hsn_code_description || <span className="text-muted-foreground/40 italic">No description available</span>}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-4 align-top text-center">
-                                        {hsn.gst_rate !== null && hsn.gst_rate !== undefined ? (
-                                            <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold ${hsn.gst_rate > 18 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : hsn.gst_rate > 12 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
-                                                {hsn.gst_rate}%
-                                            </span>
-                                        ) : (
-                                            <span className="text-muted-foreground/40 italic">-</span>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="pr-6 py-4 align-top text-right w-[100px]">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <Button variant="ghost" size="icon" onClick={() => startEdit(hsn)} className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full" aria-label="Edit HSN">
-                                                <Pencil className="w-3.5 h-3.5" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => setHsnToDelete(hsn)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full" aria-label="Delete HSN">
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
+            <div className="border rounded-md bg-card">
+                <DataTable
+                    data={hsnCodes}
+                    loading={loading}
+                    columns={[
+                        {
+                            key: "itc_hs_code",
+                            header: "ITC HS",
+                            width: "w-[120px]",
+                            sortable: true,
+                            cellClassName: "font-mono font-medium text-xs bg-primary/5 text-primary rounded-sm px-2 py-0.5 inline-block border border-primary/20",
+                            cell: (row) => row.itc_hs_code
+                        },
+                        {
+                            key: "gst_hsn_code",
+                            header: "GST HSN",
+                            width: "w-[100px]",
+                            sortable: true,
+                            cellClassName: "font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-sm border border-border inline-block",
+                            cell: (row) => row.gst_hsn_code
+                        },
+                        {
+                            key: "chapter",
+                            header: "Chapter",
+                            width: "w-[150px]",
+                            cell: (row) => (
+                                <div className="text-sm font-medium text-foreground/80 leading-snug whitespace-normal break-words max-w-[150px]">
+                                    {row.chapter || <span className="text-muted-foreground/40 italic">-</span>}
+                                </div>
+                            )
+                        },
+                        {
+                            key: "commodity",
+                            header: "Commodity",
+                            width: "w-[200px]",
+                            cell: (row) => (
+                                <div className="text-sm text-foreground/70 leading-snug whitespace-normal break-words max-w-[200px]">
+                                    {row.commodity || <span className="text-muted-foreground/40 italic">-</span>}
+                                </div>
+                            )
+                        },
+                        {
+                            key: "itc_desc",
+                            header: "ITC HS Description",
+                            cell: (row) => (
+                                <div className="text-sm text-foreground/90 leading-relaxed whitespace-normal break-words min-w-[250px] max-w-[300px]" title={row.itc_hs_code_description}>
+                                    {row.itc_hs_code_description || <span className="text-muted-foreground/40 italic">No description available</span>}
+                                </div>
+                            )
+                        },
+                        {
+                            key: "gst_desc",
+                            header: "GST HSN Description",
+                            cell: (row) => (
+                                <div className="text-sm text-foreground/90 leading-relaxed whitespace-normal break-words min-w-[250px] max-w-[300px]" title={row.gst_hsn_code_description}>
+                                    {row.gst_hsn_code_description || <span className="text-muted-foreground/40 italic">No description available</span>}
+                                </div>
+                            )
+                        },
+                        {
+                            key: "gst_rate",
+                            header: "GST %",
+                            width: "w-[80px]",
+                            cellClassName: "text-center",
+                            cell: (row) => row.gst_rate !== null && row.gst_rate !== undefined ? (
+                                <Badge variant={row.gst_rate > 18 ? "destructive" : row.gst_rate > 12 ? "secondary" : "default"} className={`font-bold ${row.gst_rate <= 12 ? "bg-green-100 text-green-700 hover:bg-green-200" : ""}`}>
+                                    {row.gst_rate}%
+                                </Badge>
+                            ) : <span className="text-muted-foreground/40 italic">-</span>
+                        }
+                    ]}
+                    actions={(row) => (
+                        <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => startEdit(row)} className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full">
+                                <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => setHsnToDelete(row)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full">
+                                <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                        </div>
+                    )}
+                />
             </div>
 
             {/* PAGINATION CONTROLS */}

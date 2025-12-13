@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Trash2,
     Edit,
     FileCheck
 } from "lucide-react";
 import { DataTable, DataTableColumn } from "@/components/ui/data-table";
+import { useRouter } from "next/navigation";
 
 interface ShippingBillListProps {
     shippingBills: any[];
@@ -28,15 +29,78 @@ export function ShippingBillList({
 }: ShippingBillListProps) {
 
     const getStatusBadge = (status: string) => {
-        const variants: any = {
-            drafted: 'secondary',
-            filed: 'default',
-            cleared: 'default',
-            shipped: 'default',
-            cancelled: 'destructive'
+        const styles: Record<string, string> = {
+            drafted: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+            filed: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground hover:bg-primary/20',
+            cleared: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-100/80',
+            shipped: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 hover:bg-purple-100/80',
+            cancelled: 'bg-destructive/10 text-destructive hover:bg-destructive/20'
         };
-        return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
+
+        const style = styles[status] || 'bg-muted text-muted-foreground';
+
+        return (
+            <Badge variant="outline" className={`${style} border-0`}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Badge>
+        );
     };
+
+    const columns: DataTableColumn<any>[] = [
+        {
+            key: 'sb_number',
+            header: 'SB Number',
+            width: 'w-[140px]',
+            sortable: true,
+            cell: (sb) => (
+                <Link href={`/shipping-bills/${sb.id}`} className="text-primary hover:underline font-medium">
+                    {sb.sb_number}
+                </Link>
+            )
+        },
+        {
+            key: 'sb_date',
+            header: 'Date',
+            width: 'w-[110px]',
+            sortable: true,
+            cell: (sb) => new Date(sb.sb_date).toLocaleDateString()
+        },
+        {
+            key: 'order_number',
+            header: 'Order',
+            width: 'w-[130px]',
+            sortable: true,
+            cell: (sb) => sb.export_orders?.order_number || '—'
+        },
+        {
+            key: 'buyer',
+            header: 'Buyer',
+            width: 'w-[180px]',
+            sortable: true,
+            cell: (sb) => sb.export_orders?.entities?.name || '—'
+        },
+        {
+            key: 'fob_value',
+            header: 'FOB Value',
+            width: 'w-[130px]',
+            sortable: true,
+            cell: (sb) => `${sb.currency_code} ${Number(sb.fob_value).toFixed(2)}`
+        },
+        {
+            key: 'port_code',
+            header: 'Port',
+            width: 'w-[100px]',
+            sortable: true,
+            cell: (sb) => sb.port_code || '—'
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            width: 'w-[100px]',
+            sortable: true,
+            cell: (sb) => getStatusBadge(sb.status)
+        }
+    ];
 
     if (viewMode === 'card') {
         return (
@@ -97,85 +161,32 @@ export function ShippingBillList({
         );
     }
 
-    // List view using DataTable
-    const columns: DataTableColumn<any>[] = [
-        {
-            key: 'sb_number',
-            header: 'SB Number',
-            width: 'w-[140px]',
-            sortable: true,
-            cell: (sb) => (
-                <Link href={`/shipping-bills/${sb.id}`} className="text-primary hover:underline font-medium">
-                    {sb.sb_number}
-                </Link>
-            )
-        },
-        {
-            key: 'sb_date',
-            header: 'Date',
-            width: 'w-[110px]',
-            sortable: true,
-            cell: (sb) => new Date(sb.sb_date).toLocaleDateString()
-        },
-        {
-            key: 'order_number',
-            header: 'Order',
-            width: 'w-[130px]',
-            cell: (sb) => sb.export_orders?.order_number || '—'
-        },
-        {
-            key: 'buyer',
-            header: 'Buyer',
-            width: 'w-[180px]',
-            cell: (sb) => sb.export_orders?.entities?.name || '—'
-        },
-        {
-            key: 'fob_value',
-            header: 'FOB Value',
-            width: 'w-[130px]',
-            sortable: true,
-            cell: (sb) => `${sb.currency_code} ${Number(sb.fob_value).toFixed(2)}`
-        },
-        {
-            key: 'port_code',
-            header: 'Port',
-            width: 'w-[100px]',
-            cell: (sb) => sb.port_code || '—'
-        },
-        {
-            key: 'status',
-            header: 'Status',
-            width: 'w-[100px]',
-            sortable: true,
-            cell: (sb) => getStatusBadge(sb.status)
-        }
-    ];
 
     return (
-        <DataTable
-            data={shippingBills}
-            columns={columns}
-            searchKeys={['sb_number', 'port_code', 'status']}
-            searchPlaceholder="Search shipping bills..."
-            actions={(sb) => (
-                <div className="flex gap-2 justify-end">
-                    {sb.status === 'drafted' && (
-                        <>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => onEdit(sb)}>
-                                <Edit className="h-4 w-4 text-primary" />
+        <div className="border rounded-md bg-card">
+            <DataTable
+                data={shippingBills}
+                columns={columns}
+                actions={(sb) => (
+                    <div className="flex gap-2 justify-end">
+                        {sb.status === 'drafted' && (
+                            <>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => onEdit(sb)}>
+                                    <Edit className="h-4 w-4 text-primary" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => onFile(sb.id)} title="Mark as Filed">
+                                    <FileCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                </Button>
+                            </>
+                        )}
+                        {(sb.status === 'drafted' || sb.status === 'cancelled') && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => onDelete(sb)}>
+                                <Trash2 className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => onFile(sb.id)} title="Mark as Filed">
-                                <FileCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                            </Button>
-                        </>
-                    )}
-                    {(sb.status === 'drafted' || sb.status === 'cancelled') && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => onDelete(sb)}>
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    )}
-                </div>
-            )}
-        />
+                        )}
+                    </div>
+                )}
+            />
+        </div>
     );
 }

@@ -36,6 +36,7 @@ export function ProformaTableView({
             key: 'buyer',
             header: 'Buyer',
             width: 'w-[200px]',
+            sortable: true,
             cell: (inv) => inv.entities?.name || "—"
         },
         {
@@ -83,7 +84,7 @@ export function ProformaTableView({
                     {inv.export_orders && inv.export_orders.length > 0 && (
                         <div className="flex items-center text-muted-foreground text-xs">
                             <span className="mr-1">To:</span>
-                            <a href={`/orders/${inv.export_orders[0].id}`} onClick={(e) => e.stopPropagation()} className="bg-blue-100/50 text-blue-700 dark:text-blue-400 dark:bg-blue-900/30 px-1.5 py-0.5 rounded hover:underline font-medium">
+                            <a href={`/orders/${inv.export_orders[0].id}`} onClick={(e) => e.stopPropagation()} className="bg-primary/10 text-primary dark:bg-primary/20 px-1.5 py-0.5 rounded hover:underline font-medium">
                                 {inv.export_orders[0].order_number}
                             </a>
                         </div>
@@ -95,27 +96,27 @@ export function ProformaTableView({
     ];
 
     return (
-        <DataTable
-            data={invoices}
-            columns={columns}
-            searchKeys={['invoice_number', 'status']}
-            searchPlaceholder="Search proforma invoices..."
-            onRowClick={(inv) => onRowClick(inv.id)}
-            actions={(inv) => (
-                <div className="flex justify-end gap-2">
-                    {inv.status !== 'converted' && (
-                        <Button variant="ghost" size="sm" onClick={() => onConvert(inv)} aria-label={`Convert proforma ${inv.proforma_number}`}>
-                            To Order
+        <div className="border rounded-md bg-card">
+            <DataTable
+                data={invoices}
+                columns={columns}
+                onRowClick={(inv) => onRowClick(inv.id)}
+                actions={(inv) => (
+                    <div className="flex justify-end gap-2">
+                        {inv.status !== 'converted' && (
+                            <Button variant="ghost" size="sm" onClick={() => onConvert(inv)} aria-label={`Convert proforma ${inv.proforma_number}`}>
+                                To Order
+                            </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(inv)} aria-label="Edit proforma">
+                            <Edit className="h-4 w-4" />
                         </Button>
-                    )}
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(inv)} aria-label="Edit proforma">
-                        <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(inv)} aria-label="Delete proforma">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                </div>
-            )}
-        />
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(inv)} aria-label="Delete proforma">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </div>
+                )}
+            />
+        </div>
     );
 }

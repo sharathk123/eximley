@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/ui/view-toggle";
+import { SearchInput } from "@/components/ui/search-input";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -23,7 +24,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Loader2, MessageSquare, FileText } from "lucide-react";
+import { Plus, Loader2, MessageSquare, FileText } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EnquiryBulkUploadDialog } from "@/components/enquiries/EnquiryBulkUploadDialog";
@@ -184,18 +185,14 @@ export default function EnquiriesPage() {
             </PageHeader>
 
             <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search enquiries..."
-                        className="pl-8"
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                    />
-                </div>
+                <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    placeholder="Search enquiries..."
+                />
                 <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
             </div>
 
@@ -223,8 +220,6 @@ export default function EnquiriesPage() {
                             description={searchQuery ? "No results match your search." : "Typically, new enquiries will appear here."}
                             actionLabel={searchQuery ? "Clear Search" : "Add Enquiry"}
                             onAction={searchQuery ? () => setSearchQuery("") : () => router.push("/enquiries/create")}
-                            iconColor="text-blue-600 dark:text-blue-200"
-                            iconBgColor="bg-blue-100 dark:bg-blue-900"
                         />
                     ) : (
                         <>

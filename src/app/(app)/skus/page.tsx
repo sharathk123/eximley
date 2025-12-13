@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable } from "@/components/ui/data-table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2, Upload, Pencil, Trash2, ChevronLeft, ChevronRight, Search, CheckCircle2 } from "lucide-react";
@@ -273,115 +274,109 @@ export default function SKUPage() {
 
     return (
         <PageContainer>
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">SKU Management</h1>
-                <div className="flex gap-2">
-
-
-                    <Dialog open={openBulk} onOpenChange={(open) => {
-                        setOpenBulk(open);
-                        if (!open) {
-                            // Clear data when dialog closes
-                            setBulkData([]);
-                        }
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline">
-                                <Upload className="w-4 h-4 mr-2" /> Bulk Upload
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                            <DialogHeader><DialogTitle>Bulk Upload SKUs (Excel)</DialogTitle></DialogHeader>
-                            <div className="space-y-4 pt-4">
-                                <div
-                                    className={`p-8 border-2 border-dashed rounded-md text-center transition-colors ${isDragging ? "border-primary bg-accent" : "border-border bg-muted hover:bg-muted"
-                                        }`}
-                                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                                    onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
-                                    onDrop={(e) => {
-                                        e.preventDefault();
-                                        setIsDragging(false);
-                                        const file = e.dataTransfer.files?.[0];
-                                        if (file) processFile(file);
-                                    }}
-                                >
-                                    <div className="flex flex-col items-center justify-center gap-2">
-                                        <Upload className={`w-10 h-10 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
-                                        <p className="text-sm font-medium text-foreground">
-                                            {isDragging ? "Drop file here" : "Drag & drop Excel/CSV file here"}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">or click to browse</p>
-                                        <Input
-                                            type="file"
-                                            accept=".xlsx, .xls, .csv"
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) processFile(file);
-                                            }}
-                                            className="hidden"
-                                            id="file-upload"
-                                        />
-                                        <Button variant="secondary" size="sm" onClick={() => document.getElementById('file-upload')?.click()}>
-                                            Browse Files
-                                        </Button>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-4">Expected columns: sku_code, name, unit, base_price</p>
+            <PageHeader title="SKU Management" description="Manage your product stock keeping units.">
+                <Dialog open={openBulk} onOpenChange={(open) => {
+                    setOpenBulk(open);
+                    if (!open) {
+                        setBulkData([]);
+                    }
+                }}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <Upload className="w-4 h-4 mr-2" /> Bulk Upload
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader><DialogTitle>Bulk Upload SKUs (Excel)</DialogTitle></DialogHeader>
+                        <div className="space-y-4 pt-4">
+                            <div
+                                className={`p-8 border-2 border-dashed rounded-md text-center transition-colors ${isDragging ? "border-primary bg-accent" : "border-border bg-muted hover:bg-muted"
+                                    }`}
+                                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    setIsDragging(false);
+                                    const file = e.dataTransfer.files?.[0];
+                                    if (file) processFile(file);
+                                }}
+                            >
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                    <Upload className={`w-10 h-10 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
+                                    <p className="text-sm font-medium text-foreground">
+                                        {isDragging ? "Drop file here" : "Drag & drop Excel/CSV file here"}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">or click to browse</p>
+                                    <Input
+                                        type="file"
+                                        accept=".xlsx, .xls, .csv"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) processFile(file);
+                                        }}
+                                        className="hidden"
+                                        id="file-upload"
+                                    />
+                                    <Button variant="secondary" size="sm" onClick={() => document.getElementById('file-upload')?.click()}>
+                                        Browse Files
+                                    </Button>
                                 </div>
-
-                                {bulkData.length > 0 && (
-                                    <div className="max-h-60 overflow-auto border rounded-md overflow-hidden">
-                                        <Table>
-                                            <TableHeader className="bg-muted sticky top-0 shadow-sm">
-                                                <TableRow>
-                                                    <TableHead className="font-bold text-foreground">Code</TableHead>
-                                                    <TableHead className="font-bold text-foreground">Name</TableHead>
-                                                    <TableHead className="font-bold text-foreground">Unit</TableHead>
-                                                    <TableHead className="font-bold text-foreground text-right">Price</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {bulkData.slice(0, 5).map((row, i) => (
-                                                    <TableRow key={i}>
-                                                        <TableCell className="font-medium text-xs whitespace-normal break-words max-w-[150px]">{row.sku_code}</TableCell>
-                                                        <TableCell className="text-xs whitespace-normal break-words max-w-[200px]">{row.name}</TableCell>
-                                                        <TableCell className="text-xs">{row.unit}</TableCell>
-                                                        <TableCell className="text-right text-xs">{row.base_price}</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                        <p className="text-xs text-muted-foreground p-2 bg-muted border-t">
-                                            Showing {Math.min(5, bulkData.length)} of {bulkData.length} records
-                                        </p>
-                                    </div>
-                                )}
-
-                                <Button onClick={confirmBulkUpload} className="w-full" disabled={bulkData.length === 0 || uploading}>
-                                    {uploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                                    {uploading ? "Uploading..." : "Confirm Upload"}
-                                </Button>
+                                <p className="text-xs text-muted-foreground mt-4">Expected columns: sku_code, name, unit, base_price</p>
                             </div>
-                        </DialogContent>
-                    </Dialog>
 
-                    <Dialog open={openAdd} onOpenChange={setOpenAdd}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="w-4 h-4 mr-2" /> Add SKU
+                            {bulkData.length > 0 && (
+                                <div className="max-h-60 overflow-auto border rounded-md overflow-hidden">
+                                    <Table>
+                                        <TableHeader className="sticky top-0 shadow-sm bg-muted">
+                                            <TableRow>
+                                                <TableHead className="font-bold text-foreground">Code</TableHead>
+                                                <TableHead className="font-bold text-foreground">Name</TableHead>
+                                                <TableHead className="font-bold text-foreground">Unit</TableHead>
+                                                <TableHead className="font-bold text-foreground text-right">Price</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {bulkData.slice(0, 5).map((row, i) => (
+                                                <TableRow key={i}>
+                                                    <TableCell className="font-medium text-xs whitespace-normal break-words max-w-[150px]">{row.sku_code}</TableCell>
+                                                    <TableCell className="text-xs whitespace-normal break-words max-w-[200px]">{row.name}</TableCell>
+                                                    <TableCell className="text-xs">{row.unit}</TableCell>
+                                                    <TableCell className="text-right text-xs">{row.base_price}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    <p className="text-xs text-muted-foreground p-2 bg-muted border-t">
+                                        Showing {Math.min(5, bulkData.length)} of {bulkData.length} records
+                                    </p>
+                                </div>
+                            )}
+
+                            <Button onClick={confirmBulkUpload} className="w-full" disabled={bulkData.length === 0 || uploading}>
+                                {uploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+                                {uploading ? "Uploading..." : "Confirm Upload"}
                             </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader><DialogTitle>Add New SKU</DialogTitle></DialogHeader>
-                            <form onSubmit={form.handleSubmit(onAddSubmit)} className="space-y-4 pt-4">
-                                <SKUFormFields form={form} products={products} />
-                                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                                    Save SKU
-                                </Button>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <Plus className="w-4 h-4 mr-2" /> Add SKU
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader><DialogTitle>Add New SKU</DialogTitle></DialogHeader>
+                        <form onSubmit={form.handleSubmit(onAddSubmit)} className="space-y-4 pt-4">
+                            <SKUFormFields form={form} products={products} />
+                            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                                Save SKU
+                            </Button>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            </PageHeader>
 
 
             {/* SEARCH & FILTERS */}
@@ -421,45 +416,61 @@ export default function SKUPage() {
             </Dialog>
 
             <div className="border rounded-md bg-card">
-                <Table>
-                    <TableHeader className="bg-muted/50">
-                        <TableRow>
-                            <TableHead className="font-bold text-foreground">Code</TableHead>
-                            <TableHead className="font-bold text-foreground">Product</TableHead>
-                            <TableHead className="font-bold text-foreground">Name</TableHead>
-                            <TableHead className="font-bold text-foreground">Unit</TableHead>
-                            <TableHead className="font-bold text-foreground text-right">Base Price</TableHead>
-                            <TableHead className="font-bold text-foreground w-[100px]">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
-                            <TableRow><TableCell colSpan={5} className="h-24 text-center"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
-                        ) : paginatedSkus.length === 0 ? (
-                            <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">No SKUs found.</TableCell></TableRow>
-                        ) : (
-                            paginatedSkus.map(sku => (
-                                <TableRow key={sku.id}>
-                                    <TableCell className="font-medium">{sku.sku_code}</TableCell>
-                                    <TableCell>{sku.product_name || '-'}</TableCell>
-                                    <TableCell>{sku.name}</TableCell>
-                                    <TableCell>{sku.unit}</TableCell>
-                                    <TableCell className="text-right">{sku.base_price}</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            <Button variant="ghost" size="icon" onClick={() => startEdit(sku)}>
-                                                <Pencil className="w-4 h-4 text-primary" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => onDelete(sku)}>
-                                                <Trash2 className="w-4 h-4 text-red-600" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
+                <DataTable
+                    data={paginatedSkus}
+                    columns={[
+                        {
+                            key: 'sku_code',
+                            header: 'Code',
+                            width: 'w-[150px]',
+                            sortable: true,
+                            cellClassName: "font-medium text-xs whitespace-normal break-words max-w-[150px]",
+                            cell: (row) => row.sku_code
+                        },
+                        {
+                            key: 'product_name',
+                            header: 'Product',
+                            sortable: true,
+                            cell: (row) => row.product_name || '-'
+                        },
+                        {
+                            key: 'name',
+                            header: 'Name',
+                            sortable: true,
+                            cellClassName: "text-xs whitespace-normal break-words max-w-[200px]",
+                            cell: (row) => row.name
+                        },
+                        {
+                            key: 'unit',
+                            header: 'Unit',
+                            width: 'w-[80px]',
+                            sortable: true,
+                            cellClassName: "text-xs",
+                            cell: (row) => row.unit
+                        },
+                        {
+                            key: 'base_price',
+                            header: 'Base Price',
+                            width: 'w-[100px]',
+                            sortable: true,
+                            cellClassName: "text-right text-xs",
+                            cell: (row) => row.base_price
+                        }
+                    ]}
+                    onRowClick={(sku) => startEdit(sku)}
+                    loading={loading}
+
+                    actions={(sku) => (
+                        <div className="flex gap-2 justify-end">
+                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEdit(sku); }}>
+                                <Pencil className="w-4 h-4 text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(sku); }}>
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                        </div>
+                    )}
+                />
             </div>
 
             {/* PAGINATION CONTROLS */}
