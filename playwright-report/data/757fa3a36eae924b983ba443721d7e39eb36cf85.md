@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e1]:
+- generic [active] [ref=e1]:
   - generic [ref=e2]:
     - complementary [ref=e3]:
       - heading "Eximley" [level=1] [ref=e5]
@@ -91,32 +91,8 @@
             - paragraph [ref=e133]: testuser_v1@example.com
     - main [ref=e134]:
       - generic [ref=e136]:
-        - generic [ref=e137]:
-          - generic [ref=e138]:
-            - heading "Enquiries" [level=2] [ref=e139]
-            - paragraph [ref=e140]: Manage customer enquiries and convert to orders.
-          - generic [ref=e141]:
-            - button "Bulk Upload" [ref=e142]:
-              - img
-              - text: Bulk Upload
-            - button "Add Enquiry" [ref=e143]:
-              - img
-              - text: Add Enquiry
-        - generic [ref=e144]:
-          - generic [ref=e145]:
-            - img [ref=e146]
-            - textbox "Search enquiries..." [ref=e149]
-          - button "Toggle Analytics Dashboard" [active] [ref=e151]:
-            - img
-        - img [ref=e153]
+        - img [ref=e137]
+        - paragraph [ref=e139]: Loading dashboard...
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e160] [cursor=pointer]:
-    - generic [ref=e163]:
-      - text: Compiling
-      - generic [ref=e164]:
-        - generic [ref=e165]: .
-        - generic [ref=e166]: .
-        - generic [ref=e167]: .
-  - alert [ref=e168]
 ```

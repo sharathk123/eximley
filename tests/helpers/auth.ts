@@ -47,8 +47,8 @@ export async function login(page: Page, user?: TestUser) {
     // Submit form
     await page.click('button[type="submit"]');
 
-    // Wait for redirect to dashboard
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    // Wait for redirect to authenticated area (dashboard or admin)
+    await page.waitForURL(/\/(dashboard|admin)/, { timeout: 15000 });
 }
 
 /**
