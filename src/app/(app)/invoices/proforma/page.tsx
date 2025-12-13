@@ -24,19 +24,21 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, Plus, Loader2, FileText } from "lucide-react";
+import { Search, Plus, Loader2, FileText, BarChart3 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageContainer } from "@/components/ui/page-container";
 import { SearchInput } from "@/components/ui/search-input";
 import { useProformaManagement } from "@/hooks/use-proforma-management";
 
 import { ProformaList } from "@/components/invoices/ProformaList";
+import { ProformaAnalytics } from "@/components/invoices/ProformaAnalytics";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useRouter } from "next/navigation";
 
 export default function ProformaPage() {
     const router = useRouter();
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+    const [showAnalytics, setShowAnalytics] = useState(false);
 
     const {
         invoices,
@@ -89,16 +91,19 @@ export default function ProformaPage() {
                     }}
                     placeholder="Search invoices..."
                 />
-                <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant={showAnalytics ? "default" : "outline"}
+                        size="icon"
+                        onClick={() => setShowAnalytics(!showAnalytics)}
+                        title="Toggle Analytics Dashboard"
+                    >
+                        <BarChart3 className="h-4 w-4" />
+                    </Button>
+                    {!showAnalytics && <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />}
+                </div>
             </div>
 
-            <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => {
-                setActiveTab(value);
-                setCurrentPage(1);
-            }}>
-                <TabsList>
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="draft">Draft</TabsTrigger>
                     <TabsTrigger value="approved">Approved</TabsTrigger>
                     <TabsTrigger value="revised">Revised</TabsTrigger>
                     <TabsTrigger value="rejected">Rejected</TabsTrigger>
@@ -153,50 +158,38 @@ export default function ProformaPage() {
                                                 className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                                             />
                                         </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
-                            )}
-                        </>
-                    )}
-                </TabsContent>
-            </Tabs>
+        <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+                This will permanently delete invoice "{deletingPI?.invoice_number}". This action cannot be undone.
+            </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleDelete(deletingPI)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+            </AlertDialogAction>
+        </AlertDialogFooter>
+    </AlertDialogContent>
+            </AlertDialog >
 
-
-            {/* Delete Confirmation Dialog */}
-            <AlertDialog open={!!deletingPI} onOpenChange={(open) => !open && setDeletingPI(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete invoice "{deletingPI?.invoice_number}". This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(deletingPI)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-
-            {/* Convert to Order Confirmation Dialog */}
-            <AlertDialog open={!!convertingPI} onOpenChange={(open) => !open && setConvertingPI(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Convert into Order?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will create a confirmed Export Order from PI "{convertingPI?.invoice_number}" and mark the PI as converted.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleConvertToOrder(convertingPI)}>
-                            Convert to Order
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </PageContainer>
+    {/* Convert to Order Confirmation Dialog */ }
+    < AlertDialog open = {!!convertingPI} onOpenChange = {(open) => !open && setConvertingPI(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Convert into Order?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This will create a confirmed Export Order from PI "{convertingPI?.invoice_number}" and mark the PI as converted.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => handleConvertToOrder(convertingPI)}>
+                    Convert to Order
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+            </AlertDialog >
+        </PageContainer >
     );
 }
