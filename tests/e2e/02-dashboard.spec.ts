@@ -23,7 +23,8 @@ test.describe('Dashboard', () => {
     });
 
     test('should display stats cards', async ({ page }) => {
-        await page.goto('/dashboard');
+        // Wait for dashboard to load
+        await page.waitForTimeout(1000);
 
         // Should have at least some stat cards
         const cards = await page.locator('.shadow-stripe').count();

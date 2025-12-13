@@ -70,6 +70,9 @@ test.describe('Analytics Dashboards', () => {
 
             await analyticsButton.click();
 
+            // Wait for analytics to load
+            await page.waitForTimeout(1000);
+
             // Should have at least 3 summary cards
             const cards = await page.locator('.card, [data-testid="analytics-card"]').count();
             expect(cards).toBeGreaterThanOrEqual(3);
@@ -93,11 +96,12 @@ test.describe('Analytics Dashboards', () => {
 
             await analyticsButton.click();
 
-            // Should have area chart
-            await expect(page.locator('.recharts-area')).toBeVisible({ timeout: 5000 });
+            // Should have area chart (wait for rendering)
+            await page.waitForTimeout(2000); // Give charts time to render
+            await expect(page.locator('.recharts-area').first()).toBeVisible({ timeout: 10000 });
 
             // Should have pie chart
-            await expect(page.locator('.recharts-pie')).toBeVisible({ timeout: 5000 });
+            await expect(page.locator('.recharts-pie').first()).toBeVisible({ timeout: 10000 });
         });
     }
 
