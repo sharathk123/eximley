@@ -2,123 +2,121 @@
 
 ```yaml
 - generic [ref=e1]:
-  - generic [ref=e6] [cursor=pointer]:
-    - button "Open Next.js Dev Tools" [ref=e7]:
-      - img [ref=e8]
-    - generic [ref=e11]:
-      - button "Open issues overlay" [ref=e12]:
-        - generic [ref=e13]:
-          - generic [ref=e14]: "1"
-          - generic [ref=e15]: "2"
-        - generic [ref=e16]:
-          - text: Issue
-          - generic [ref=e17]: s
-      - button "Collapse issues badge" [ref=e18]:
-        - img [ref=e19]
-  - generic [ref=e21]:
-    - complementary [ref=e22]:
-      - heading "Eximley" [level=1] [ref=e24]
-      - navigation [ref=e25]:
-        - link "Dashboard" [ref=e26] [cursor=pointer]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - heading "Eximley" [level=1] [ref=e5]
+      - navigation [ref=e6]:
+        - link "Dashboard" [ref=e7] [cursor=pointer]:
           - /url: /dashboard
-          - img [ref=e28]
-          - generic [ref=e33]: Dashboard
-        - link "Enquiries" [ref=e34] [cursor=pointer]:
+          - img [ref=e9]
+          - generic [ref=e14]: Dashboard
+        - link "Enquiries" [ref=e15] [cursor=pointer]:
           - /url: /enquiries
-          - img [ref=e36]
-          - generic [ref=e39]: Enquiries
-        - link "Quotes" [ref=e40] [cursor=pointer]:
+          - img [ref=e17]
+          - generic [ref=e20]: Enquiries
+        - link "Quotes" [ref=e21] [cursor=pointer]:
           - /url: /quotes
-          - img [ref=e42]
-          - generic [ref=e46]: Quotes
-        - link "Proforma Invoices" [ref=e47] [cursor=pointer]:
+          - img [ref=e23]
+          - generic [ref=e27]: Quotes
+        - link "Proforma Invoices" [ref=e28] [cursor=pointer]:
           - /url: /invoices/proforma
-          - img [ref=e49]
-          - generic [ref=e52]: Proforma Invoices
-        - link "Export Orders" [ref=e53] [cursor=pointer]:
+          - img [ref=e30]
+          - generic [ref=e33]: Proforma Invoices
+        - link "Export Orders" [ref=e34] [cursor=pointer]:
           - /url: /orders
-          - img [ref=e55]
-          - generic [ref=e58]: Export Orders
-        - link "Purchase Orders" [ref=e59] [cursor=pointer]:
+          - img [ref=e36]
+          - generic [ref=e39]: Export Orders
+        - link "Purchase Orders" [ref=e40] [cursor=pointer]:
           - /url: /purchase-orders
-          - img [ref=e61]
-          - generic [ref=e65]: Purchase Orders
-        - link "Shipments" [ref=e66] [cursor=pointer]:
+          - img [ref=e42]
+          - generic [ref=e46]: Purchase Orders
+        - link "Shipments" [ref=e47] [cursor=pointer]:
           - /url: /shipments
-          - img [ref=e68]
-          - generic [ref=e72]: Shipments
-        - link "Shipping Bills" [ref=e73] [cursor=pointer]:
+          - img [ref=e49]
+          - generic [ref=e53]: Shipments
+        - link "Shipping Bills" [ref=e54] [cursor=pointer]:
           - /url: /shipping-bills
-          - img [ref=e75]
-          - generic [ref=e79]: Shipping Bills
-        - link "e-BRC" [ref=e80] [cursor=pointer]:
+          - img [ref=e56]
+          - generic [ref=e60]: Shipping Bills
+        - link "e-BRC" [ref=e61] [cursor=pointer]:
           - /url: /brcs
-          - img [ref=e82]
-          - generic [ref=e85]: e-BRC
-        - link "Incentives" [ref=e86] [cursor=pointer]:
+          - img [ref=e63]
+          - generic [ref=e66]: e-BRC
+        - link "Incentives" [ref=e67] [cursor=pointer]:
           - /url: /incentives
-          - img [ref=e88]
-          - generic [ref=e91]: Incentives
-        - link "LUT Management" [ref=e92] [cursor=pointer]:
+          - img [ref=e69]
+          - generic [ref=e72]: Incentives
+        - link "LUT Management" [ref=e73] [cursor=pointer]:
           - /url: /compliance/lut
-          - img [ref=e94]
-          - generic [ref=e98]: LUT Management
-        - generic [ref=e99]: Documents
-        - link "Document Library" [ref=e100] [cursor=pointer]:
+          - img [ref=e75]
+          - generic [ref=e79]: LUT Management
+        - generic [ref=e80]: Documents
+        - link "Document Library" [ref=e81] [cursor=pointer]:
           - /url: /documents
-          - img [ref=e102]
-          - generic [ref=e104]: Document Library
-        - generic [ref=e105]: Masters
-        - link "Products" [ref=e106] [cursor=pointer]:
+          - img [ref=e83]
+          - generic [ref=e85]: Document Library
+        - generic [ref=e86]: Masters
+        - link "Products" [ref=e87] [cursor=pointer]:
           - /url: /products
-          - img [ref=e108]
-          - generic [ref=e111]: Products
-        - link "Entities" [ref=e112] [cursor=pointer]:
+          - img [ref=e89]
+          - generic [ref=e92]: Products
+        - link "Entities" [ref=e93] [cursor=pointer]:
           - /url: /entities
-          - img [ref=e114]
-          - generic [ref=e119]: Entities
-        - link "SKU Management" [ref=e120] [cursor=pointer]:
+          - img [ref=e95]
+          - generic [ref=e100]: Entities
+        - link "SKU Management" [ref=e101] [cursor=pointer]:
           - /url: /skus
-          - img [ref=e122]
-          - generic [ref=e126]: SKU Management
-        - generic [ref=e127]: System
-        - link "ITC-HSN Lookup" [ref=e128] [cursor=pointer]:
+          - img [ref=e103]
+          - generic [ref=e107]: SKU Management
+        - generic [ref=e108]: System
+        - link "ITC-HSN Lookup" [ref=e109] [cursor=pointer]:
           - /url: /hsn
-          - img [ref=e130]
-          - generic [ref=e133]: ITC-HSN Lookup
-        - link "Settings" [ref=e134] [cursor=pointer]:
+          - img [ref=e111]
+          - generic [ref=e114]: ITC-HSN Lookup
+        - link "Settings" [ref=e115] [cursor=pointer]:
           - /url: /settings/company
-          - img [ref=e136]
-          - generic [ref=e139]: Settings
-      - generic [ref=e140]:
-        - generic [ref=e141]:
-          - button "Notifications" [ref=e142]:
+          - img [ref=e117]
+          - generic [ref=e120]: Settings
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - button "Notifications" [ref=e123]:
             - img
-          - button "Log out" [ref=e143]:
-            - img [ref=e144]
-            - generic [ref=e147]: Log out
-        - generic [ref=e148]:
-          - generic [ref=e149]: T
-          - generic [ref=e150]:
-            - paragraph [ref=e151]: Test User
-            - paragraph [ref=e152]: testuser_v1@example.com
-    - main [ref=e153]:
-      - generic [ref=e155]:
-        - generic [ref=e156]:
-          - generic [ref=e157]:
-            - heading "Shipping Bills" [level=2] [ref=e158]
-            - paragraph [ref=e159]: Manage customs export declarations and compliance documents.
-          - button "Add Shipping Bill" [ref=e161]:
+          - button "Log out" [ref=e124]:
+            - img [ref=e125]
+            - generic [ref=e128]: Log out
+        - generic [ref=e129]:
+          - generic [ref=e130]: T
+          - generic [ref=e131]:
+            - paragraph [ref=e132]: Test User
+            - paragraph [ref=e133]: testuser_v1@example.com
+    - main [ref=e134]:
+      - generic [ref=e136]:
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - heading "Shipping Bills" [level=2] [ref=e139]
+            - paragraph [ref=e140]: Manage customs export declarations and compliance documents.
+          - button "Add Shipping Bill" [ref=e142]:
             - img
             - text: Add Shipping Bill
-        - generic [ref=e162]:
-          - generic [ref=e163]:
-            - img [ref=e164]
-            - textbox "Search shipping bills..." [ref=e167]
-          - button "Toggle Analytics Dashboard" [active] [ref=e169]:
+        - generic [ref=e143]:
+          - generic [ref=e144]:
+            - img [ref=e145]
+            - textbox "Search shipping bills..." [ref=e148]
+          - button "Toggle Analytics Dashboard" [active] [ref=e150]:
             - img
-        - generic [ref=e170]: Failed to load analytics
+        - generic [ref=e151]: Failed to load analytics
   - region "Notifications (F8)":
     - list
-  - alert [ref=e171]
+  - generic [ref=e156] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e157]:
+      - img [ref=e158]
+    - generic [ref=e161]:
+      - button "Open issues overlay" [ref=e162]:
+        - generic [ref=e163]:
+          - generic [ref=e164]: "0"
+          - generic [ref=e165]: "1"
+        - generic [ref=e166]: Issue
+      - button "Collapse issues badge" [ref=e167]:
+        - img [ref=e168]
+  - alert [ref=e170]
 ```

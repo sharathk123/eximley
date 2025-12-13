@@ -167,8 +167,8 @@
                 - application [ref=e249]
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e255] [cursor=pointer]:
-    - img [ref=e256]
-  - alert [ref=e259]
-  - generic [ref=e260]: $0.00
+  - button "Open Next.js Dev Tools" [ref=e260] [cursor=pointer]:
+    - img [ref=e261]
+  - alert [ref=e264]
+  - generic [ref=e265]: $0.00
 ```

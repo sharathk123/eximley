@@ -95,16 +95,7 @@
         - paragraph [ref=e139]: Loading dashboard...
   - region "Notifications (F8)":
     - list
-  - generic [ref=e144] [cursor=pointer]:
-    - button "Open Next.js Dev Tools" [ref=e145]:
-      - img [ref=e146]
-    - generic [ref=e149]:
-      - button "Open issues overlay" [ref=e150]:
-        - generic [ref=e151]:
-          - generic [ref=e152]: "0"
-          - generic [ref=e153]: "1"
-        - generic [ref=e154]: Issue
-      - button "Collapse issues badge" [ref=e155]:
-        - img [ref=e156]
-  - alert [ref=e158]
+  - button "Open Next.js Dev Tools" [ref=e145] [cursor=pointer]:
+    - img [ref=e146]
+  - alert [ref=e149]
 ```

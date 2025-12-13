@@ -91,11 +91,41 @@
             - paragraph [ref=e133]: testuser_v1@example.com
     - main [ref=e134]:
       - generic [ref=e136]:
-        - img [ref=e137]
-        - paragraph [ref=e139]: Loading dashboard...
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - heading "Quotes" [level=2] [ref=e139]
+            - paragraph [ref=e140]: Manage quotations and convert to Proforma Invoices.
+          - generic [ref=e141]:
+            - button "Use Template" [ref=e142]:
+              - img
+              - text: Use Template
+            - button "New Quote" [ref=e143]:
+              - img
+              - text: New Quote
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - img [ref=e146]
+            - textbox "Search quotes..." [ref=e149]
+          - generic [ref=e150]:
+            - button "Toggle Analytics Dashboard" [ref=e151]:
+              - img
+            - generic [ref=e152]:
+              - button "Card View" [ref=e153]:
+                - img
+              - button "List View" [ref=e154]:
+                - img
+        - generic [ref=e155]:
+          - tablist [ref=e156]:
+            - tab "All" [selected] [ref=e157]
+            - tab "Draft" [ref=e158]
+            - tab "Sent" [ref=e159]
+            - tab "Approved" [ref=e160]
+            - tab "Rejected" [ref=e161]
+            - tab "Converted" [ref=e162]
+          - tabpanel "All" [ref=e163]:
+            - generic [ref=e164]:
+              - img [ref=e165]
+              - paragraph [ref=e167]: Loading quotes...
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e145] [cursor=pointer]:
-    - img [ref=e146]
-  - alert [ref=e149]
 ```
