@@ -35,8 +35,8 @@ export async function signup(page: Page, user: TestUser) {
  * Login existing user
  */
 export async function login(page: Page, user?: TestUser) {
-    const email = user?.email || process.env.TEST_EMAIL || 'test@example.com';
-    const password = user?.password || process.env.TEST_PASSWORD || 'password';
+    const email = user?.email || process.env.TEST_EMAIL || 'testuser_v1@example.com';
+    const password = user?.password || process.env.TEST_PASSWORD || 'NewPass123!';
 
     await page.goto('/login');
 
