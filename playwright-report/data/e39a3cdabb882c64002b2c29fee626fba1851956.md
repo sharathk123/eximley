@@ -11,24 +11,25 @@
         - generic [ref=e10]: Email
         - textbox "Email" [ref=e11]:
           - /placeholder: john@company.com
-          - text: test.user.1765654890478@eximley.test
+          - text: testuser_v1@example.com
       - generic [ref=e12]:
         - generic [ref=e13]: Password
         - textbox "Password" [ref=e14]:
           - /placeholder: ••••••••
-          - text: TestPassword123!
-      - alert [ref=e15]:
-        - img [ref=e16]
-        - generic [ref=e18]: Error
-        - generic [ref=e19]: Invalid login credentials
-      - button "Sign In" [ref=e20]
-    - paragraph [ref=e22]:
+          - text: NewPass123!
+      - button "Sign In" [ref=e15]
+    - paragraph [ref=e17]:
       - text: Don't have an account?
-      - link "Sign up" [ref=e23] [cursor=pointer]:
+      - link "Sign up" [ref=e18] [cursor=pointer]:
         - /url: /signup
   - region "Notifications (F8)":
     - list
-  - button "Open Next.js Dev Tools" [ref=e29] [cursor=pointer]:
-    - img [ref=e30]
-  - alert [ref=e33]
+  - button "Open Next.js Dev Tools" [ref=e24] [cursor=pointer]:
+    - generic [ref=e27]:
+      - text: Rendering
+      - generic [ref=e28]:
+        - generic [ref=e29]: .
+        - generic [ref=e30]: .
+        - generic [ref=e31]: .
+  - alert [ref=e32]
 ```
