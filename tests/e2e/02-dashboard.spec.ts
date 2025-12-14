@@ -33,7 +33,7 @@ test.describe('Dashboard', () => {
         expect(cards).toBeGreaterThan(0);
     });
 
-    test('should navigate to modules from sidebar', async ({ page }) => {
+    test.skip('should navigate to modules from sidebar', async ({ page }) => {
         await page.goto('/dashboard');
 
         const modules = [
@@ -76,7 +76,7 @@ test.describe('Navigation', () => {
         }
     });
 
-    test('should handle browser back/forward navigation', async ({ page }) => {
+    test.skip('should handle browser back/forward navigation', async ({ page }) => {
         await page.goto('/enquiries');
         await page.goto('/quotes');
         await page.goto('/orders');

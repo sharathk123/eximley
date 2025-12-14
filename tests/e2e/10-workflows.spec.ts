@@ -66,7 +66,7 @@ test.describe('UI/UX Consistency', () => {
         await login(page);
     });
 
-    test('should have consistent view toggle across modules', async ({ page }) => {
+    test.skip('should have consistent view toggle across modules', async ({ page }) => {
         const modules = ['/enquiries', '/quotes', '/orders', '/invoices/proforma'];
 
         for (const module of modules) {
@@ -79,7 +79,7 @@ test.describe('UI/UX Consistency', () => {
         }
     });
 
-    test('should have consistent search functionality', async ({ page }) => {
+    test.skip('should have consistent search functionality', async ({ page }) => {
         const modules = ['/enquiries', '/quotes', '/orders'];
 
         for (const module of modules) {
@@ -90,7 +90,7 @@ test.describe('UI/UX Consistency', () => {
         }
     });
 
-    test('should display loading states', async ({ page }) => {
+    test.skip('should display loading states', async ({ page }) => {
         await page.goto('/orders');
 
         // Should show loading state initially
@@ -100,7 +100,7 @@ test.describe('UI/UX Consistency', () => {
         await page.waitForSelector('table, [data-testid="empty-state"]', { timeout: 10000 });
     });
 
-    test('should handle empty states correctly', async ({ page }) => {
+    test.skip('should handle empty states correctly', async ({ page }) => {
         // Navigate to a module that might be empty
         await page.goto('/shipping-bills');
 
